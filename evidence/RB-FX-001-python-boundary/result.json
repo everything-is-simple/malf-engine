@@ -1,0 +1,29 @@
+{
+  "artifacts_sha256": {
+    "boundary.py": "d5bf5ee990cd62587bccdd0311fc970cbcc21f4d7968fc9d85f435e1c1a0b08c",
+    "test_boundary.py": "2da294a98edf1a9a10e4b6c4503af6b6349b2796569e89187aa438711f13d2d3"
+  },
+  "assembly_recommendation": "Use standard library primitives as the main Data/Core foundation; port only through an approved task plan, not by copying this trial file.",
+  "component": "Python 3.10 standard library",
+  "environment": {
+    "git": "git version 2.54.0.windows.1",
+    "node": "v25.4.0",
+    "npm": "11.7.0",
+    "os": "Windows-10-10.0.19045-SP0",
+    "python": "3.10.19"
+  },
+  "license": "PSF License",
+  "limitations": [
+    "synthetic fixture only",
+    "not a production TDX parser"
+  ],
+  "recorded_at_utc": "2026-07-19T19:08:31.520238+00:00",
+  "status": "trial-passed",
+  "test": {
+    "command": "J:\\asteria-riskbench-factory\\.venv\\Scripts\\python.exe -m pytest -q experiments/RB-FX-001-python-boundary",
+    "cwd": "J:\\asteria-riskbench-factory",
+    "exit_code": 0,
+    "stderr": "",
+    "stdout": "........                                                                 [100%]\n8 passed in 0.07s\n"
+  }
+}

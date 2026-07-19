@@ -1,0 +1,22 @@
+{
+  "packages": {
+    "fastapi": "0.139.2",
+    "httpx": "0.28.1",
+    "playwright": "1.61.0",
+    "pydantic": "2.13.4",
+    "pytest": "9.1.1",
+    "pytest-playwright": "0.8.0",
+    "uv": "0.11.29",
+    "uvicorn": "0.51.0"
+  },
+  "results": {
+    "RB-FX-001-python-boundary": "trial-passed",
+    "RB-FX-002-pydantic-contract": "trial-passed",
+    "RB-FX-003-fastapi-readonly-viewer": "trial-passed",
+    "RB-FX-004-pytest-harness": "trial-passed",
+    "RB-FX-005-playwright-viewer": "trial-passed",
+    "RB-FX-006-package-manager": "trial-passed",
+    "RB-FX-007-chart-comparison": "trial-passed"
+  },
+  "status": "complete"
+}

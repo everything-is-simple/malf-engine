@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.pyc
+node_modules/
+.npm/
+evidence/**/*.tmp
+evidence/**/*.log
+
+.uv-venv/
