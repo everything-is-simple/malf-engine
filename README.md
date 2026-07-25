@@ -9,7 +9,6 @@ MALF v2.0 结构计算核心。吃 OHLC，吐 `WaveProbabilitySnapshot`。确定
 | 文档 | 是什么 | 何时看 |
 |---|---|---|
 | `../../asteria-riskbench/new-docs/MALF_v2.0_引擎规格_定稿.md` | **规范**（WHAT），唯一权威 | 查规则/公式/字段/编号 |
-| `../../asteria-riskbench/new-docs/malf2.0-引擎.md` | 讲解（WHY） | 想懂设计理由 |
 | `docs/BUILD-CONTRACT.md` | 建造合同：范围 / 非目标 / 验收线 | 稳定，极少改 |
 | `docs/BUILD-PLAN.md` | 建造计划：当前这一刀的 step + 勾选 | 活的，每天看 |
 
@@ -23,4 +22,4 @@ pip install -e ".[dev]"
 pytest
 ```
 
-现在只有空壳冒烟测试会 PASS，第一刀 fixture 测试标 skip（见 BUILD-PLAN.md S1）。
+第一刀（uninitialized → up_alive）已完成：**16 passed, 1 skipped**（skip 是真实数据冒烟，Windows 上无 TDX 路径）。
