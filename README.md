@@ -1,57 +1,26 @@
-# RiskBench 组件实验工厂
+# malf-engine
 
-本目录用于回答一个具体问题：**哪些免费开源组件在 RiskBench 的约束下真的能工作，哪些不能，什么时候可以装配。**
+MALF v2.0 结构计算核心。吃 OHLC，吐 `WaveProbabilitySnapshot`。确定性、单遍、零外部依赖。
 
-工厂不是主系统，不承载正式业务代码，不读取真实 TDX/MALF 目录，不把试验结果自动升级为主系统选型。
+实验目录 `RB-FX-008`，独立 venv，自跑 pytest。五层 trial-passed + replay 通过后搬主仓库。
 
-## 快速开始（Windows PowerShell）
+## 文档（一个萝卜一个坑）
 
-```powershell
-Set-Location J:\asteria-riskbench-factory
-py -3.10 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
-.\.venv\Scripts\python.exe -m pytest -q
-```
-
-Playwright 浏览器只在需要执行浏览器验收时安装：
-
-```powershell
-.\.venv\Scripts\python.exe -m playwright install chromium
-.\.venv\Scripts\python.exe -m pytest experiments/RB-FX-005-playwright-viewer -q
-```
-
-图表实验在自己的 npm 工作目录中运行，不影响 Python 环境：
-
-```powershell
-Set-Location experiments/RB-FX-007-chart-comparison
-npm install --package-lock-only
-npm install
-node smoke.mjs
-```
-
-## 当前实验
-
-| ID | 能力 | 当前状态 |
+| 文档 | 是什么 | 何时看 |
 |---|---|---|
-| RB-FX-001 | Python 标准库边界：TDX 32 字节解析、哈希、原子指针 | trial-passed（证据已生成） |
-| RB-FX-002 | Pydantic v2 发布快照合同 | trial-passed（证据已生成） |
-| RB-FX-003 | FastAPI + Uvicorn 只读 Viewer | trial-passed（证据已生成） |
-| RB-FX-004 | pytest 测试装配和故障注入 | trial-passed（证据已生成） |
-| RB-FX-005 | Playwright Python 浏览器验收 | trial-passed（证据已生成） |
-| RB-FX-006 | uv 与 venv/pip 装配比较 | trial-passed（证据已生成） |
-| RB-FX-007 | ECharts / Lightweight Charts / 原生 SVG | trial-passed（证据已生成） |
+| `../../asteria-riskbench/new-docs/MALF_v2.0_引擎规格_定稿.md` | **规范**（WHAT），唯一权威 | 查规则/公式/字段/编号 |
+| `../../asteria-riskbench/new-docs/malf2.0-引擎.md` | 讲解（WHY） | 想懂设计理由 |
+| `docs/BUILD-CONTRACT.md` | 建造合同：范围 / 非目标 / 验收线 | 稳定，极少改 |
+| `docs/BUILD-PLAN.md` | 建造计划：当前这一刀的 step + 勾选 | 活的，每天看 |
 
-状态以 `docs/03-试验记录.md` 与 `evidence/` 中的实际结果为准。
+> 本 README 与 BUILD-* 都**不复述规范**，只指向。行为的真正规格活在规格文档 + `tests/fixtures/` 的 golden fixture 里。
 
-## 与主仓库的关系
+## 跑测试
 
-主仓库的正式入口是：
+```bash
+python -m venv .venv && . .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -e ".[dev]"
+pytest
+```
 
-- `J:\asteria-riskbench\AGENTS.md`
-- `J:\asteria-riskbench\docs\00-索引.md`
-- `J:\asteria-riskbench\docs\implementation\TECH-工程技术选型、开源组件、调试与装配治理.md`
-- `J:\asteria-riskbench\docs\implementation\TECH-STACK-RiskBench-v0.1-技术栈选型基线.md`
-- `J:\asteria-riskbench\docs\implementation\COMPONENTS-RiskBench-v0.1-组件台账.md`
-
-工厂只输出能力卡和证据；主仓库必须通过自己的任务计划和门禁后才可装配。
-
+现在只有空壳冒烟测试会 PASS，第一刀 fixture 测试标 skip（见 BUILD-PLAN.md S1）。
