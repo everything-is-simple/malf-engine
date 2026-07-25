@@ -10,3 +10,8 @@ evidence/**/*.tmp
 evidence/**/*.log
 
 .uv-venv/
+
+# build artifacts
+*.egg-info/
+dist/
+build/
