@@ -59,6 +59,7 @@ class MALFCoreEngine:
 
         # Wave duration tracking（第五刀 Task 2）
         self._wave_start_bar_dt: Optional[str] = None  # Wave 开始的 bar_dt（初始化确认时设置）
+        self._wave_bar_counter: int = 0  # Wave 持续 bar 数量计数器（O(1)）
 
         # Transition 相关信息（第四刀）
         self._transition_boundary_high: Optional[int] = None
@@ -101,6 +102,7 @@ class MALFCoreEngine:
                 self._progress_extreme_price = self._init_result.progress_extreme_price
                 self._progress_extreme_bar_dt = self._init_result.progress_extreme_bar_dt
                 self._wave_start_bar_dt = bar.bar_dt  # 第五刀 Task 2: 记录 wave 开始时间
+                self._wave_bar_counter = 1  # 初始化时计数器从 1 开始
 
                 if self._direction == Direction.UP:
                     self._system_state = SystemState.UP_ALIVE
@@ -109,6 +111,9 @@ class MALFCoreEngine:
 
         # S3: Guard break detection（up/down_alive → transition）
         elif self._system_state in [SystemState.UP_ALIVE, SystemState.DOWN_ALIVE]:
+            # 递增 bar 计数器（每根新 bar）
+            self._wave_bar_counter += 1
+
             # D16 Progress Confirmation + D9 Guard Update: 检查是否有新 pivot 确认
             if bar.bar_dt in pivots_by_confirm_dt:
                 new_pivot = pivots_by_confirm_dt[bar.bar_dt]
@@ -121,6 +126,8 @@ class MALFCoreEngine:
                 self._system_state = SystemState.TRANSITION
                 self._wave_core_state = WaveCoreState.TERMINATED
                 self._break_bar_dt = bar.bar_dt  # 记录 break bar（用于 C-05）
+                self._wave_start_bar_dt = None  # 清空 wave 开始时间（transition 期间无 active wave）
+                self._wave_bar_counter = 0  # 清空计数器
 
                 # 初始化 candidate 状态
                 self._active_candidate_guard_price = None
@@ -344,6 +351,7 @@ class MALFCoreEngine:
         self._direction = new_direction
         self._wave_core_state = WaveCoreState.ALIVE
         self._wave_start_bar_dt = confirmation_pivot.confirm_bar_dt  # 第五刀 Task 2: 重置 wave 开始时间
+        self._wave_bar_counter = 1  # 新 wave 从 1 开始计数
 
         # 清空 transition 字段
         self._transition_boundary_high = None
@@ -365,19 +373,8 @@ class MALFCoreEngine:
             CoreStateSnapshot: 状态快照
         """
         # 计算 bar_count（第五刀 Task 2）
-        bar_count = None
-        if self._wave_start_bar_dt is not None:
-            # 计算从 wave 开始到当前 bar 的数量
-            start_idx = None
-            current_idx = None
-            for i, b in enumerate(self._bars):
-                if b.bar_dt == self._wave_start_bar_dt:
-                    start_idx = i
-                if b.bar_dt == bar.bar_dt:
-                    current_idx = i
-
-            if start_idx is not None and current_idx is not None:
-                bar_count = current_idx - start_idx + 1
+        # 使用 O(1) 计数器替代 O(n) 遍历
+        bar_count = self._wave_bar_counter if self._wave_bar_counter > 0 else None
 
         if self._system_state == SystemState.UNINITIALIZED:
             return CoreStateSnapshot(

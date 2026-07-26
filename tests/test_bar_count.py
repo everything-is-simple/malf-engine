@@ -152,21 +152,82 @@ def test_bar_count_at_break():
     snapshot = engine.on_bar(break_bar)
 
     assert snapshot.system_state == SystemState.TRANSITION
-    # Break 时 bar_count 应该保持为旧 wave 的最终值
-    # 注：transition 后 bar_count 的语义需要明确（是保持旧值还是变为 None）
-    # 这里先假设保持旧值，待实现时确认
-    assert snapshot.bar_count == 6 or snapshot.bar_count is None  # 待明确
+    # Transition 期间 bar_count 应该为 None（无 active wave）
+    assert snapshot.bar_count is None
 
 
 def test_bar_count_resets_on_new_wave():
     """New wave 后 bar_count 重新从 1 开始。
 
-    场景：transition → new wave 确认
-    预期：new wave 的第一根 bar，bar_count = 1
+    场景：
+    1. UP_ALIVE (bar_count=1)
+    2. Guard break → TRANSITION (bar_count=None)
+    3. Candidate 确认 + 突破边界 → New wave (DOWN_ALIVE, bar_count=1)
+    4. 继续喂入 2 根 bars (bar_count=2, 3)
     """
     engine = MALFCoreEngine(k=2)
 
-    # 初始化 + break + transition + new wave 的完整序列
-    # （这个测试需要较长的 bar 序列，先标记为 TODO）
-    # 等 new wave 逻辑完善后再补充
-    pass  # TODO: 待 new wave 完整实现后补充
+    # 初始化 UP_ALIVE
+    bars_init = [
+        PriceBar("A", "1D", "d00", 100, 102, 99, 101),
+        PriceBar("A", "1D", "d01", 101, 105, 100, 104),
+        PriceBar("A", "1D", "d02", 104, 110, 103, 108),  # H0=110
+        PriceBar("A", "1D", "d03", 108, 107, 104, 105),
+        PriceBar("A", "1D", "d04", 105, 106, 102, 103),
+        PriceBar("A", "1D", "d05", 103, 104, 96, 98),    # L1=96 (guard)
+        PriceBar("A", "1D", "d06", 98, 101, 97, 100),
+        PriceBar("A", "1D", "d07", 100, 103, 98, 102),
+        PriceBar("A", "1D", "d08", 102, 108, 101, 107),
+        PriceBar("A", "1D", "d09", 107, 114, 106, 112),  # H2=114 (progress)
+        PriceBar("A", "1D", "d10", 112, 111, 108, 109),
+        PriceBar("A", "1D", "d11", 109, 110, 106, 108),  # UP_ALIVE, bar_count=1
+    ]
+
+    for bar in bars_init:
+        snapshot = engine.on_bar(bar)
+
+    assert snapshot.system_state == SystemState.UP_ALIVE
+    assert snapshot.bar_count == 1
+
+    # Break (close < guard=96)
+    # Boundary: high=114 (progress), low=96 (guard)
+    bars_break = [
+        PriceBar("A", "1D", "d12", 108, 109, 90, 92),   # Break bar (close=92 < guard=96)
+    ]
+
+    for bar in bars_break:
+        snapshot = engine.on_bar(bar)
+
+    assert snapshot.system_state == SystemState.TRANSITION
+    assert snapshot.bar_count is None
+    # 记录 boundary
+    boundary_low = snapshot.transition_boundary_low  # 96
+    boundary_high = snapshot.transition_boundary_high  # 114
+
+    # Transition 演化：H0 candidate (120)，然后 L1 (80) 突破 boundary_low 触发 DOWN new wave
+    bars_new_wave = [
+        PriceBar("A", "1D", "d13", 92, 120, 91, 118),   # H0 extreme (120 > boundary_high=114，但这是 opposite pivot)
+        PriceBar("A", "1D", "d14", 118, 119, 115, 117),
+        PriceBar("A", "1D", "d15", 117, 118, 114, 116), # H0 confirm (candidate=120)
+        PriceBar("A", "1D", "d16", 116, 115, 90, 92),   # 中间 bar
+        PriceBar("A", "1D", "d17", 92, 93, 80, 82),     # L1 extreme (80 < boundary_low=96，opposite + 突破)
+        PriceBar("A", "1D", "d18", 82, 85, 81, 84),
+        PriceBar("A", "1D", "d19", 84, 87, 83, 86),     # L1 confirm → NEW WAVE (DOWN_ALIVE)
+    ]
+
+    for bar in bars_new_wave:
+        snapshot = engine.on_bar(bar)
+
+    # 验证 new wave 开始，bar_count 重置为 1
+    assert snapshot.system_state == SystemState.DOWN_ALIVE
+    assert snapshot.bar_count == 1
+
+    # 继续喂入 2 根 bars
+    bars_continue = [
+        PriceBar("A", "1D", "d20", 86, 88, 82, 84),     # bar_count=2
+        PriceBar("A", "1D", "d21", 84, 86, 80, 82),     # bar_count=3
+    ]
+
+    for i, bar in enumerate(bars_continue, start=2):
+        snapshot = engine.on_bar(bar)
+        assert snapshot.bar_count == i
