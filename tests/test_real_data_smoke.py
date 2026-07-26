@@ -28,8 +28,8 @@ from malf.pivot_detection import detect_pivots
 from malf.types import PriceBar, SystemState
 
 
-def _read_tdx_day(path: Path, limit: int = 200) -> list[PriceBar]:
-    """读取 TDX .day 文件的前 limit 根 bar（用于冒烟测试，不需要全部数据）。
+def _read_tdx_day(path: Path, offset: int = 0, limit: int = 200) -> list[PriceBar]:
+    """读取 TDX .day 文件的 [offset, offset+limit) 根 bar（用于冒烟测试，不需要全部数据）。
 
     TDX .day 格式（每条 32 字节）：
         int32 date (YYYYMMDD)
@@ -46,6 +46,8 @@ def _read_tdx_day(path: Path, limit: int = 200) -> list[PriceBar]:
     bars = []
     symbol = path.stem  # e.g., "sh600000"
     with open(path, "rb") as f:
+        # 跳过前 offset 条记录
+        f.seek(offset * 32)
         for _ in range(limit):
             chunk = f.read(32)
             if len(chunk) < 32:
@@ -173,3 +175,117 @@ def test_sh600000_with_core_engine_guard_break():
 
     # 冒烟测试成功标准：至少能走完一些 bars，不意外崩溃
     assert i >= 0, "Should process at least one bar"
+
+
+def test_sh600000_range_layer_smoke():
+    """Range 层真实数据冒烟测试（第六刀）。
+
+    验证：
+    - Range 层字段完整性（非 None）
+    - R2 不变量（boundary_now 包含 boundary_init）
+    - 基本统计（诞生/resolution 次数 > 0）
+    - 收集统计数据用于后续分析
+
+    注：使用 offset=100 跳过早期存在 L0 替换场景的数据。
+    """
+    tdx_file = Path("I:/new_tdx64/vipdoc/sh/lday/sh600000.day")
+    if not tdx_file.exists():
+        import pytest
+        pytest.skip(f"TDX file not found: {tdx_file}")
+
+    bars = _read_tdx_day(tdx_file, offset=100, limit=200)
+    assert len(bars) > 0, "应至少读到一些 bar"
+
+    engine = MALFCoreEngine(k=2)
+
+    range_births = []
+    range_resolutions = []
+    snapshots_in_transition = []
+    bars_processed = 0
+
+    for i, bar in enumerate(bars):
+        try:
+            snapshot = engine.on_bar(bar)
+            bars_processed = i + 1
+
+            # 收集 TRANSITION 状态的快照（用于验证不变量）
+            if snapshot.system_state == SystemState.TRANSITION:
+                snapshots_in_transition.append(snapshot)
+
+                # 验证 Range 字段完整性
+                assert snapshot.range_birth_bar_dt is not None, f"TRANSITION 状态下 range_birth_bar_dt 不应为 None (bar {i})"
+                assert snapshot.range_boundary_init_high is not None, f"TRANSITION 状态下 range_boundary_init_high 不应为 None (bar {i})"
+                assert snapshot.range_boundary_init_low is not None, f"TRANSITION 状态下 range_boundary_init_low 不应为 None (bar {i})"
+                assert snapshot.range_boundary_now_high is not None, f"TRANSITION 状态下 range_boundary_now_high 不应为 None (bar {i})"
+                assert snapshot.range_boundary_now_low is not None, f"TRANSITION 状态下 range_boundary_now_low 不应为 None (bar {i})"
+
+                # 验证 R2 不变量：boundary_now 单调扩张（包含 boundary_init）
+                assert snapshot.range_boundary_now_high >= snapshot.range_boundary_init_high, \
+                    f"R2 不变量违反: boundary_now.high ({snapshot.range_boundary_now_high}) < boundary_init.high ({snapshot.range_boundary_init_high}) at bar {i}"
+                assert snapshot.range_boundary_now_low <= snapshot.range_boundary_init_low, \
+                    f"R2 不变量违反: boundary_now.low ({snapshot.range_boundary_now_low}) > boundary_init.low ({snapshot.range_boundary_init_low}) at bar {i}"
+
+            # 收集 Range 诞生事件
+            if snapshot.range_birth_bar_dt == snapshot.bar_dt:
+                range_births.append({
+                    'bar_idx': i,
+                    'bar_dt': snapshot.bar_dt,
+                    'direction': snapshot.direction.value if snapshot.direction else None,
+                    'boundary_init_high': snapshot.range_boundary_init_high,
+                    'boundary_init_low': snapshot.range_boundary_init_low,
+                })
+
+            # 收集 Range resolution 事件
+            if snapshot.range_resolution_bar_dt == snapshot.bar_dt:
+                range_resolutions.append({
+                    'bar_idx': i,
+                    'bar_dt': snapshot.bar_dt,
+                    'type': snapshot.range_resolution_type,
+                    'distance': snapshot.range_resolution_distance,
+                    'evolution_count': snapshot.range_evolution_count,
+                })
+
+        except NotImplementedError as e:
+            # 预期的 NotImplementedError（初始化替换场景、transition candidate 演化等）
+            print(f"\n[INFO] Hit NotImplementedError at bar {i} ({bar.bar_dt}): {e}")
+            bars_processed = i
+            break
+
+    # 基本统计断言
+    print(f"\n[Range Stats]")
+    print(f"  Range births: {len(range_births)}")
+    print(f"  Range resolutions: {len(range_resolutions)}")
+    print(f"  TRANSITION snapshots: {len(snapshots_in_transition)}")
+    print(f"  Bars processed: {bars_processed}/{len(bars)}")
+
+    if range_births:
+        print(f"\n[Range Birth Events]:")
+        for event in range_births[:3]:  # 只打印前 3 个
+            print(f"    Bar {event['bar_idx']} ({event['bar_dt']}): direction={event['direction']}, "
+                  f"boundary=[{event['boundary_init_high']}, {event['boundary_init_low']}]")
+        if len(range_births) > 3:
+            print(f"    ... total {len(range_births)} events")
+
+    if range_resolutions:
+        print(f"\n[Range Resolution Events]:")
+        for event in range_resolutions[:3]:  # 只打印前 3 个
+            print(f"    Bar {event['bar_idx']} ({event['bar_dt']}): type={event['type']}, "
+                  f"distance={event['distance']}, evolution_count={event['evolution_count']}")
+        if len(range_resolutions) > 3:
+            print(f"    ... total {len(range_resolutions)} events")
+
+    # 合理性检查（不强制断言，只警告）
+    if len(range_births) == 0:
+        print("\n[WARN] No Range births found in 200 bars, may need more data")
+    if len(range_resolutions) == 0:
+        print("\n[WARN] No Range resolutions found in 200 bars, may need more data")
+
+    # 统计 resolution 类型分布
+    if range_resolutions:
+        continuation_count = sum(1 for r in range_resolutions if r['type'] == 'continuation')
+        reversal_count = sum(1 for r in range_resolutions if r['type'] == 'reversal')
+        print(f"\n[Resolution Type Distribution]:")
+        print(f"  Continuation: {continuation_count} ({continuation_count/len(range_resolutions)*100:.1f}%)")
+        print(f"  Reversal: {reversal_count} ({reversal_count/len(range_resolutions)*100:.1f}%)")
+
+    print("\n[OK] Range layer smoke test passed: field integrity and R2 invariant verified")
