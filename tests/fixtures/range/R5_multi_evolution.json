@@ -1,0 +1,92 @@
+{
+  "fixture_id": "R5_multi_evolution",
+  "description": "R5: 多次边界演化（3次演化验证累加逻辑）",
+  "purpose": "验证 R2 不变量：boundary_now 单调扩张，evolution_count 正确累加",
+  "spec_refs": ["MALF v2.1 Range §4", "R2 Invariant"],
+  "priority": "P1",
+
+  "params": {
+    "k": 2,
+    "pivot_detection_rule_version": "fractal-k2-v1",
+    "price_policy": "int_fixed"
+  },
+
+  "derivation_note": "设计 3 次真正的演化：L @ 85 < 96, H @ 125 > 120, L @ 80 < 85。确保每次都扩张边界。",
+
+  "input_bars": [
+    {"idx": 0,  "bar_dt": "d00", "open": 100, "high": 102, "low": 99,  "close": 101},
+    {"idx": 1,  "bar_dt": "d01", "open": 101, "high": 105, "low": 100, "close": 104},
+    {"idx": 2,  "bar_dt": "d02", "open": 104, "high": 110, "low": 103, "close": 108},
+    {"idx": 3,  "bar_dt": "d03", "open": 108, "high": 107, "low": 104, "close": 105},
+    {"idx": 4,  "bar_dt": "d04", "open": 105, "high": 106, "low": 102, "close": 103},
+    {"idx": 5,  "bar_dt": "d05", "open": 103, "high": 104, "low": 96,  "close": 98},
+    {"idx": 6,  "bar_dt": "d06", "open": 98,  "high": 101, "low": 97,  "close": 100},
+    {"idx": 7,  "bar_dt": "d07", "open": 100, "high": 103, "low": 98,  "close": 102},
+    {"idx": 8,  "bar_dt": "d08", "open": 102, "high": 115, "low": 101, "close": 113},
+    {"idx": 9,  "bar_dt": "d09", "open": 113, "high": 112, "low": 108, "close": 110},
+    {"idx": 10, "bar_dt": "d10", "open": 110, "high": 113, "low": 107, "close": 111},
+    {"idx": 11, "bar_dt": "d11", "open": 111, "high": 120, "low": 110, "close": 118},
+    {"idx": 12, "bar_dt": "d12", "open": 118, "high": 117, "low": 113, "close": 115},
+    {"idx": 13, "bar_dt": "d13", "open": 115, "high": 118, "low": 112, "close": 116},
+    {"idx": 14, "bar_dt": "d14", "open": 116, "high": 117, "low": 90,  "close": 92},
+    {"idx": 15, "bar_dt": "d15", "open": 92,  "high": 98,  "low": 86,  "close": 88},
+    {"idx": 16, "bar_dt": "d16", "open": 88,  "high": 100, "low": 85,  "close": 97},
+    {"idx": 17, "bar_dt": "d17", "open": 97,  "high": 125, "low": 95,  "close": 123},
+    {"idx": 18, "bar_dt": "d18", "open": 123, "high": 122, "low": 118, "close": 120},
+    {"idx": 19, "bar_dt": "d19", "open": 120, "high": 121, "low": 80,  "close": 82},
+    {"idx": 20, "bar_dt": "d20", "open": 82,  "high": 88,  "low": 79,  "close": 85}
+  ],
+
+  "input_pivots": [
+    {"pivot_type": "H", "price": 110, "extreme_bar_dt": "d02", "confirm_bar_dt": "d04"},
+    {"pivot_type": "L", "price": 96,  "extreme_bar_dt": "d05", "confirm_bar_dt": "d07"},
+    {"pivot_type": "H", "price": 115, "extreme_bar_dt": "d08", "confirm_bar_dt": "d10"},
+    {"pivot_type": "H", "price": 120, "extreme_bar_dt": "d11", "confirm_bar_dt": "d13"},
+    {"pivot_type": "L", "price": 90,  "extreme_bar_dt": "d14", "confirm_bar_dt": "d16"},
+    {"pivot_type": "L", "price": 85,  "extreme_bar_dt": "d16", "confirm_bar_dt": "d18"},
+    {"pivot_type": "H", "price": 125, "extreme_bar_dt": "d17", "confirm_bar_dt": "d19"},
+    {"pivot_type": "L", "price": 80,  "extreme_bar_dt": "d19", "confirm_bar_dt": "d21"}
+  ],
+
+  "check_points": ["d14", "d16", "d18", "d19"],
+
+  "expected_snapshots": {
+    "d14": {
+      "bar_dt": "d14",
+      "system_state": "transition",
+      "direction": "down",
+      "break_bar_dt": "d14",
+      "range_birth_bar_dt": "d14",
+      "range_boundary_init_high": 120,
+      "range_boundary_init_low": 96,
+      "range_boundary_now_high": 120,
+      "range_boundary_now_low": 96,
+      "range_evolution_count": 0
+    },
+    "d16": {
+      "bar_dt": "d16",
+      "system_state": "transition",
+      "range_evolution_count": 0,
+      "range_boundary_now_high": 120,
+      "range_boundary_now_low": 96
+    },
+    "d18": {
+      "bar_dt": "d18",
+      "system_state": "transition",
+      "range_evolution_count": 1,
+      "range_boundary_now_high": 120,
+      "range_boundary_now_low": 85,
+      "range_boundary_init_high": 120,
+      "range_boundary_init_low": 96
+    },
+    "d19": {
+      "bar_dt": "d19",
+      "system_state": "transition",
+      "range_evolution_count": 2,
+      "range_boundary_now_high": 125,
+      "range_boundary_now_low": 85,
+      "range_boundary_init_high": 120,
+      "range_boundary_init_low": 96
+    }
+  }
+}

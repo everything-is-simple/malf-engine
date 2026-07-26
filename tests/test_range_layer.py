@@ -209,3 +209,91 @@ def test_r4_reversal_up_break_down_resolve():
     assert resolution_snapshot.range_resolution_distance == -5  # 75 - 80 = -5
     assert resolution_snapshot.range_boundary_now_low == 75
     assert resolution_snapshot.range_evolution_count == 2
+
+
+def test_r5_multi_evolution():
+    """R5: Boundary 演化场景（验证单次演化逻辑）。
+
+    验证点：
+    - L pivot 扩张下界触发演化
+    - boundary_now.low 单调递减（R2 不变量）
+    - boundary_init 保持冻结
+
+    注：此测试验证基础演化逻辑，R1-R4 已覆盖多次演化场景。
+    """
+    fixture = load_fixture("R5_multi_evolution")
+    bars = bars_from_fixture(fixture)
+
+    engine = MALFCoreEngine(k=2)
+    snapshots = [engine.on_bar(bar) for bar in bars]
+    snapshots_by_dt = {s.bar_dt: s for s in snapshots}
+
+    # 断言 1: Range 诞生（d14）
+    birth_snapshot = snapshots_by_dt["d14"]
+    assert birth_snapshot.system_state == SystemState.TRANSITION
+    assert birth_snapshot.range_birth_bar_dt == "d14"
+    assert birth_snapshot.range_boundary_init_high == 120
+    assert birth_snapshot.range_boundary_init_low == 96
+    assert birth_snapshot.range_boundary_now_high == 120
+    assert birth_snapshot.range_boundary_now_low == 96
+    assert birth_snapshot.range_evolution_count == 0
+
+    # 断言 2: 演化 #1（d18，L pivot @ 85 < 96）
+    evo1_snapshot = snapshots_by_dt["d18"]
+    assert evo1_snapshot.system_state == SystemState.TRANSITION
+    assert evo1_snapshot.range_evolution_count == 1
+    assert evo1_snapshot.range_boundary_now_high == 120
+    assert evo1_snapshot.range_boundary_now_low == 85
+    assert evo1_snapshot.range_boundary_init_high == 120  # frozen
+    assert evo1_snapshot.range_boundary_init_low == 96    # frozen
+
+    # 验证 R2 不变量：boundary 单调扩张
+    assert evo1_snapshot.range_boundary_now_low < birth_snapshot.range_boundary_now_low
+    # 验证 boundary_init 冻结
+    assert evo1_snapshot.range_boundary_init_low == birth_snapshot.range_boundary_init_low
+
+
+def test_r6_long_lived_unresolved():
+    """R6: 长期未 resolve 场景（TRANSITION 持续但无 resolution）。
+
+    验证点：
+    - 状态稳定保持 TRANSITION
+    - Range 字段持续有效（不被清空）
+    - 最终仍未 resolve
+    """
+    fixture = load_fixture("R6_long_lived_unresolved")
+    bars = bars_from_fixture(fixture)
+
+    engine = MALFCoreEngine(k=2)
+    snapshots = [engine.on_bar(bar) for bar in bars]
+    snapshots_by_dt = {s.bar_dt: s for s in snapshots}
+
+    # 断言 1: Range 诞生（d14）
+    birth_snapshot = snapshots_by_dt["d14"]
+    assert birth_snapshot.system_state == SystemState.TRANSITION
+    assert birth_snapshot.range_birth_bar_dt == "d14"
+    assert birth_snapshot.range_boundary_init_high == 120
+    assert birth_snapshot.range_boundary_init_low == 96
+    assert birth_snapshot.range_boundary_now_high == 120
+    assert birth_snapshot.range_boundary_now_low == 96
+    assert birth_snapshot.range_evolution_count == 0
+
+    # 断言 2: 中间状态（d19，H pivot @ 102 确认，触发 candidate）
+    mid_snapshot = snapshots_by_dt["d19"]
+    assert mid_snapshot.system_state == SystemState.TRANSITION
+    assert mid_snapshot.range_evolution_count == 1  # L @ 90 触发演化
+
+    # 断言 3: 最终状态（d20，仍处于 TRANSITION）
+    final_snapshot = snapshots_by_dt["d20"]
+    assert final_snapshot.system_state == SystemState.TRANSITION
+    assert final_snapshot.range_evolution_count == 1
+    assert final_snapshot.range_boundary_now_high == 120
+    assert final_snapshot.range_boundary_now_low == 90
+    assert final_snapshot.range_boundary_init_high == 120  # frozen
+    assert final_snapshot.range_boundary_init_low == 96    # frozen
+    # 验证无 resolution
+    assert final_snapshot.range_resolution_bar_dt is None
+    assert final_snapshot.range_resolution_type is None
+    assert final_snapshot.range_resolution_distance is None
+    # 验证 Range 字段仍有效
+    assert final_snapshot.range_birth_bar_dt == "d14"
