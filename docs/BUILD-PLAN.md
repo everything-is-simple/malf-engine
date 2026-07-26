@@ -375,3 +375,82 @@ _（推 fixture 时若发现规格语义有洞，记在这里，别就地改规�
 达标后，才排第六刀（Range 层第一刀：boundary 计算 + range 状态机）。
 
 ---
+
+## 第六刀：Range 层（震荡区间一等公民）
+
+**目标**：实现 MALF v2.1 Range 层，将 transition 升格为"震荡区间"一等公民。
+
+**覆盖（v2.1 §2 Range）**：
+- §1：层职责（Range 有自己的边界、生命周期、户口、分类）
+- §2：Range 对象定义（两层边界：init/now）
+- §3：Boundary 演化 ⚠️ **核心设计**（两层边界模型 + 使用场景对照表）
+- §4-§5：Resolution 判定与 distance 计算
+- §6：Range 分类 ⚠️ **命名陷阱**（continuation 延续 break 方向，不是旧 wave 方向）
+- §7：不变量 R1-R5
+- §8：编号对照（与 v2.0 一致）
+- §9：测试覆盖要求（核心不变量 + 边界情况）
+
+**v2.1 关键变更（影响实现）**：
+- **两层边界模型**（§3）：Core 用 `boundary_init`（冻结），Range 用 `boundary_now`（演化）
+- **Boundary 使用场景对照表**：混用 init/now 会导致状态机不稳定或统计失真
+- **Resolution distance 公式明确**（§5）：使用 `confirmation_pivot.extreme_price` 和 `boundary_init`
+- **Continuation 命名陷阱警告**（§6）：continuation = 延续 break 方向，reversal = 反转 break 方向
+
+**实施指南**：`docs/T6-RANGE-IMPLEMENTATION-GUIDE.md`（Day -3 创建，3 小时）
+
+### Step 清单
+
+- [ ] **S6-1 推 6 个 fixture 预期输出**（4-6 小时，人肉推导 + debug_t6.py）
+  - Fixture 1: range_simple_continuation_up（UP → 下 break → 下突破）
+  - Fixture 2: range_simple_reversal_up（UP → 下 break → 上突破）
+  - Fixture 3: range_boundary_evolution（3 次演化）
+  - Fixture 4: range_unresolved_alive（50+ bar transition）
+  - Fixture 5: range_resolution_distance_extreme（正/负 distance）
+  - Fixture 6: range_continuation_down（DOWN → 上 break → 上突破）
+  - 复核铁律：窗口填充 >= k、严格不等式、工具辅助
+- [ ] S6-2 预期输出定稿存 JSON（2 小时，6 个 fixtures）
+- [ ] S6-3 写 Range 数据结构（1 小时）
+  - `src/malf/types.py::RangeSnapshot`（两层边界 + resolution 状态）
+  - `src/malf/version.py`（RANGE_RULE_VERSION = "v2.1.0"）
+- [ ] S6-4 写 boundary 演化逻辑（2 小时）
+  - `src/malf/range.py::MALFRangeEngine`
+  - `_evolve_boundary()`（仅使用已确认 pivot，R2）
+  - 单元测试：上边界扩展、下边界扩展、不扩展
+- [ ] S6-5 写 resolution 判定逻辑（2 小时）
+  - `_check_resolution()`（基于 Core new wave 确认）
+  - `_calculate_resolution_distance()`（v2.1 §5 公式）
+  - `_classify_range_type()`（continuation/reversal，§6 命名陷阱）
+  - 单元测试：4 种场景（UP/DOWN × continuation/reversal）
+- [ ] S6-6 写单元测试（3 小时，TDD RED）
+  - Range 创建（2 个：up/down break）
+  - Boundary 初始化与 Core 一致（R1）
+  - Boundary 演化（3 个：上/下/不扩展，R2）
+  - Range 不修改 Core boundary（R3）
+  - Resolution 冻结 Range（R4）
+  - Continuation/reversal 4 种场景
+- [ ] S6-7 端到端测试（2 小时，逐 bar 喂入，全等比对）
+  - `tests/test_t6_range_integration.py`
+  - 6 个 fixtures 全部通过（TDD GREEN）
+- [ ] S6-8 真实数据冒烟（1 小时）
+  - sh600000 前 200 根，Range 引擎稳定
+  - 记录 range 分布（continuation/reversal 数量、evolution_count 平均值）
+- [ ] S6-9 回补文档（1 小时）
+  - BUILD-PLAN.md 勾选完成
+  - `src/malf/range.py` docstring
+  - DAILY-LOG + T6-COMPLETION-SUMMARY.md
+
+### 完成标志
+
+第六刀 done = S6-7 绿（6 个 fixtures 通过）+ S6-8 无崩溃 + S6-9 文档更新。
+
+**预期成果**：
+- ✅ 测试总数：62+ passed, 1 skipped（Core 47 + Range 15+）
+- ✅ 不变量 R1-R4 有专门测试
+- ✅ Continuation 命名陷阱覆盖（4 种场景）
+- ✅ Range 引擎在真实数据上稳定
+
+**状态**：⏸ 未开始（Day -3 准备中）
+
+达标后，才排第七刀（Lifespan 层：双轨系统 + percentile_rank）。
+
+---
