@@ -303,3 +303,75 @@ _（推 fixture 时若发现规格语义有洞，记在这里，别就地改规�
 达标后，才排第五刀（Range 层或其他后续功能）。
 
 ---
+
+## 第五刀：Core 层闭合（Guard 更新 + bar_count + Replay 测试）
+
+**目标**：补齐 Core 层关键逻辑缺口，为 Range 层打下坚实基础。
+**覆盖**：D9 守护唯一性铁律、Wave bar_count 计算、O8 Replay 确定性验证。
+
+### Step 清单
+
+#### Task 1: Guard 更新逻辑（D9 守护唯一性铁律）
+
+- [x] **S5-T1-1 推导 fixture 预期输出**：人肉推导 guard 更新场景 ✅
+  - 场景 A：UP_ALIVE 状态下 L pivot 替换 guard
+  - 场景 B：DOWN_ALIVE 状态下 H pivot 替换 guard
+  - 交付物：`docs/t5_guard_update_derivation.md`
+- [x] S5-T1-2 写单元测试（TDD RED）：4 个测试场景 ✅
+  - `tests/test_guard_update.py`
+  - 注：Guard 逻辑在 DeepSeek 验收修复时已实现，测试直接通过（非标准 TDD 流程）
+- [x] S5-T1-3 实现 guard 更新逻辑（TDD GREEN）：已在前序提交中实现 ✅
+  - `_update_guard_if_valid()` 方法
+  - 对称实现 UP/DOWN 方向
+- [x] S5-T1-4 回归测试：38 passed, 1 skipped ✅
+- [x] S5-T1-5 文档回补：BUILD-PLAN.md 更新 ✅
+
+#### Task 2: Wave bar_count 计算
+
+- [x] **S5-T2-1 扩展数据结构**：添加 `bar_count` 字段到 `CoreStateSnapshot` ✅
+- [x] **S5-T2-2 写单元测试（TDD RED）**：5 个测试场景 ✅
+  - `tests/test_bar_count.py`
+  - 3 个测试 FAILED（预期行为）
+- [x] **S5-T2-3 实现 bar_count 计算（TDD GREEN）** ✅
+  - 添加 `_wave_start_bar_dt` 跟踪
+  - 在 `_make_snapshot()` 中计算 bar_count
+  - 初始化和 new wave 时设置 `_wave_start_bar_dt`
+  - 所有测试通过
+- [x] S5-T2-4 回归测试：43 passed, 1 skipped ✅
+
+#### Task 3: 第一条 Replay 确定性测试（O8 铁律验证）
+
+- [x] **S5-T3-1 设计 replay 测试场景**：文档化测试目标 ✅
+  - 交付物：`docs/t5_replay_test_design.md`
+  - 4 个场景设计（基础 replay、跨 session、fingerprint 隔离、版本验证）
+- [x] **S5-T3-2 写 replay 测试（TDD RED/GREEN）** ✅
+  - `tests/test_replay_determinism.py`
+  - 4 个测试全部 PASSED（未发现非确定性问题）
+- [x] S5-T3-3 修复非确定性问题（如需）：无需修复 ✅
+- [x] S5-T3-4 回归测试：47 passed, 1 skipped ✅
+
+### 完成标志
+
+第五刀 done = 以下全部达标：
+
+1. ✅ D9 守护唯一性铁律有专门测试验证（4 个测试）
+2. ✅ Wave bar_count 字段实现并通过测试（5 个测试）
+3. ✅ O8 至少 1 条 replay 确定性测试通过（4 个测试）
+4. ✅ 所有测试通过：47 passed, 1 skipped
+5. ✅ BUILD-PLAN.md 更新，标记第五刀完成
+
+**状态**：✅ **第五刀完成**
+- Guard 更新测试：4/4 PASSED
+- bar_count 测试：5/5 PASSED  
+- Replay 确定性测试：4/4 PASSED
+- 总测试：47 passed, 1 skipped, 0 failed
+
+**关键成果**：
+- ✅ 补上 D9 Guard 更新逻辑（alive 状态下回撤 pivot 替换 guard）
+- ✅ 实现 Wave bar_count 计算（为 Range 层提供持续时间）
+- ✅ 验证 O8 Replay 确定性（相同输入 → 相同输出，除审计元数据）
+- ✅ Core 层基础牢固，可以安全进入 Range 层
+
+达标后，才排第六刀（Range 层第一刀：boundary 计算 + range 状态机）。
+
+---
