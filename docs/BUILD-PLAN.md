@@ -68,6 +68,48 @@
 
 _（推 fixture 时若发现规格语义有洞，记在这里，别就地改规格——先记，评估后再动）_
 
-- ~~**S5 发现·down 方向初始化未验证**~~ → **第二刀已排期**：spec §2.4 写了 `L0→H1→L2, L2<L0`，结构上与 up 对称。补 down 方向 golden fixture + 实现（见第二刀 S2-1 至 S2-5）。
-- **S5 发现·【填洞 C-07】H0 替换后 L1 候选范围未定义**：spec 只说"更高的 H 可替换 H0，需重新评估条件"，没规定替换后能接受的 L1 候选是否受限（只认替换点之后的 L，还是任意更早的 L 都算）。当前遇到 H0 之后、L1 确认前的第二个 H 会显式报错。**待办**：需要用户/deepseek/规格作者对这条给出裁决，再补 fixture 实现。
-- **S5 发现·L1 替换未提及**：spec 对"L1 确认后、H2 确认前又出现更低的 L 是否替换 guard 候选"完全没有规定（不是 C-07 的范围，是全新的空白）。当前显式报错。**待办**：同上，需要裁决 + fixture。
+- ~~**S5 发现·down 方向初始化未验证**~~ → **第二刀已完成**：spec §2.4 写了 `L0→H1→L2, L2<L0`，结构上与 up 对称。补 down 方向 golden fixture + 实现（见第二刀 S2-1 至 S2-7）。
+- **S5 发现·【填洞 C-07】H0/L0 替换后候选范围未定义**：spec 只说"更高的 H 可替换 H0，需重新评估条件"，没规定替换后能接受的 L1/H1 候选是否受限（只认替换点之后的 L/H，还是任意更早的 L/H 都算）。当前遇到 H0/L0 之后、L1/H1 确认前的第二个 H/L 会显式报错。**待办**：需要用户/deepseek/规格作者对这条给出裁决，再补 fixture 实现。
+- **S5 发现·L1/H1 替换未提及**：spec 对"L1 确认后、H2 确认前又出现更低的 L 是否替换 guard 候选"完全没有规定（不是 C-07 的范围，是全新的空白）。对称地，"H1 确认后、L2 确认前又出现更高的 H"也未规定。当前显式报错。**待办**：同上，需要裁决 + fixture。
+
+---
+
+## 第三刀：Same-direction Break（同向突破 → transition）
+
+**目标**：从 `up_alive/down_alive` 走到 `transition`，实现 guard break（同向突破）。
+**覆盖**（规格 Core §2，v1.4 T3/T4 定义）：
+- up_alive 期间，价格向下突破 guard（LH break） → transition
+- down_alive 期间，价格向上突破 guard（HL break） → transition
+- transition 状态下 active candidate 演化（后续刀）
+
+### Step 清单
+
+- [ ] **S3-1 推 fixture 预期输出**：人肉推导 up_alive + guard break 序列。复核 BUILD-CONTRACT.md §5 铁律：
+  - 窗口填充：序列开头 >= k 根 bars（铁律 1）
+  - Pivot 确认：严格不等式 `>` / `<`（铁律 2）
+  - 工具辅助：debug 脚本验证 pivots（铁律 3）
+  - Break 条件：close 突破 guard（规格 §2 定义）
+  - 关键验证：
+    * 初始化：H0→L1→H2>H0 进入 up_alive（复用第一刀逻辑）
+    * Guard break：某根 bar 的 close < guard（LH break）
+    * 状态转换：system_state = transition
+    * Active candidate 初始化：第一个反向 pivot（后续刀完善）
+- [ ] S3-2 预期输出定稿存 `tests/fixtures/t3_same_direction_break_up.json`（X 根 bar，含窗口填充，JSON 自检通过）
+- [ ] S3-3 写单元测试：验证 guard break 检测逻辑（给定 up_alive + bar.close < guard → 返回 break=True）
+- [ ] S3-4 实现 guard break：
+  - 新增 `_check_guard_break()` 方法（对称 up/down）
+  - up_alive: bar.close < guard → transition（铁律 5：对称实现）
+  - down_alive: bar.close > guard → transition
+  - 显式 NotImplementedError：transition 后的 active candidate 演化（留给第四刀）
+- [ ] S3-5 端到端测试：`tests/test_t3_same_direction_break.py`，逐 bar 喂入，验证 up_alive → transition
+- [ ] S3-6 真实数据冒烟：sh600000 前 200 根，验证：
+  - 能触发 up_alive 或 down_alive（第一刀、第二刀已验证）
+  - 能触发 guard break → transition（或不触发，取决于实际序列）
+  - 无崩溃，guard break 逻辑在真实 OHLC 数据上稳定
+- [ ] S3-7 回补文档：BUILD-PLAN.md + 模块 docstring + DAILY-LOG-2026-07-27.md（或新日期）
+
+### 完成标志
+
+第三刀 done = S3-5 绿 + S3-6 无意外崩溃 + S3-7 文档更新。达标后，才排第四刀（transition 期间 active candidate 演化）。
+
+---
