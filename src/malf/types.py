@@ -100,6 +100,8 @@ class CoreStateSnapshot:
     # progress
     progress_extreme_price: Optional[int] = None
     progress_extreme_bar_dt: Optional[str] = None
+    # wave duration（第五刀：T2）
+    bar_count: Optional[int] = None  # Wave 持续 bar 数量，uninitialized 时为 None
     # transition（第四刀：D12 双边界 + O4/T5 active candidate）
     transition_boundary_high: Optional[int] = None
     transition_boundary_low: Optional[int] = None

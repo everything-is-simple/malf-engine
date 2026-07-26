@@ -57,6 +57,9 @@ class MALFCoreEngine:
         self._progress_extreme_price: Optional[int] = None
         self._progress_extreme_bar_dt: Optional[str] = None
 
+        # Wave duration tracking（第五刀 Task 2）
+        self._wave_start_bar_dt: Optional[str] = None  # Wave 开始的 bar_dt（初始化确认时设置）
+
         # Transition 相关信息（第四刀）
         self._transition_boundary_high: Optional[int] = None
         self._transition_boundary_low: Optional[int] = None
@@ -97,6 +100,7 @@ class MALFCoreEngine:
                 self._guard_confirm_bar_dt = self._init_result.guard_confirm_bar_dt
                 self._progress_extreme_price = self._init_result.progress_extreme_price
                 self._progress_extreme_bar_dt = self._init_result.progress_extreme_bar_dt
+                self._wave_start_bar_dt = bar.bar_dt  # 第五刀 Task 2: 记录 wave 开始时间
 
                 if self._direction == Direction.UP:
                     self._system_state = SystemState.UP_ALIVE
@@ -339,6 +343,7 @@ class MALFCoreEngine:
         # 更新方向和状态
         self._direction = new_direction
         self._wave_core_state = WaveCoreState.ALIVE
+        self._wave_start_bar_dt = confirmation_pivot.confirm_bar_dt  # 第五刀 Task 2: 重置 wave 开始时间
 
         # 清空 transition 字段
         self._transition_boundary_high = None
@@ -359,6 +364,21 @@ class MALFCoreEngine:
         Returns:
             CoreStateSnapshot: 状态快照
         """
+        # 计算 bar_count（第五刀 Task 2）
+        bar_count = None
+        if self._wave_start_bar_dt is not None:
+            # 计算从 wave 开始到当前 bar 的数量
+            start_idx = None
+            current_idx = None
+            for i, b in enumerate(self._bars):
+                if b.bar_dt == self._wave_start_bar_dt:
+                    start_idx = i
+                if b.bar_dt == bar.bar_dt:
+                    current_idx = i
+
+            if start_idx is not None and current_idx is not None:
+                bar_count = current_idx - start_idx + 1
+
         if self._system_state == SystemState.UNINITIALIZED:
             return CoreStateSnapshot(
                 symbol=bar.symbol,
@@ -380,6 +400,7 @@ class MALFCoreEngine:
                 current_effective_guard_confirm_bar_dt=self._guard_confirm_bar_dt,
                 progress_extreme_price=self._progress_extreme_price,
                 progress_extreme_bar_dt=self._progress_extreme_bar_dt,
+                bar_count=bar_count,  # 第五刀 Task 2: 添加 bar_count
                 # Transition 字段（第四刀）
                 transition_boundary_high=self._transition_boundary_high,
                 transition_boundary_low=self._transition_boundary_low,
