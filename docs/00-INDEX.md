@@ -12,6 +12,7 @@
 👉 **然后**: [`guide/API.md`](guide/API.md) - API 参考
 
 ### 我要继续开发 ⭐
+👉 **工作流程**: [`dev/AI-TASK-WORKFLOW.md`](dev/AI-TASK-WORKFLOW.md) - 任务执行 SOP（新手必读）  
 👉 **主文档**: [`dev/BUILD-PLAN.md`](dev/BUILD-PLAN.md) - 当前开发计划（活文档）  
 👉 **开发指引**: [`../CLAUDE.md`](../CLAUDE.md) - AI 助手工作指引  
 👉 **规格查询**: [`spec/MALF_V2_1_AUTHORITY_REFERENCE.md`](spec/MALF_V2_1_AUTHORITY_REFERENCE.md)
@@ -41,6 +42,7 @@ docs/
 │   └── RANGE-LAYER-GUIDE.md                 # Range 层使用指南
 │
 ├── dev/                     🔧 开发指南（当前工作）⭐
+│   ├── AI-TASK-WORKFLOW.md                  # AI 助手任务执行 SOP（新手必读）
 │   ├── BUILD-PLAN.md                        # 当前开发计划（活文档）
 │   ├── C07-RULE-ANALYSIS.md                 # C-07 规则分析
 │   └── REVISION-CHECKLIST.md                # 修订检查清单
@@ -81,9 +83,10 @@ docs/
 
 ### Q: 我要开始新功能，从哪里开始？
 **A**: 
-1. 阅读 [`dev/BUILD-PLAN.md`](dev/BUILD-PLAN.md) 了解当前进度
-2. 查看 [`spec/BUILD-CONTRACT.md`](spec/BUILD-CONTRACT.md) 确认验收标准
-3. 参考 [`archive/tasks/`](archive/tasks/) 中相关任务的实现方式
+1. **先看**: [`dev/AI-TASK-WORKFLOW.md`](dev/AI-TASK-WORKFLOW.md) 了解任务执行流程
+2. 阅读 [`dev/BUILD-PLAN.md`](dev/BUILD-PLAN.md) 了解当前进度
+3. 查看 [`spec/BUILD-CONTRACT.md`](spec/BUILD-CONTRACT.md) 确认验收标准
+4. 参考 [`archive/tasks/`](archive/tasks/) 中相关任务的实现方式
 
 ### Q: 规格中的某个编号（如 D18）在哪里？
 **A**: 查看 [`spec/MALF_V2_1_AUTHORITY_REFERENCE.md`](spec/MALF_V2_1_AUTHORITY_REFERENCE.md)
@@ -99,6 +102,9 @@ docs/
 
 ### Q: 真实数据验证结果在哪里？
 **A**: 查看 [`reports/range/RANGE-REAL-DATA-VALIDATION-COMPLETE.md`](reports/range/RANGE-REAL-DATA-VALIDATION-COMPLETE.md)
+
+### Q: AI 助手接到任务后应该怎么做？
+**A**: 查看 [`dev/AI-TASK-WORKFLOW.md`](dev/AI-TASK-WORKFLOW.md) - 按任务类型（写代码/修规格/调试/整理文档）有不同的执行流程
 
 ---
 
