@@ -120,7 +120,7 @@ I:\\asteria-riskbench-Definitive-validated\\MALF_Definitive_v2_1-deepseek-202607
 ## 下一步
 
 ### Day -1 任务（P0-1 + P1-2 + P2-1）
-- **P0-1：** 类型名重命名（WaveProbabilitySnapshot → WaveStructuralSnapshot）
+- **P0-1：** 类型名重命名（WaveStructuralSnapshot → WaveStructuralSnapshot）
 - **P1-2：** 补充 Range 数据结构到 types.py
 - **P2-1：** 创建 version.py
 

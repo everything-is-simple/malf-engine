@@ -4,7 +4,7 @@
 
 ## 项目概述
 
-**malf-engine** 是 Asteria RiskBench 系统的 MALF v2.0 结构计算核心。吃 OHLC 价格数据，吐 `WaveProbabilitySnapshot` 结构。引擎设计为确定性、单遍、**零外部依赖**（纯 Python 3.10+ 标准库）。
+**malf-engine** 是 Asteria RiskBench 系统的 MALF v2.1 结构计算核心。吃 OHLC 价格数据，吐 `WaveStructuralSnapshot` 结构。引擎设计为确定性、单遍、**零外部依赖**（纯 Python 3.10+ 标准库）。
 
 **关键约束**：领域核心零外部依赖，以保证 replay 确定性（spec §7.4, O8）。永远不要建议在核心引擎中添加 numpy、pandas 或任何外部库——不同版本/平台的 float 精度变化会破坏 `lineage_hash` 的 replay 校验。
 

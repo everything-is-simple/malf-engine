@@ -844,7 +844,7 @@ def test_sh600000_range_engine_smoke():
 
 ### 11.3 前置任务完成
 
-- [ ] **P0-1**：类型名重命名（WaveProbabilitySnapshot → WaveStructuralSnapshot）
+- [ ] **P0-1**：类型名重命名（WaveStructuralSnapshot → WaveStructuralSnapshot）
 - [ ] **P0-2**：v2.1 文档引用说明（core_engine.py docstring）
 - [ ] **P2-3**：BUILD-PLAN.md 增加 v2.1 章节映射
 

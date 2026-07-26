@@ -21,14 +21,14 @@
 ### P0-1：类型名重命名（第六刀前）
 
 **问题：**  
-当前代码使用 v2.0 命名 `WaveProbabilitySnapshot`，与 v2.1 权威定义不一致。
+当前代码使用 v2.0 命名 `WaveStructuralSnapshot`，与 v2.1 权威定义不一致。
 
 **影响范围：**
 1. `src/malf/types.py` - 类型定义
    ```python
    # 当前（v2.0）
    @dataclass
-   class WaveProbabilitySnapshot:
+   class WaveStructuralSnapshot:
        ...
    
    # 需要改为（v2.1）
@@ -40,13 +40,13 @@
 2. `src/malf/core_engine.py` - 类型引用
    ```python
    # 需要全局替换
-   WaveProbabilitySnapshot → WaveStructuralSnapshot
+   WaveStructuralSnapshot → WaveStructuralSnapshot
    ```
 
 3. `tests/` 所有测试文件 - 类型引用
    ```bash
    # 需要批量替换（约 47 个测试文件）
-   grep -r "WaveProbabilitySnapshot" tests/ --files-with-matches
+   grep -r "WaveStructuralSnapshot" tests/ --files-with-matches
    ```
 
 4. `tests/fixtures/*.json` - 可能包含类型名字符串
@@ -60,7 +60,7 @@
 **验收标准：**
 ```bash
 # 1. 类型名全部替换
-grep -r "WaveProbabilitySnapshot" src/ tests/ | wc -l  # 应该为 0
+grep -r "WaveStructuralSnapshot" src/ tests/ | wc -l  # 应该为 0
 
 # 2. 新类型名可找到
 grep -r "WaveStructuralSnapshot" src/ tests/ | wc -l  # 应该 > 0
@@ -94,7 +94,7 @@ MALF Core Engine - 结构状态机
 - 设计基于：MALF v2.0 Definitive (claude-20260616)
 - 权威定义：MALF v2.1 Definitive (deepseek-20260726)
 - 语义兼容性：v2.1 与 v2.0 完全等价（v2.1 是清晰表达版本）
-- 命名差异：WaveProbabilitySnapshot（v2.0）→ WaveStructuralSnapshot（v2.1）
+- 命名差异：WaveStructuralSnapshot（v2.0）→ WaveStructuralSnapshot（v2.1）
 
 v2.1 权威文档：
 I:\\asteria-riskbench-Definitive-validated\\MALF_Definitive_v2_1-deepseek-20260726\\

@@ -220,7 +220,7 @@ cd /i/asteria-riskbench-components/malf-engine
 ### ⏸ 待第六刀
 
 以下修订将在第六刀（Range 层）开工前统一执行：
-- [ ] 类型名重命名（WaveProbabilitySnapshot → WaveStructuralSnapshot，当前代码未使用此类型）
+- [ ] 类型名重命名（WaveStructuralSnapshot → WaveStructuralSnapshot，当前代码未使用此类型）
 - [ ] 补充 Range 数据结构（RangeSnapshot）
 - [ ] 创建 version.py 常量文件
 - [ ] 创建 T6-RANGE-IMPLEMENTATION-GUIDE.md
@@ -229,11 +229,11 @@ cd /i/asteria-riskbench-components/malf-engine
 
 ## 关键发现
 
-### 1. 当前代码未使用 WaveProbabilitySnapshot
+### 1. 当前代码未使用 WaveStructuralSnapshot
 
 **发现：**
 - 当前 malf-engine 只实现了 Core 层
-- 代码中只有 CoreStateSnapshot，没有 WaveProbabilitySnapshot
+- 代码中只有 CoreStateSnapshot，没有 WaveStructuralSnapshot
 - 因此不需要立即执行类型名重命名
 
 **结论：**

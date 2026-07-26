@@ -12,7 +12,7 @@
 
 ## 1. 造什么（范围）
 
-一个 Python 包，吃 OHLC（PriceBar 序列），吐 `WaveStructuralSnapshot`（v2.1 命名，原 `WaveProbabilitySnapshot`）。五层：
+一个 Python 包，吃 OHLC（PriceBar 序列），吐 `WaveStructuralSnapshot`（v2.1 命名，原 `WaveStructuralSnapshot`）。五层：
 Core → Range → Lifespan → Structural Position → Service。全部行为定义在规格，本包只实现。
 
 **命名变更（v2.1）**：Probability 层 → Structural Position 层，因为该层不输出概率，输出结构位置（rank 透传 + 向量差 + 比较标签）。

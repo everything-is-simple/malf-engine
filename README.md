@@ -14,7 +14,7 @@ MALF v2.1 结构计算核心。吃 OHLC，吐 `WaveStructuralSnapshot`。确定�
 | `docs/IMPLEMENTATION-CONTRACT-PATCH.md` | 实现合同补丁：第 4A/4B 层立法参考（第 1-3 层已回写 v2.1） | TDD 前必读 |
 
 > **v2.1 更新（2026-07-26）**：权威定义已从 v2.0 升级到 v2.1 Definitive（DeepSeek 起草/Claude 审核/东西南北中认定）。  
-> v2.1 与 v2.0 语义等价，是"清晰表达版本"。核心变更：Probability 层 → Structural Position 层，WaveProbabilitySnapshot → WaveStructuralSnapshot。  
+> v2.1 与 v2.0 语义等价，是"清晰表达版本"。核心变更：Probability 层 → Structural Position 层，快照类型名已重命名为 WaveStructuralSnapshot。  
 > **当前实现状态：** Core 层已完成（47 passed），基于 v2.0 命名。第六刀（Range 层）开工前将统一重命名为 v2.1 命名。
 
 > 本 README 与 BUILD-* 都**不复述规范**，只指向。行为的真正规格活在规格文档 + `tests/fixtures/` 的 golden fixture 里。

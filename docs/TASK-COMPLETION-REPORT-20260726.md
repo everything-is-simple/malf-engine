@@ -82,7 +82,7 @@
 
 **修改内容：**
 1. 标题：MALF v2.0 → MALF v2.1
-2. 快照类型名：WaveProbabilitySnapshot → WaveStructuralSnapshot
+2. 快照类型名：WaveStructuralSnapshot → WaveStructuralSnapshot
 3. 文档引用：指向 `docs/MALF_V2_1_AUTHORITY_REFERENCE.md`
 4. 增加 v2.1 更新说明框
 5. 更新当前进度：Core 层五刀已完成，47 passed
@@ -95,7 +95,7 @@
 1. 规格权威：指向 v2.1 Definitive 目录
 2. 增加 v2.1 与 v2.0 关系说明
 3. 修正层名：Probability → Structural Position
-4. 修正快照类型名：WaveProbabilitySnapshot → WaveStructuralSnapshot
+4. 修正快照类型名：WaveStructuralSnapshot → WaveStructuralSnapshot
 
 **状态：** ✅ 完成
 
@@ -121,7 +121,7 @@
 
 **P0 级（阻塞性修订）：2 项**
 1. P0-1：类型名重命名（第六刀前）
-   - WaveProbabilitySnapshot → WaveStructuralSnapshot
+   - WaveStructuralSnapshot → WaveStructuralSnapshot
    - 影响范围：types.py, core_engine.py, tests/, fixtures/
    - 预计工作量：30 分钟
    - 验收标准：明确的 grep 命令
@@ -208,7 +208,7 @@
 
 **命名修正的必要性：**
 - Probability → Structural Position：避免"输出概率"的误导
-- WaveProbabilitySnapshot → WaveStructuralSnapshot：与层名对齐
+- WaveStructuralSnapshot → WaveStructuralSnapshot：与层名对齐
 - 这是 v2.1 最重要的改进，消除了长期的命名混淆
 
 ### 2. malf-engine 当前状态评估

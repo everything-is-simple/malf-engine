@@ -41,7 +41,7 @@
 | v2.0 | v2.1 | 理由 |
 |------|------|------|
 | Probability 层 | Structural Position 层 | 不输出概率，输出结构位置 |
-| WaveProbabilitySnapshot | WaveStructuralSnapshot | 快照类型名与层名对齐 |
+| WaveStructuralSnapshot | WaveStructuralSnapshot | 快照类型名与层名对齐 |
 
 **对 malf-engine 的影响：**
 - 类型名需要重命名（可在第六刀统一处理）
@@ -212,7 +212,7 @@ IMPLEMENTATION-CONTRACT-PATCH 的第 1-3 层（21条）已全部回写入 v2.1 �
 
 | 模块 | v2.1 定义章节 | 状态 |
 |------|--------------|------|
-| `src/malf/types.py::WaveProbabilitySnapshot` | Service §2-§3 | 🔄 需重命名为 WaveStructuralSnapshot |
+| `src/malf/types.py::WaveStructuralSnapshot` | Service §2-§3 | 🔄 需重命名为 WaveStructuralSnapshot |
 | Service 组装逻辑 | Service §4-§8 | ⏸ 待第九刀完成 |
 
 **需要补充（v2.1 明确）：**
@@ -243,7 +243,7 @@ IMPLEMENTATION-CONTRACT-PATCH 的第 1-3 层（21条）已全部回写入 v2.1 �
 ```python
 # src/malf/types.py
 @dataclass
-class WaveProbabilitySnapshot:  # ← 需要改名
+class WaveStructuralSnapshot:  # ← 需要改名
     ...
 ```
 

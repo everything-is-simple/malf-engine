@@ -56,7 +56,7 @@
 **关键决策：**
 - 代码逻辑无需变更（v2.1 与 v2.0 语义等价）
 - 只更新 docstring 指向 v2.1 文档
-- 类型名重命名推迟到第八刀（当前代码未使用 WaveProbabilitySnapshot）
+- 类型名重命名推迟到第六刀准备阶段（Day -1 任务）
 
 ---
 
@@ -145,7 +145,7 @@
 | v2.0 | v2.1 | 理由 |
 |------|------|------|
 | Probability 层 | Structural Position 层 | 不输出概率，输出结构位置 |
-| WaveProbabilitySnapshot | WaveStructuralSnapshot | 与层名对齐 |
+| WaveStructuralSnapshot | WaveStructuralSnapshot | 与层名对齐 |
 
 ### 补丁回写（21 条）
 

@@ -107,7 +107,7 @@ S6-1 至 S6-9 的 9 个步骤：
 - [ ] **P0-2**：补充 core_engine.py docstring 版本说明（20 分钟）
 
 ### Day -1（开工前 1 天）
-- [ ] **P0-1**：类型名重命名（WaveProbabilitySnapshot → WaveStructuralSnapshot，30 分钟）
+- [ ] **P0-1**：类型名重命名（WaveStructuralSnapshot → WaveStructuralSnapshot，30 分钟）
 - [ ] **P1-2**：补充 Range 数据结构到 types.py（1 小时）
 - [ ] **P2-1**：创建 version.py（15 分钟）
 
