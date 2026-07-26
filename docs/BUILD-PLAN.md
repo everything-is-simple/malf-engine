@@ -29,10 +29,39 @@
 
 ---
 
+---
+
+## 第二刀：Down 方向初始化（T2 转换）
+
+**目标**：实现 `uninitialized → down_alive` 转换，补全下跌初始化序列（D7）：`L0→H1→L2, L2<L0`。  
+**覆盖**（规格 Core §2，v1.4 T2 定义）：down 方向 3-pivot 序列、初始 guard=H1、progress=L2、对称 up 方向逻辑。
+
+### Step 清单
+
+- [x] **S2-1 推 down 方向 fixture**：构造 `L0(100)→H1(115)→L2(95)` 序列（8 根 bar，k=2），人肉推导每根 snapshot。关键验证：
+  - L2 < L0（95 < 100）触发初始化
+  - `wave_start_price = L2.confirmation_price = 95`（对齐 L4-2 裁决）
+  - `wave_start_bar_dt = L2.confirm_bar_dt`（对齐 C-18 消歧）
+  - `guard_price = H1.confirmation_price = 115`
+  - `progress_extreme = L2` 
+- [x] S2-2 fixture 定稿存 `tests/fixtures/t2_down_initialization.json`
+- [x] S2-3 写测试 `tests/test_t2_down_initialization.py`：加载 fixture，断言 `system_state=down_alive`、`direction=down`、`wave_start_price=95`、`guard_price=115`。测试已完成，复用第一刀的端到端模式
+- [x] **S2-4 实现 down 初始化**：
+  - `find_initial_wave()` 补全 down 分支（对称 up 逻辑，不等号反向）
+  - Down 方向逻辑：L0→H1→L2, L2<L0 触发 down_alive
+  - 删除了 down 方向的 `NotImplementedError`
+- [ ] S2-5 验收：`test_t2_down_initialization.py` 通过 + 全量测试（预期 17 passed, 1 skipped）
+
+### 完成标志
+
+第二刀 done = S2-5 全绿 + 无回归。达标后开第三刀（same-direction break）。
+
+---
+
 ## 已发现待处理（滚动记录）
 
 _（推 fixture 时若发现规格语义有洞，记在这里，别就地改规格——先记，评估后再动）_
 
-- **S5 发现·down 方向初始化未验证**：spec §2.4 写了 `L0→H1→L2, L2<L0`，结构上与 up 对称，但目前只有 up 方向的 golden fixture。`find_initial_wave` 遇到 down 序列会显式 `NotImplementedError`，不凭"看起来对称"实现。**待办**：补一条 down 方向 golden fixture 再实现。
+- ~~**S5 发现·down 方向初始化未验证**~~ → **第二刀已排期**：spec §2.4 写了 `L0→H1→L2, L2<L0`，结构上与 up 对称。补 down 方向 golden fixture + 实现（见第二刀 S2-1 至 S2-5）。
 - **S5 发现·【填洞 C-07】H0 替换后 L1 候选范围未定义**：spec 只说"更高的 H 可替换 H0，需重新评估条件"，没规定替换后能接受的 L1 候选是否受限（只认替换点之后的 L，还是任意更早的 L 都算）。当前遇到 H0 之后、L1 确认前的第二个 H 会显式报错。**待办**：需要用户/deepseek/规格作者对这条给出裁决，再补 fixture 实现。
 - **S5 发现·L1 替换未提及**：spec 对"L1 确认后、H2 确认前又出现更低的 L 是否替换 guard 候选"完全没有规定（不是 C-07 的范围，是全新的空白）。当前显式报错。**待办**：同上，需要裁决 + fixture。

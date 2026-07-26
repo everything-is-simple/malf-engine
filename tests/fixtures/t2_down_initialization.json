@@ -1,0 +1,51 @@
+{
+  "fixture_id": "t2_down_initialization",
+  "purpose": "第二刀：从 uninitialized 走到 initial down wave 确认（down_alive）。覆盖 T2 转换（v1.4 定义）、下跌初始化序列 D7：L0→H1→L2, L2<L0。",
+  "spec_refs": ["Core §2.4 pivot检测/初始化", "Core §2.5 状态机", "v1.4 D7 下跌结构", "v1.4 T2 转换", "L4-2 裁决", "C-18 消歧"],
+  "params": {
+    "k": 2,
+    "pivot_detection_rule_version": "fractal-k2-v1",
+    "price_policy": "int_fixed"
+  },
+  "derivation_note": "预期输出人肉按 spec §2 推导，对称 up 方向逻辑。L2 < L0 触发初始化。wave_start_price = L2.confirmation_price（L4-2）。wave_start_bar_dt = L2.confirm_bar_dt（C-18）。first guard = H1。",
+  "scope_note": "本 fixture 只断言到 d08（down_alive 成立）。d08 之后的潜在 pivot / break / transition 不在本 fixture 断言范围。",
+
+  "input_bars": [
+    {"idx": 0, "bar_dt": "2024-01-01T09:00:00", "open": 105, "high": 107, "low": 100, "close": 102},
+    {"idx": 1, "bar_dt": "2024-01-01T09:05:00", "open": 102, "high": 110, "low": 101, "close": 108},
+    {"idx": 2, "bar_dt": "2024-01-01T09:10:00", "open": 108, "high": 112, "low": 107, "close": 111},
+    {"idx": 3, "bar_dt": "2024-01-01T09:15:00", "open": 111, "high": 115, "low": 110, "close": 113},
+    {"idx": 4, "bar_dt": "2024-01-01T09:20:00", "open": 113, "high": 114, "low": 108, "close": 109},
+    {"idx": 5, "bar_dt": "2024-01-01T09:25:00", "open": 109, "high": 110, "low": 95, "close": 96},
+    {"idx": 6, "bar_dt": "2024-01-01T09:30:00", "open": 96, "high": 100, "low": 94, "close": 99},
+    {"idx": 7, "bar_dt": "2024-01-01T09:35:00", "open": 99, "high": 102, "low": 98, "close": 101}
+  ],
+
+  "expected_pivots": [
+    {"pivot_type": "L", "label": "L0", "price": 100, "extreme_bar_dt": "2024-01-01T09:00:00", "confirm_bar_dt": "2024-01-01T09:10:00"},
+    {"pivot_type": "H", "label": "H1", "price": 115, "extreme_bar_dt": "2024-01-01T09:15:00", "confirm_bar_dt": "2024-01-01T09:25:00"},
+    {"pivot_type": "L", "label": "L2", "price": 95, "extreme_bar_dt": "2024-01-01T09:25:00", "confirm_bar_dt": "2024-01-01T09:35:00"}
+  ],
+
+  "expected_snapshots": [
+    {"bar_dt": "2024-01-01T09:00:00", "system_state": "uninitialized", "direction": null, "note": "L0 极值发生于此（bar0.low=100），但窗口不足"},
+    {"bar_dt": "2024-01-01T09:05:00", "system_state": "uninitialized", "direction": null, "note": "L0 右侧第1根"},
+    {"bar_dt": "2024-01-01T09:10:00", "system_state": "uninitialized", "direction": null, "note": "确认 L0（extreme=bar0, price=100）；仅有首个 L，初始化序列未齐"},
+    {"bar_dt": "2024-01-01T09:15:00", "system_state": "uninitialized", "direction": null, "note": "H1 极值发生于此（bar3.high=115）"},
+    {"bar_dt": "2024-01-01T09:20:00", "system_state": "uninitialized", "direction": null, "note": "H1 右侧第1根"},
+    {"bar_dt": "2024-01-01T09:25:00", "system_state": "uninitialized", "direction": null, "note": "确认 H1（extreme=bar3, price=115）；L0→H1 就位，仍差 L2。同时 L2 极值发生于此（bar5.low=95）"},
+    {"bar_dt": "2024-01-01T09:30:00", "system_state": "uninitialized", "direction": null, "note": "L2 右侧第1根"},
+    {
+      "bar_dt": "2024-01-01T09:35:00",
+      "system_state": "down_alive",
+      "direction": "down",
+      "wave_core_state": "alive",
+      "current_effective_guard_price": 115,
+      "current_effective_guard_extreme_bar_dt": "2024-01-01T09:15:00",
+      "current_effective_guard_confirm_bar_dt": "2024-01-01T09:25:00",
+      "progress_extreme_price": 95,
+      "progress_extreme_bar_dt": "2024-01-01T09:25:00",
+      "note": "确认 L2<L0（95<100, extreme=bar5, confirm=bar7）→ initial down wave 成立（T2转换）。first guard=H1（115）。wave_start_price=95（L4-2），wave_start_bar_dt=bar7（C-18）。核心断言。"
+    }
+  ]
+}
