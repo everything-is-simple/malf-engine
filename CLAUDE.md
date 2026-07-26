@@ -76,13 +76,13 @@ pytest tests/test_initialization.py::test_up_direction_clean_sequence
 
 1. **Spec**（WHAT）：`../../asteria-riskbench/new-docs/MALF_v2.0_引擎规格_定稿.md` — 所有规则、公式、字段、编号的唯一真相源。永远不要在代码或文档中复述规格内容。
 
-2. **BUILD-CONTRACT.md**（稳定）：范围、非目标、验收标准。极少改动。
+2. **BUILD-CONTRACT.md**（稳定）：范围、非目标、验收标准。极少改动。**§5 经验教训**：第一刀、第二刀累积的 7 条铁律，第三刀起强制遵循。
 
 3. **BUILD-PLAN.md**（活的）：当前这一刀的 step 清单。每天更新。
 
 4. **IMPLEMENTATION-CONTRACT-PATCH.md**（实施）：deepseek 审计的 43 条缺口闭合。包含勘误、还原、消歧、立法四层。TDD 前必读。
 
-**实现时**：参考 spec 查行为规则。查 BUILD-PLAN.md 了解已知空白和 NotImplementedError 位置。查 IMPLEMENTATION-CONTRACT-PATCH.md 了解规格缺口的闭合决策。不要实现推测性功能——只做 golden fixture 驱动的部分。
+**实现时**：参考 spec 查行为规则。查 BUILD-PLAN.md 了解已知空白和 NotImplementedError 位置。查 IMPLEMENTATION-CONTRACT-PATCH.md 了解规格缺口的闭合决策。**查 BUILD-CONTRACT.md §5 了解必须遵循的铁律**（fixture 设计、TDD 流程、真实数据验证、文档回补）。不要实现推测性功能——只做 golden fixture 驱动的部分。
 
 ## 编码原则
 
