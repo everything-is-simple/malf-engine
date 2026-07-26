@@ -1,9 +1,13 @@
-"""MALF Core 最小数据结构（S3）。
+"""MALF 数据结构定义。
 
-规格权威：spec §2.2（D1 PriceBar / D2 Pivot）、§2.9（CoreStateSnapshot 字段）。
+规格权威：MALF v2.1 Definitive (deepseek-20260726)
+- Core 层：v2.1 §1 Core（D1 PriceBar / D2 Pivot / §9 CoreStateSnapshot）
+- 版本兼容：v2.1 与 v2.0 语义等价（v2.1 是清晰表达版本）
+- 命名变更：Probability → Structural Position（v2.1 重命名，本模块未来会扩展）
+
 本文件只定义数据的形状，不含任何状态机逻辑。纯 stdlib dataclass + enum。
 
-价格为整数（int_fixed，spec §7.1）——领域核心不出现 float，从根上规避 float 精度问题。
+价格为整数（int_fixed，v2.1 Core §9）——领域核心不出现 float，从根上规避 float 精度问题。
 """
 
 from __future__ import annotations
@@ -73,14 +77,21 @@ class Pivot:
 
 @dataclass(frozen=True)
 class CoreStateSnapshot:
-    """§2.9 O7 逐 bar 发布契约。
+    """Core 层状态快照（v2.1 Core §9）。
 
-    第一刀（uninitialized → up_alive）：最小字段集
-    第二刀（uninitialized → down_alive）：对称实现
-    第三刀（guard break → transition）：system_state = transition
-    第四刀（transition 演化）：transition_* 和 active_candidate_* 字段
+    实现进度：
+    - 第一刀（uninitialized → up_alive）：最小字段集 ✅
+    - 第二刀（uninitialized → down_alive）：对称实现 ✅
+    - 第三刀（guard break → transition）：system_state = transition ✅
+    - 第四刀（transition 演化）：transition_* 和 active_candidate_* 字段 ✅
+    - 第五刀（guard 更新 + bar_count + replay）：D9 守护更新 + O8 确定性 ✅
 
-    version 字段组含 runtime_fingerprint（L4-6，审计用，不进 lineage_hash）。
+    v2.1 对应：
+    - 本快照对应 v2.1 Core §9 的完整字段
+    - 未来会被 WaveStructuralSnapshot 包装（v2.1 Service §2）
+    - WaveStructuralSnapshot = Core + Range + Lifespan + Structural Position
+
+    version 字段组含 runtime_fingerprint（v2.1 Core §9，审计用，不进 lineage_hash）。
     """
 
     # identity

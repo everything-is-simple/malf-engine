@@ -3,13 +3,19 @@
 > **薄而稳。** 本文只定「造什么范围、不造什么、什么算做完」。
 > **规则、公式、字段、编号一律不复述——指向规格。** 复述就是制造第二个真相源（洞）。
 >
-> 规格权威：`../../../asteria-riskbench/new-docs/MALF_v2.0_引擎规格_定稿.md`（相对本仓库）
-> 讲解（WHY）：同目录 `malf2.0-引擎.md`
+> **规格权威（v2.1 Definitive，2026-07-26 更新）**：
+> - 权威文档：`I:\asteria-riskbench-Definitive-validated\MALF_Definitive_v2_1-deepseek-20260726\`
+> - 本地引用：`docs/MALF_V2_1_AUTHORITY_REFERENCE.md`
+> - 起草者：DeepSeek，审核者：Claude (Anthropic)，认定者：东西南北中（待签署）
+>
+> **v2.1 与 v2.0 关系**：语义等价，v2.1 是"清晰表达版本"。核心变更：Probability 层 → Structural Position 层。
 
 ## 1. 造什么（范围）
 
-一个 Python 包，吃 OHLC（PriceBar 序列），吐 `WaveProbabilitySnapshot`。五层：
-Core → Range → Lifespan → Probability → Service。全部行为定义在规格，本包只实现。
+一个 Python 包，吃 OHLC（PriceBar 序列），吐 `WaveStructuralSnapshot`（v2.1 命名，原 `WaveProbabilitySnapshot`）。五层：
+Core → Range → Lifespan → Structural Position → Service。全部行为定义在规格，本包只实现。
+
+**命名变更（v2.1）**：Probability 层 → Structural Position 层，因为该层不输出概率，输出结构位置（rank 透传 + 向量差 + 比较标签）。
 
 - 领域核心**零外部依赖**（Python 3.10+ 标准库）。理由见 pyproject.toml 注释与规格 §7.4。
 - 实验目录 `RB-FX-008`，独立 venv，自跑 pytest，不污染主仓库。五层全部 trial-passed + replay 通过后，再搬主仓库 `src/riskbench/malf/`。

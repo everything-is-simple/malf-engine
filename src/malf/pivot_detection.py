@@ -1,6 +1,11 @@
-"""L1 Core：pivot 检测（分形 k=2 延迟确认）。
+"""MALF Pivot Detection - 分形k=2延迟确认。
 
-规格权威：spec §2.4（pivot 检测规则、时序不对称）。
+本模块实现 MALF v2.1 Core §2.4（D2 Pivot 检测规则）。
+
+规格权威：MALF v2.1 Core §2.4
+- Pivot 定义（D2）：确认的高点或低点
+- 检测算法：fractal k=2（参数可配置但默认k=2）
+- 时序不对称：极值发生在i，确认发生在i+k
 
 算法（fractal，参数 k）：
     对每个下标 i（要求左右各有 k 根，即 k <= i <= len(bars)-1-k）：
@@ -8,9 +13,9 @@
       - L pivot：bars[i].low  严格小于窗口 [i-k, i+k] 内其余 2k 根的 low
     极值发生在 i（extreme_bar_dt = bars[i].bar_dt）。
     确认发生在 i+k（confirm_bar_dt = bars[i+k].bar_dt）——因为要等右侧 k 根出现才能判定
-    "严格最优"，这是 §2.4 时序不对称的来源：极值早就发生了，但要延迟 k 根才能确认。
+    "严格最优"，这是时序不对称的来源：极值早就发生了，但要延迟 k 根才能确认。
 
-本模块只产出 pivot 列表，不含任何状态机 / guard / wave 逻辑（那是 S5 的事）。
+本模块只产出 pivot 列表，不含任何状态机 / guard / wave 逻辑。
 零依赖：仅用 malf.types。
 """
 

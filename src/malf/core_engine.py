@@ -1,14 +1,33 @@
-"""L1 Core：MALF 状态机引擎。
+"""MALF Core Engine - 结构状态机。
 
-将 pivot detection、initialization、guard break 等模块串联起来，
-实现完整的 MALF 状态机（uninitialized → up/down_alive → transition → new wave）。
+本模块实现 MALF v2.1 Core 层（§1-§10）。
 
-范围声明：
-- ✅ pivot detection（k=2，延迟确认）
-- ✅ initialization（up/down 方向，H0→L1→H2>H0 / L0→H1→L2<L0）
-- ✅ guard break（up_alive: close < guard → transition / down_alive: close > guard → transition）
-- ✅ transition 期间 active candidate 演化（第四刀）
-- ✅ new wave 确认（第四刀）
+版本说明：
+- 设计基于：MALF v2.0 Definitive (claude-20260616)
+- 权威定义：MALF v2.1 Definitive (deepseek-20260726)
+- 语义兼容性：v2.1 与 v2.0 完全等价（v2.1 是清晰表达版本）
+- 认定者：东西南北中（2026-07-26 签署）
+
+v2.1 权威文档：
+I:\\asteria-riskbench-Definitive-validated\\MALF_Definitive_v2_1-deepseek-20260726\\
+
+编号对照：
+- D1-D18：定义（Definitions）
+- T1-T10：定理（Theorems）
+- O1-O8：操作边界（Operational Boundaries）
+
+本模块实现：
+- §2：Pivot 检测与确认（fractal k=2，D2）
+- §3：初始化逻辑（D18/O6）
+- §4-§8：状态机九步顺序（O2）
+- §9：快照输出与指纹
+
+实现进度：
+- ✅ 第一~五刀：Core 层完整状态机（47 passed, 1 skipped）
+- ⏸ 第六刀：Range 层（v2.1 §2 Range）
+- ⏸ 第七刀：Lifespan 双轨（v2.1 §3 Lifespan）
+- ⏸ 第八刀：Structural Position（v2.1 §4 Structural Position）
+- ⏸ 第九刀：Service 集成（v2.1 §5 Service）
 """
 
 from __future__ import annotations

@@ -1,6 +1,9 @@
-"""runtime_fingerprint —— replay 审计用的运行环境指纹。
+"""Runtime Fingerprint - 运行环境指纹（审计用）。
 
-【填洞 L4-6，形态在此由代码定，回补规格 §7 前的验证实现】
+本模块实现 MALF v2.1 Core §9 的 runtime_fingerprint 字段。
+
+规格权威：MALF v2.1 Core §9
+- runtime_fingerprint：审计元数据，不进 lineage_hash
 
 设计决定：runtime_fingerprint 记录 Python 版本 + 平台，随每条 CoreStateSnapshot 存，
 但 **不进 lineage_hash 的计算输入**。
