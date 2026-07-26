@@ -90,6 +90,17 @@ class MALFCoreEngine:
         self._candidate_replacement_count: int = 0
         self._break_bar_dt: Optional[str] = None  # 记录 break bar 的时间（用于 C-05）
 
+        # Range 层状态（第六刀，v2.1 Range §2-§6）
+        self._range_birth_bar_dt: Optional[str] = None
+        self._range_boundary_init_high: Optional[int] = None
+        self._range_boundary_init_low: Optional[int] = None
+        self._range_boundary_now_high: Optional[int] = None
+        self._range_boundary_now_low: Optional[int] = None
+        self._range_evolution_count: int = 0
+        self._range_resolution_bar_dt: Optional[str] = None
+        self._range_resolution_type: Optional[str] = None
+        self._range_resolution_distance: Optional[int] = None
+
     def on_bar(self, bar: PriceBar) -> CoreStateSnapshot:
         """逐 bar 推进状态机。
 
@@ -148,6 +159,16 @@ class MALFCoreEngine:
                 self._wave_start_bar_dt = None  # 清空 wave 开始时间（transition 期间无 active wave）
                 self._wave_bar_counter = 0  # 清空计数器
 
+                # Range 诞生（第六刀，v2.1 Range §2）
+                # Range 在 guard break 时刻诞生，继承 transition boundary 作为 init 值
+                self._range_birth_bar_dt = bar.bar_dt
+                self._range_boundary_init_high = self._transition_boundary_high
+                self._range_boundary_init_low = self._transition_boundary_low
+                self._range_boundary_now_high = self._transition_boundary_high
+                self._range_boundary_now_low = self._transition_boundary_low
+                self._range_evolution_count = 0
+                # Resolution 信息在 new wave 确认时填充
+
                 # 初始化 candidate 状态
                 self._active_candidate_guard_price = None
                 self._active_candidate_guard_extreme_bar_dt = None
@@ -160,6 +181,16 @@ class MALFCoreEngine:
             # 检测当前 bar 是否有新确认的 pivot
             if bar.bar_dt in pivots_by_confirm_dt:
                 new_pivot = pivots_by_confirm_dt[bar.bar_dt]
+
+                # Range boundary 演化（第六刀，R2 不变量）
+                # boundary_now 只能单调扩展：high 只能增，low 只能减
+                if new_pivot.pivot_type == PivotType.H and new_pivot.price > self._range_boundary_now_high:
+                    self._range_boundary_now_high = new_pivot.price
+                    self._range_evolution_count += 1
+
+                if new_pivot.pivot_type == PivotType.L and new_pivot.price < self._range_boundary_now_low:
+                    self._range_boundary_now_low = new_pivot.price
+                    self._range_evolution_count += 1
 
                 # C-05: break bar 自身的极值不进 candidate 逻辑
                 if new_pivot.extreme_bar_dt != self._break_bar_dt:
@@ -348,6 +379,7 @@ class MALFCoreEngine:
         - progress = confirmation_pivot
         - direction = confirmation_pivot 决定
         - 清空 transition 字段
+        - 记录 Range resolution（第六刀）
         """
         # 确定新波方向
         if confirmation_pivot.pivot_type == PivotType.H:
@@ -356,6 +388,30 @@ class MALFCoreEngine:
         else:
             new_direction = Direction.DOWN
             self._system_state = SystemState.DOWN_ALIVE
+
+        # Range resolution 判定（第六刀，v2.1 Range §4-§6）
+        # 记录 resolution 信息
+        self._range_resolution_bar_dt = confirmation_pivot.confirm_bar_dt
+
+        # 计算 resolution_type（基于 break_direction）
+        # break_direction 是旧 wave 被 break 的方向（与旧 wave 方向相反）
+        old_wave_direction = self._direction  # transition 期间 direction 保持旧 wave 方向
+        if old_wave_direction == Direction.UP:
+            break_direction = Direction.DOWN  # UP wave 向下 break
+        else:
+            break_direction = Direction.UP  # DOWN wave 向上 break
+
+        # Continuation/Reversal 判定（相对于 break 方向）
+        if break_direction == new_direction:
+            self._range_resolution_type = "continuation"  # 延续 break 方向
+        else:
+            self._range_resolution_type = "reversal"  # 反转 break 方向
+
+        # 计算 resolution_distance（基于 boundary_init）
+        if new_direction == Direction.UP:
+            self._range_resolution_distance = confirmation_pivot.price - self._range_boundary_init_high
+        else:
+            self._range_resolution_distance = confirmation_pivot.price - self._range_boundary_init_low
 
         # 设置 guard = active candidate
         self._guard_price = self._active_candidate_guard_price
@@ -425,5 +481,15 @@ class MALFCoreEngine:
                 active_candidate_guard_confirm_bar_dt=self._active_candidate_guard_confirm_bar_dt,
                 active_candidate_direction=self._active_candidate_direction,
                 candidate_replacement_count=self._candidate_replacement_count,
+                # Range 字段（第六刀）
+                range_birth_bar_dt=self._range_birth_bar_dt,
+                range_boundary_init_high=self._range_boundary_init_high,
+                range_boundary_init_low=self._range_boundary_init_low,
+                range_boundary_now_high=self._range_boundary_now_high,
+                range_boundary_now_low=self._range_boundary_now_low,
+                range_evolution_count=self._range_evolution_count,
+                range_resolution_bar_dt=self._range_resolution_bar_dt,
+                range_resolution_type=self._range_resolution_type,
+                range_resolution_distance=self._range_resolution_distance,
                 runtime_fingerprint=runtime_fingerprint(),
             )

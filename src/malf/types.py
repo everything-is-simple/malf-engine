@@ -130,6 +130,21 @@ class CoreStateSnapshot:
     schema_version: str = "malf-core-snapshot-v0"  # 【填洞 L4-7 预留】
     note: str = field(default="", compare=False)  # 人读注释，不参与相等比较
 
+    # ========================================================================
+    # Range 层字段（第六刀，v2.1 Range §2-§6）
+    # ========================================================================
+    # Range 诞生和边界
+    range_birth_bar_dt: Optional[str] = None  # Range 诞生时间（guard break 那根 bar）
+    range_boundary_init_high: Optional[int] = None  # 初始上边界（冻结，用于 resolution 判定）
+    range_boundary_init_low: Optional[int] = None   # 初始下边界（冻结）
+    range_boundary_now_high: Optional[int] = None   # 当前上边界（演化，用于统计）
+    range_boundary_now_low: Optional[int] = None    # 当前下边界（演化）
+    # Range 演化和 resolution
+    range_evolution_count: int = 0  # Boundary 演化次数（R2 不变量）
+    range_resolution_bar_dt: Optional[str] = None  # Resolution 确认时间
+    range_resolution_type: Optional[str] = None  # "continuation" | "reversal"
+    range_resolution_distance: Optional[int] = None  # Resolution 距离（有符号）
+
 
 # ============================================================================
 # Range 层数据结构（v2.1 Range §2-§6）
