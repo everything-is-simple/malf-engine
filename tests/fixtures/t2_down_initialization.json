@@ -11,14 +11,16 @@
   "scope_note": "本 fixture 只断言到 d08（down_alive 成立）。d08 之后的潜在 pivot / break / transition 不在本 fixture 断言范围。",
 
   "input_bars": [
-    {"idx": 0, "bar_dt": "2024-01-01T09:00:00", "open": 105, "high": 107, "low": 100, "close": 102},
-    {"idx": 1, "bar_dt": "2024-01-01T09:05:00", "open": 102, "high": 110, "low": 101, "close": 108},
-    {"idx": 2, "bar_dt": "2024-01-01T09:10:00", "open": 108, "high": 112, "low": 107, "close": 111},
-    {"idx": 3, "bar_dt": "2024-01-01T09:15:00", "open": 111, "high": 115, "low": 110, "close": 113},
-    {"idx": 4, "bar_dt": "2024-01-01T09:20:00", "open": 113, "high": 114, "low": 108, "close": 109},
-    {"idx": 5, "bar_dt": "2024-01-01T09:25:00", "open": 109, "high": 110, "low": 95, "close": 96},
-    {"idx": 6, "bar_dt": "2024-01-01T09:30:00", "open": 96, "high": 100, "low": 96, "close": 99},
-    {"idx": 7, "bar_dt": "2024-01-01T09:35:00", "open": 99, "high": 102, "low": 97, "close": 101}
+    {"idx": 0, "bar_dt": "2024-01-01T08:50:00", "open": 110, "high": 112, "low": 108, "close": 111},
+    {"idx": 1, "bar_dt": "2024-01-01T08:55:00", "open": 111, "high": 113, "low": 109, "close": 112},
+    {"idx": 2, "bar_dt": "2024-01-01T09:00:00", "open": 112, "high": 114, "low": 100, "close": 102},
+    {"idx": 3, "bar_dt": "2024-01-01T09:05:00", "open": 102, "high": 110, "low": 101, "close": 108},
+    {"idx": 4, "bar_dt": "2024-01-01T09:10:00", "open": 108, "high": 112, "low": 107, "close": 111},
+    {"idx": 5, "bar_dt": "2024-01-01T09:15:00", "open": 111, "high": 115, "low": 110, "close": 113},
+    {"idx": 6, "bar_dt": "2024-01-01T09:20:00", "open": 113, "high": 114, "low": 108, "close": 109},
+    {"idx": 7, "bar_dt": "2024-01-01T09:25:00", "open": 109, "high": 110, "low": 95, "close": 96},
+    {"idx": 8, "bar_dt": "2024-01-01T09:30:00", "open": 96, "high": 100, "low": 96, "close": 99},
+    {"idx": 9, "bar_dt": "2024-01-01T09:35:00", "open": 99, "high": 102, "low": 97, "close": 101}
   ],
 
   "expected_pivots": [
@@ -28,12 +30,14 @@
   ],
 
   "expected_snapshots": [
-    {"bar_dt": "2024-01-01T09:00:00", "system_state": "uninitialized", "direction": null, "note": "L0 极值发生于此（bar0.low=100），但窗口不足"},
+    {"bar_dt": "2024-01-01T08:50:00", "system_state": "uninitialized", "direction": null, "note": "窗口填充 bar"},
+    {"bar_dt": "2024-01-01T08:55:00", "system_state": "uninitialized", "direction": null, "note": "窗口填充 bar"},
+    {"bar_dt": "2024-01-01T09:00:00", "system_state": "uninitialized", "direction": null, "note": "L0 极值发生于此（bar2.low=100），但此刻不可确认"},
     {"bar_dt": "2024-01-01T09:05:00", "system_state": "uninitialized", "direction": null, "note": "L0 右侧第1根"},
-    {"bar_dt": "2024-01-01T09:10:00", "system_state": "uninitialized", "direction": null, "note": "确认 L0（extreme=bar0, price=100）；仅有首个 L，初始化序列未齐"},
-    {"bar_dt": "2024-01-01T09:15:00", "system_state": "uninitialized", "direction": null, "note": "H1 极值发生于此（bar3.high=115）"},
+    {"bar_dt": "2024-01-01T09:10:00", "system_state": "uninitialized", "direction": null, "note": "确认 L0（extreme=bar2）；仅有首个 L，初始化序列未齐"},
+    {"bar_dt": "2024-01-01T09:15:00", "system_state": "uninitialized", "direction": null, "note": "H1 极值发生于此（bar5.high=115）"},
     {"bar_dt": "2024-01-01T09:20:00", "system_state": "uninitialized", "direction": null, "note": "H1 右侧第1根"},
-    {"bar_dt": "2024-01-01T09:25:00", "system_state": "uninitialized", "direction": null, "note": "确认 H1（extreme=bar3, price=115）；L0→H1 就位，仍差 L2。同时 L2 极值发生于此（bar5.low=95）"},
+    {"bar_dt": "2024-01-01T09:25:00", "system_state": "uninitialized", "direction": null, "note": "确认 H1（extreme=bar5, price=115）；L0→H1 就位，仍差 L2。同时 L2 极值发生于此（bar7.low=95）"},
     {"bar_dt": "2024-01-01T09:30:00", "system_state": "uninitialized", "direction": null, "note": "L2 右侧第1根"},
     {
       "bar_dt": "2024-01-01T09:35:00",
@@ -45,7 +49,7 @@
       "current_effective_guard_confirm_bar_dt": "2024-01-01T09:25:00",
       "progress_extreme_price": 95,
       "progress_extreme_bar_dt": "2024-01-01T09:25:00",
-      "note": "确认 L2<L0（95<100, extreme=bar5, confirm=bar7）→ initial down wave 成立（T2转换）。first guard=H1（115）。wave_start_price=95（L4-2），wave_start_bar_dt=bar7（C-18）。核心断言。"
+      "note": "确认 L2<L0（95<100, extreme=bar7, confirm=bar9）→ initial down wave 成立（T2转换）。first guard=H1（115）。wave_start_price=95（L4-2），wave_start_bar_dt=bar9（C-18）。核心断言。"
     }
   ]
 }
