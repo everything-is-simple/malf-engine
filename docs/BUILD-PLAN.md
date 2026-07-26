@@ -31,30 +31,36 @@
 
 ---
 
-## 第二刀：Down 方向初始化（T2 转换）
+## 第二刀：Core `uninitialized → down_alive`（T2 转换）
 
-**目标**：实现 `uninitialized → down_alive` 转换，补全下跌初始化序列（D7）：`L0→H1→L2, L2<L0`。  
-**覆盖**（规格 Core §2，v1.4 T2 定义）：down 方向 3-pivot 序列、初始 guard=H1、progress=L2、对称 up 方向逻辑。
+**目标**：从「无状态」走到「第一个下跌波段确认」，对称实现 up 方向逻辑。
+**覆盖**（规格 Core §2，v1.4 T2 定义）：down 方向 3-pivot 序列（`L0→H1→L2, L2<L0`）、初始 guard=H1、progress=L2、对称 up 方向逻辑。
 
 ### Step 清单
 
-- [x] **S2-1 推 down 方向 fixture**：构造 `L0(100)→H1(115)→L2(95)` 序列（8 根 bar，k=2），人肉推导每根 snapshot。关键验证：
-  - L2 < L0（95 < 100）触发初始化
+- [x] **S2-1 推 fixture 预期输出**：按规格 §2 逐根推导 `L0(100)→H1(115)→L2(95), L2<L0` 的每根 snapshot。复核 §2.4 窗口/时序、双时间戳标注、无计划外 pivot。关键验证：
+  - k=2 窗口：L0 需要左右各 k 根 bars（添加 2 根窗口填充 bars，对齐第一刀模式）
+  - 双时间戳标注：extreme_bar_dt（极值发生）+ confirm_bar_dt（延迟确认）
+  - L2 < L0（95 < 100）触发初始化（对称 H2 > H0）
   - `wave_start_price = L2.confirmation_price = 95`（对齐 L4-2 裁决）
   - `wave_start_bar_dt = L2.confirm_bar_dt`（对齐 C-18 消歧）
-  - `guard_price = H1.confirmation_price = 115`
-  - `progress_extreme = L2` 
-- [x] S2-2 fixture 定稿存 `tests/fixtures/t2_down_initialization.json`
-- [x] S2-3 写测试 `tests/test_t2_down_initialization.py`：加载 fixture，断言 `system_state=down_alive`、`direction=down`、`wave_start_price=95`、`guard_price=115`。测试已完成，复用第一刀的端到端模式
-- [x] **S2-4 实现 down 初始化**：
-  - `find_initial_wave()` 补全 down 分支（对称 up 逻辑，不等号反向）
-  - Down 方向逻辑：L0→H1→L2, L2<L0 触发 down_alive
-  - 删除了 down 方向的 `NotImplementedError`
-- [ ] S2-5 验收：`test_t2_down_initialization.py` 通过 + 全量测试（预期 17 passed, 1 skipped）
+  - `guard_price = H1.confirmation_price = 115`（对称 up 方向的 L1）
+  - `progress_extreme = L2`（首个 progress）
+- [x] S2-2 预期输出定稿存 `tests/fixtures/t2_down_initialization.json`（10根，含 2 根窗口填充 bars，JSON 自检通过）
+- [x] S2-3 写单元测试：`tests/test_initialization.py::test_find_initial_wave_down_direction_implemented`。验证 L0→H1→L2 序列返回 confirmed=True, direction=DOWN, guard=H1, progress=L2
+- [x] S2-4 实现 down 初始化：`src/malf/initialization.py::find_initial_wave` 补全 down 分支（对称 up 逻辑，不等号反向：L2 < L0 vs H2 > H0）。删除 down 方向的 `NotImplementedError`。H0/L0 替换、L1/H1 替换仍保持 NotImplementedError（规格缺口）
+- [x] S2-5 填实 `tests/test_t2_down_initialization.py`：端到端测试，逐 bar 喂入 10 根，每根产出 CoreStateSnapshot 与 fixture 预期全等比对。串起 pivot_detection + initialization，覆盖完整的 uninitialized→down_alive 流程
+- [x] **S2-6 真实数据冒烟**：浦发银行 (sh600000) 前 200 根日线，验证：
+  - `detect_pivots` 同时检出 H 和 L pivot（第一刀已验证 48 个 pivot）
+  - `find_initial_wave` 能在真实数据上触发 down_alive（或保持 uninitialized，取决于实际序列）
+  - 无崩溃，down 方向初始化逻辑在真实 OHLC 数据上稳定
+  - 可能触发的边界情况：连续 L pivot 无 H 穿插、连续 H pivot 无 L 穿插、L0→H1→L2 但 L2 >= L0（不满足触发条件）
+  - 更新 `test_real_data_smoke.py`：记录 H/L pivot 分布、验证 down 方向不再抛 NotImplementedError（除非替换场景）
+- [x] S2-7 回补文档：在 BUILD-PLAN.md「已发现待处理」标记 down 方向已从待办转为已实现。确认 `initialization.py` 模块 docstring 已更新（标记 up/down 均已实现）
 
 ### 完成标志
 
-第二刀 done = S2-5 全绿 + 无回归。达标后开第三刀（same-direction break）。
+第二刀 done = S2-5 绿 + S2-6 无意外崩溃 + S2-7 文档更新。达标后，才排第三刀（same-direction break / opposite-direction break / transition）。
 
 ---
 

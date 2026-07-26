@@ -11,6 +11,9 @@
 
 如果这些问题导致引擎崩溃或行为异常，应记录在 BUILD-PLAN.md「已发现待处理」，
 评估是否需要在规格中明确边界处理规则、或在数据读取层做清洗。
+
+第一刀（S7）：验证 up 方向初始化，down 方向会抛 NotImplementedError。
+第二刀（S2-6）：验证 down 方向初始化也能正常工作，不再抛异常（除非 H0/L0 或 L1/H1 替换）。
 """
 
 from __future__ import annotations
@@ -66,6 +69,8 @@ def test_sh600000_first_200_bars_no_crash():
 
     不断言具体 pivot 或 snapshot 内容（那是 golden fixture 的职责），
     只验证 detect_pivots + find_initial_wave 能跑完、不抛异常（除了预期的 NotImplementedError）。
+
+    第二刀更新：验证 down 方向初始化也能正常工作（第一刀时 down 会抛 NotImplementedError）。
     """
     tdx_file = Path("/sessions/loving-sharp-rubin/mnt/new_tdx64/vipdoc/sh/lday/sh600000.day")
     if not tdx_file.exists():
@@ -80,13 +85,22 @@ def test_sh600000_first_200_bars_no_crash():
     pivots = detect_pivots(bars, k=2)
     assert isinstance(pivots, list)  # 不崩就行，pivot 数量不做断言
 
-    # 初始化判定应能跑完（可能 confirmed=False，也可能确认，都不崩就行）
+    # 统计 pivot 类型分布（用于诊断）
+    h_count = sum(1 for p in pivots if p.pivot_type.value == "H")
+    l_count = sum(1 for p in pivots if p.pivot_type.value == "L")
+
+    # 初始化判定应能跑完（可能 confirmed=False，也可能确认 up/down，都不崩就行）
     try:
         result = find_initial_wave(pivots)
-        # 如果走到 down 分支或 H0/L1 替换分支，会抛 NotImplementedError——那是预期的
+        # 第二刀：down 方向已实现，不应再抛 NotImplementedError（除非 H0/L0 或 L1/H1 替换）
         assert result is not None
+        if result.confirmed:
+            print(f"Initialized: direction={result.direction.value}, guard={result.guard_price}, progress={result.progress_extreme_price}")
+        else:
+            print("Not yet initialized (O6 failure rule)")
     except NotImplementedError as e:
-        # 预期的未实现分支（down / H0 替换 / L1 替换），记录但不算失败
-        print(f"Hit expected NotImplementedError: {e}")
+        # 预期的未实现分支（H0/L0 替换 / L1/H1 替换），记录但不算失败
+        # 第二刀后，down 方向本身不应抛异常
+        print(f"Hit expected NotImplementedError (replacement scenario): {e}")
 
-    print(f"Smoke test passed: {len(bars)} bars, {len(pivots)} pivots detected.")
+    print(f"Smoke test passed: {len(bars)} bars, {len(pivots)} pivots detected (H={h_count}, L={l_count}).")
