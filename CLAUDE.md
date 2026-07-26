@@ -116,19 +116,25 @@ pip install -e ".[dev]"
 
 **入口**: [`docs/00-INDEX.md`](docs/00-INDEX.md) - 文档导航（告诉你看哪个）
 
-**四个核心文档，各司其职**：
+**五个核心文档，各司其职**：
 
-1. **Spec**（WHAT）：[`docs/spec/MALF_V2_1_AUTHORITY_REFERENCE.md`](docs/spec/MALF_V2_1_AUTHORITY_REFERENCE.md) — 所有规则、公式、字段、编号的唯一真相源。永远不要在代码或文档中复述规格内容。
+1. **AI-TASK-WORKFLOW.md**（HOW）：[`docs/dev/AI-TASK-WORKFLOW.md`](docs/dev/AI-TASK-WORKFLOW.md) ⭐ — **AI 助手任务执行 SOP**。接到任务先看这个，按任务类型（写代码/修规格/调试/整理文档）执行对应流程。固化了"先看哪个文档、做哪些检查、更新哪些文档"的标准操作。
 
-2. **BUILD-CONTRACT.md**（稳定）：[`docs/spec/BUILD-CONTRACT.md`](docs/spec/BUILD-CONTRACT.md) — 范围、非目标、验收标准。极少改动。**§5 经验教训**：第一刀、第二刀累积的 7 条铁律，第三刀起强制遵循。
+2. **Spec**（WHAT）：[`docs/spec/MALF_V2_1_AUTHORITY_REFERENCE.md`](docs/spec/MALF_V2_1_AUTHORITY_REFERENCE.md) — 所有规则、公式、字段、编号的唯一真相源。永远不要在代码或文档中复述规格内容。
 
-3. **BUILD-PLAN.md**（活的）：[`docs/dev/BUILD-PLAN.md`](docs/dev/BUILD-PLAN.md) ⭐ — 当前这一刀的 step 清单。每天更新。**这是指导系统开发的主文档**。
+3. **BUILD-CONTRACT.md**（稳定）：[`docs/spec/BUILD-CONTRACT.md`](docs/spec/BUILD-CONTRACT.md) — 范围、非目标、验收标准。极少改动。**§5 经验教训**：第一刀、第二刀累积的 7 条铁律，第三刀起强制遵循。
 
-4. **API.md**（用户）：[`docs/guide/API.md`](docs/guide/API.md) — CoreStateSnapshot 字段说明，用户手册。
+4. **BUILD-PLAN.md**（活的）：[`docs/dev/BUILD-PLAN.md`](docs/dev/BUILD-PLAN.md) — 当前这一刀的 step 清单。每天更新。告诉你"下一步做什么"。
 
-4. **IMPLEMENTATION-CONTRACT-PATCH.md**（实施）：deepseek 审计的 43 条缺口闭合。包含勘误、还原、消歧、立法四层。TDD 前必读。
+5. **IMPLEMENTATION-CONTRACT-PATCH.md**（实施）：[`docs/spec/IMPLEMENTATION-CONTRACT-PATCH.md`](docs/spec/IMPLEMENTATION-CONTRACT-PATCH.md) — deepseek 审计的 43 条缺口闭合。包含勘误、还原、消歧、立法四层。TDD 前必读。
 
-**实现时**：参考 spec 查行为规则。查 BUILD-PLAN.md 了解已知空白和 NotImplementedError 位置。查 IMPLEMENTATION-CONTRACT-PATCH.md 了解规格缺口的闭合决策。**查 BUILD-CONTRACT.md §5 了解必须遵循的铁律**（fixture 设计、TDD 流程、真实数据验证、文档回补）。不要实现推测性功能——只做 golden fixture 驱动的部分。
+6. **API.md**（用户）：[`docs/guide/API.md`](docs/guide/API.md) — CoreStateSnapshot 字段说明，用户手册。
+
+**接到任务后的标准流程**：
+1. 先看 **AI-TASK-WORKFLOW.md** 确认任务类型与执行流程
+2. 再看 **BUILD-PLAN.md** 确认当前进度
+3. 查 **BUILD-CONTRACT.md §5** 确认七条铁律
+4. 如需规格，查 **MALF_V2_1_AUTHORITY_REFERENCE.md** 和 **IMPLEMENTATION-CONTRACT-PATCH.md**
 
 ## 编码原则
 
