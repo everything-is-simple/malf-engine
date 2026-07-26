@@ -1,9 +1,12 @@
-"""S5 验证：初始化状态机（D18/O6）在 golden fixture 上判定 up_alive 的时刻与守护完全一致。
+"""S5 验证：初始化状态机（D18/O6）在 golden fixture 上判定 up_alive 和 down_alive 的时刻与守护完全一致。
 
 范围（见 malf/initialization.py 模块 docstring 的范围声明）：
-本刀只实现 up 方向、干净序列（H0→L1→H2>H0，无 C-07 替换）。
-超出此范围的输入（down 方向 / H0 替换 / L1 替换）应显式 NotImplementedError，
-不能沉默地给出未经验证的结果——这几支留给专门的后续 fixture。
+- ✅ up 方向、干净序列（H0→L1→H2>H0，无 C-07 替换）— 第一刀已实现
+- ✅ down 方向、干净序列（L0→H1→L2<L0）— 第二刀已实现
+- ❌ H0/L0 替换（【填洞 C-07】）暂未实现
+- ❌ L1/H1 替换暂未实现
+
+超出已实现范围的输入应显式 NotImplementedError，不能沉默地给出未经验证的结果。
 """
 
 from __future__ import annotations
@@ -85,12 +88,19 @@ def test_find_initial_wave_waits_when_h2_does_not_exceed_h0():
     assert result.guard_price == 96  # L1 不受 h_a 影响
 
 
-def test_find_initial_wave_down_direction_not_implemented():
-    """down 方向（L0→H1→L2<L0）暂未实现——必须显式报错，不能沉默给错结果。"""
-    l0 = Pivot(pivot_type=PivotType.L, price=96, extreme_bar_dt="d02", confirm_bar_dt="d04")
+def test_find_initial_wave_down_direction_implemented():
+    """down 方向（L0→H1→L2<L0）已实现（第二刀）——验证基本的 down 序列能正确返回。"""
+    l0 = Pivot(pivot_type=PivotType.L, price=100, extreme_bar_dt="d00", confirm_bar_dt="d02")
+    h1 = Pivot(pivot_type=PivotType.H, price=115, extreme_bar_dt="d03", confirm_bar_dt="d05")
+    l2 = Pivot(pivot_type=PivotType.L, price=95, extreme_bar_dt="d05", confirm_bar_dt="d07")
 
-    with pytest.raises(NotImplementedError):
-        find_initial_wave([l0])
+    result = find_initial_wave([l0, h1, l2])
+
+    assert result.confirmed is True
+    assert result.direction is Direction.DOWN
+    assert result.confirm_bar_dt == "d07"
+    assert result.guard_price == 115  # H1
+    assert result.progress_extreme_price == 95  # L2
 
 
 def test_find_initial_wave_h0_replacement_not_implemented():

@@ -17,8 +17,8 @@
     {"idx": 3, "bar_dt": "2024-01-01T09:15:00", "open": 111, "high": 115, "low": 110, "close": 113},
     {"idx": 4, "bar_dt": "2024-01-01T09:20:00", "open": 113, "high": 114, "low": 108, "close": 109},
     {"idx": 5, "bar_dt": "2024-01-01T09:25:00", "open": 109, "high": 110, "low": 95, "close": 96},
-    {"idx": 6, "bar_dt": "2024-01-01T09:30:00", "open": 96, "high": 100, "low": 94, "close": 99},
-    {"idx": 7, "bar_dt": "2024-01-01T09:35:00", "open": 99, "high": 102, "low": 98, "close": 101}
+    {"idx": 6, "bar_dt": "2024-01-01T09:30:00", "open": 96, "high": 100, "low": 96, "close": 99},
+    {"idx": 7, "bar_dt": "2024-01-01T09:35:00", "open": 99, "high": 102, "low": 97, "close": 101}
   ],
 
   "expected_pivots": [
