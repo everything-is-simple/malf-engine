@@ -6,7 +6,7 @@
 > **规格权威（v2.1 Definitive，2026-07-26 更新）**：
 > - 权威文档：`I:\asteria-riskbench-Definitive-validated\MALF_Definitive_v2_1-deepseek-20260726\`
 > - 本地引用：`docs/MALF_V2_1_AUTHORITY_REFERENCE.md`
-> - 起草者：DeepSeek，审核者：Claude (Anthropic)，认定者：东西南北中（待签署）
+> - 起草者：DeepSeek，审核者：Claude (Anthropic)，认定者：东西南北中（2026-07-26 已签署）
 >
 > **v2.1 与 v2.0 关系**：语义等价，v2.1 是"清晰表达版本"。核心变更：Probability 层 → Structural Position 层。
 

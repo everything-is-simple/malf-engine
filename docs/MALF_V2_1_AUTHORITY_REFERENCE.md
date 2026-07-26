@@ -4,7 +4,7 @@
 > **状态：** 权威定稿  
 > **起草者：** DeepSeek  
 > **审核者：** Claude (Anthropic)  
-> **认定者：** 东西南北中（待签署）
+> **认定者：** 东西南北中（2026-07-26 已签署）
 
 ---
 
@@ -366,7 +366,7 @@ class WaveStructuralSnapshot:  # ✓ v2.1 命名
 
 ```
 I:\asteria-riskbench-Definitive-validated\MALF_Definitive_v2_1-deepseek-20260726\
-├── AUTHORITY.md                                        # 权威声明（东西南北中待签署）
+├── AUTHORITY.md                                        # 权威声明（东西南北中已签署，2026-07-26）
 ├── MANIFEST-deepseek-20260726.json                     # 文件清单+哈希
 ├── MALF_00_Bridge_v2_1-deepseek-20260726.md           # 入口+变更说明
 ├── MALF_01_Core_v2_1-deepseek-20260726.md             # Core 层（510 行）
