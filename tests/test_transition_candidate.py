@@ -314,16 +314,3 @@ def test_new_wave_confirmation_with_candidate():
     assert snapshot.transition_boundary_high is None  # transition 字段清空
     assert snapshot.transition_boundary_low is None
     assert snapshot.active_candidate_guard_price is None  # candidate 字段清空
-
-
-def test_new_wave_no_confirmation_without_candidate():
-    """测试 new wave 不确认（无 active candidate）。
-
-    场景：transition 期间有 pivot 突破 boundary，但无 active candidate
-    验证：
-    - 不触发 new wave
-    - 保持 transition 状态
-    """
-    # 这个场景理论上不会发生（规格要求 candidate 先确认）
-    # 但为了完整性，验证逻辑的健壮性
-    pass  # 留作扩展测试

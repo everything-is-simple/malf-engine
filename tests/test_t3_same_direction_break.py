@@ -53,13 +53,9 @@ def test_t3_same_direction_break_up_end_to_end():
             prev_snapshot = engine.on_bar(bars[i - 1]) if i == len(bars) - 1 else None
 
             # 现在喂入会触发 guard break 的 bar
-            try:
-                snapshot = engine.on_bar(bar)
-                # 如果没抛异常，说明实现了 transition 逻辑（第四刀）
-                assert snapshot.system_state == SystemState.TRANSITION
-            except NotImplementedError as e:
-                # 预期行为：第三刀只实现 guard break 检测，transition 后续逻辑留给第四刀
-                assert "Transition 期间 active candidate" in str(e)
+            snapshot = engine.on_bar(bar)
+            # 第四刀已实现 transition 逻辑
+            assert snapshot.system_state == SystemState.TRANSITION
             break
         else:
             snapshot = engine.on_bar(bar)
@@ -123,13 +119,9 @@ def test_t3_same_direction_break_down_end_to_end():
             assert i > 0
 
             # 现在喂入会触发 guard break 的 bar
-            try:
-                snapshot = engine.on_bar(bar)
-                # 如果没抛异常，说明实现了 transition 逻辑（第四刀）
-                assert snapshot.system_state == SystemState.TRANSITION
-            except NotImplementedError as e:
-                # 预期行为：第三刀只实现 guard break 检测，transition 后续逻辑留给第四刀
-                assert "Transition 期间 active candidate" in str(e)
+            snapshot = engine.on_bar(bar)
+            # 第四刀已实现 transition 逻辑
+            assert snapshot.system_state == SystemState.TRANSITION
             break
         else:
             snapshot = engine.on_bar(bar)

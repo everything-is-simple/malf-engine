@@ -105,6 +105,12 @@ class MALFCoreEngine:
 
         # S3: Guard break detection（up/down_alive → transition）
         elif self._system_state in [SystemState.UP_ALIVE, SystemState.DOWN_ALIVE]:
+            # D16 Progress Confirmation + D9 Guard Update: 检查是否有新 pivot 确认
+            if bar.bar_dt in pivots_by_confirm_dt:
+                new_pivot = pivots_by_confirm_dt[bar.bar_dt]
+                self._update_progress_if_better(new_pivot)
+                self._update_guard_if_valid(new_pivot)
+
             if self._check_guard_break(bar):
                 # 计算双边界（D12）
                 self._transition_boundary_high, self._transition_boundary_low = self._calculate_boundaries()
@@ -255,6 +261,51 @@ class MALFCoreEngine:
         else:
             # L pivot: 检查是否 < boundary_low（触发 DOWN wave）
             return new_pivot.price < self._transition_boundary_low
+
+    def _update_progress_if_better(self, new_pivot: Pivot) -> None:
+        """D16 Progress Confirmation: 更新 progress_extreme（如果新 pivot 更优）。
+
+        Args:
+            new_pivot: 新确认的 pivot
+
+        规则（D16）：
+        - UP wave: 新 H pivot 且 price > progress_extreme_price → 更新
+        - DOWN wave: 新 L pivot 且 price < progress_extreme_price → 更新
+        """
+        if self._system_state == SystemState.UP_ALIVE:
+            # UP wave: 检查新 H pivot 是否推进
+            if new_pivot.pivot_type == PivotType.H and new_pivot.price > self._progress_extreme_price:
+                self._progress_extreme_price = new_pivot.price
+                self._progress_extreme_bar_dt = new_pivot.extreme_bar_dt
+        elif self._system_state == SystemState.DOWN_ALIVE:
+            # DOWN wave: 检查新 L pivot 是否推进
+            if new_pivot.pivot_type == PivotType.L and new_pivot.price < self._progress_extreme_price:
+                self._progress_extreme_price = new_pivot.price
+                self._progress_extreme_bar_dt = new_pivot.extreme_bar_dt
+
+    def _update_guard_if_valid(self, new_pivot: Pivot) -> None:
+        """D9 守护唯一性铁律: 更新 guard（如果新 pivot 是回撤类型）。
+
+        Args:
+            new_pivot: 新确认的 pivot
+
+        规则（D9）：
+        - UP wave: 只有新 L pivot（回撤）才能替换 guard，H pivot 只更新 progress
+        - DOWN wave: 只有新 H pivot（回撤）才能替换 guard，L pivot 只更新 progress
+        - Guard 是单元素栈，新的回撤 pivot 直接替换旧的
+        """
+        if self._system_state == SystemState.UP_ALIVE:
+            # UP wave: 只有 L pivot（回撤）才能替换 guard
+            if new_pivot.pivot_type == PivotType.L:
+                self._guard_price = new_pivot.price
+                self._guard_extreme_bar_dt = new_pivot.extreme_bar_dt
+                self._guard_confirm_bar_dt = new_pivot.confirm_bar_dt
+        elif self._system_state == SystemState.DOWN_ALIVE:
+            # DOWN wave: 只有 H pivot（回撤）才能替换 guard
+            if new_pivot.pivot_type == PivotType.H:
+                self._guard_price = new_pivot.price
+                self._guard_extreme_bar_dt = new_pivot.extreme_bar_dt
+                self._guard_confirm_bar_dt = new_pivot.confirm_bar_dt
 
     def _enter_new_wave(self, confirmation_pivot: Pivot) -> None:
         """进入 new wave。
