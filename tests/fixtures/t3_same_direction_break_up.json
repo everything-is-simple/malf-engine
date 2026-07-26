@@ -1,0 +1,106 @@
+{
+  "fixture_id": "t3_same_direction_break_up",
+  "purpose": "第三刀：up_alive 期间 guard break（LH break）→ transition",
+  "spec_refs": ["Core §2", "v1.4 T3"],
+  "params": {
+    "k": 2,
+    "pivot_detection_rule_version": "fractal-k2-v1",
+    "price_policy": "int_fixed"
+  },
+  "derivation_note": "人肉推导：H0@bar1(102) → L1@bar2(94) → H2@bar4(104>102) 进入 up_alive，guard=94。Bar7: close=92 < guard=94 触发 LH break → transition",
+
+  "input_bars": [
+    {"idx": 0, "bar_dt": "d00", "open": 100, "high": 100, "low": 95, "close": 98},
+    {"idx": 1, "bar_dt": "d01", "open": 102, "high": 102, "low": 96, "close": 99},
+    {"idx": 2, "bar_dt": "d02", "open": 99, "high": 99, "low": 94, "close": 95},
+    {"idx": 3, "bar_dt": "d03", "open": 98, "high": 98, "low": 95, "close": 97},
+    {"idx": 4, "bar_dt": "d04", "open": 104, "high": 104, "low": 96, "close": 103},
+    {"idx": 5, "bar_dt": "d05", "open": 100, "high": 100, "low": 95, "close": 98},
+    {"idx": 6, "bar_dt": "d06", "open": 99, "high": 99, "low": 94, "close": 96},
+    {"idx": 7, "bar_dt": "d07", "open": 98, "high": 98, "low": 90, "close": 92}
+  ],
+
+  "expected_pivots": [
+    {
+      "pivot_type": "H",
+      "label": "H0",
+      "price": 102,
+      "extreme_bar_dt": "d01",
+      "confirm_bar_dt": "d03"
+    },
+    {
+      "pivot_type": "L",
+      "label": "L1",
+      "price": 94,
+      "extreme_bar_dt": "d02",
+      "confirm_bar_dt": "d04"
+    },
+    {
+      "pivot_type": "H",
+      "label": "H2",
+      "price": 104,
+      "extreme_bar_dt": "d04",
+      "confirm_bar_dt": "d06"
+    }
+  ],
+
+  "expected_snapshots": [
+    {
+      "bar_dt": "d00",
+      "system_state": "uninitialized",
+      "direction": null,
+      "note": "窗口填充"
+    },
+    {
+      "bar_dt": "d01",
+      "system_state": "uninitialized",
+      "direction": null,
+      "note": "窗口填充完成，H0 候选"
+    },
+    {
+      "bar_dt": "d02",
+      "system_state": "uninitialized",
+      "direction": null,
+      "note": "L1 候选"
+    },
+    {
+      "bar_dt": "d03",
+      "system_state": "uninitialized",
+      "direction": null,
+      "note": "H0 确认 @ bar 1"
+    },
+    {
+      "bar_dt": "d04",
+      "system_state": "uninitialized",
+      "direction": null,
+      "note": "L1 确认 @ bar 2，H2 候选"
+    },
+    {
+      "bar_dt": "d05",
+      "system_state": "uninitialized",
+      "direction": null,
+      "note": "H2 确认中"
+    },
+    {
+      "bar_dt": "d06",
+      "system_state": "up_alive",
+      "direction": "up",
+      "wave_core_state": "alive",
+      "current_effective_guard_price": 94,
+      "current_effective_guard_extreme_bar_dt": "d02",
+      "current_effective_guard_confirm_bar_dt": "d04",
+      "progress_extreme_price": 104,
+      "progress_extreme_bar_dt": "d04",
+      "note": "H2 确认，H2 > H0，进入 up_alive"
+    },
+    {
+      "bar_dt": "d07",
+      "system_state": "transition",
+      "direction": "up",
+      "wave_core_state": "terminated",
+      "current_effective_guard_price": 94,
+      "progress_extreme_price": 104,
+      "note": "LH break: close=92 < guard=94 → transition"
+    }
+  ]
+}

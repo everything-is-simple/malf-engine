@@ -37,6 +37,22 @@
 
 ## 开发命令
 
+### Python 环境
+
+**⚠️ 重要：Windows 环境下的 Python 路径**
+
+系统 PATH 中的 `python` 命令指向 Windows Store 重定向器（返回 exit code 49）。
+**必须使用实际安装的 Python**：
+
+```bash
+# Windows 上的实际 Python 路径
+/d/miniconda/py310/python.exe
+
+# 验证版本
+/d/miniconda/py310/python.exe --version
+# 输出: Python 3.10.19
+```
+
 ### 环境搭建
 ```bash
 cd malf-engine
@@ -51,17 +67,20 @@ pip install -e ".[dev]"
 
 ### 测试
 ```bash
+# ⚠️ Windows: 必须使用完整路径
+/d/miniconda/py310/python.exe -m pytest
+
 # 运行所有测试
-pytest
+/d/miniconda/py310/python.exe -m pytest
 
 # 运行特定测试文件
-pytest tests/test_pivot_detection.py
+/d/miniconda/py310/python.exe -m pytest tests/test_pivot_detection.py
 
 # 详细输出
-pytest -v
+/d/miniconda/py310/python.exe -m pytest -v
 
 # 运行单个测试函数
-pytest tests/test_initialization.py::test_up_direction_clean_sequence
+/d/miniconda/py310/python.exe -m pytest tests/test_initialization.py::test_up_direction_clean_sequence
 ```
 
 ### 验收机制

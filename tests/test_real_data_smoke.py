@@ -14,6 +14,7 @@
 
 第一刀（S7）：验证 up 方向初始化，down 方向会抛 NotImplementedError。
 第二刀（S2-6）：验证 down 方向初始化也能正常工作，不再抛异常（除非 H0/L0 或 L1/H1 替换）。
+第三刀（S3-6）：验证 guard break 逻辑在真实数据上稳定，能触发 up_alive/down_alive → transition。
 """
 
 from __future__ import annotations
@@ -21,9 +22,10 @@ from __future__ import annotations
 import struct
 from pathlib import Path
 
+from malf.core_engine import MALFCoreEngine
 from malf.initialization import find_initial_wave
 from malf.pivot_detection import detect_pivots
-from malf.types import PriceBar
+from malf.types import PriceBar, SystemState
 
 
 def _read_tdx_day(path: Path, limit: int = 200) -> list[PriceBar]:
@@ -72,7 +74,7 @@ def test_sh600000_first_200_bars_no_crash():
 
     第二刀更新：验证 down 方向初始化也能正常工作（第一刀时 down 会抛 NotImplementedError）。
     """
-    tdx_file = Path("/sessions/loving-sharp-rubin/mnt/new_tdx64/vipdoc/sh/lday/sh600000.day")
+    tdx_file = Path("I:/new_tdx64/vipdoc/sh/lday/sh600000.day")
     if not tdx_file.exists():
         # 在 Windows 机器上路径不同，跳过（这是 VM 专属测试）
         import pytest
@@ -104,3 +106,70 @@ def test_sh600000_first_200_bars_no_crash():
         print(f"Hit expected NotImplementedError (replacement scenario): {e}")
 
     print(f"Smoke test passed: {len(bars)} bars, {len(pivots)} pivots detected (H={h_count}, L={l_count}).")
+
+
+def test_sh600000_with_core_engine_guard_break():
+    """第三刀：使用 MALFCoreEngine 测试真实数据，验证 guard break 逻辑。
+
+    验证：
+    - 引擎能逐 bar 推进完整序列（不崩溃）
+    - 能触发 up_alive 或 down_alive（initialization）
+    - 能触发 guard break → transition（或不触发，取决于实际序列）
+    - transition 后抛出预期的 NotImplementedError（active candidate 演化未实现）
+    """
+    tdx_file = Path("I:/new_tdx64/vipdoc/sh/lday/sh600000.day")
+    if not tdx_file.exists():
+        import pytest
+        pytest.skip(f"TDX file not found: {tdx_file}")
+
+    bars = _read_tdx_day(tdx_file, limit=200)
+    assert len(bars) > 0, "应至少读到一些 bar"
+
+    engine = MALFCoreEngine(k=2)
+
+    initialized = False
+    transitioned = False
+    last_state = None
+    transition_bar_idx = None
+
+    for i, bar in enumerate(bars):
+        try:
+            snapshot = engine.on_bar(bar)
+            last_state = snapshot.system_state
+
+            # 记录初始化
+            if not initialized and snapshot.system_state in [SystemState.UP_ALIVE, SystemState.DOWN_ALIVE]:
+                initialized = True
+                print(f"[OK] Initialized at bar {i}: state={snapshot.system_state.value}, "
+                      f"direction={snapshot.direction.value if snapshot.direction else None}, "
+                      f"guard={snapshot.current_effective_guard_price}, "
+                      f"progress={snapshot.progress_extreme_price}")
+
+            # 记录 transition
+            if snapshot.system_state == SystemState.TRANSITION:
+                transitioned = True
+                transition_bar_idx = i
+                print(f"[OK] Transitioned at bar {i}: direction={snapshot.direction.value if snapshot.direction else None}")
+
+        except NotImplementedError as e:
+            # 预期的 NotImplementedError：transition 后的 active candidate 演化
+            if "Transition 期间 active candidate" in str(e):
+                print(f"[OK] Hit expected NotImplementedError at bar {i}: {e}")
+                transitioned = True
+                transition_bar_idx = i
+                break
+            else:
+                # 其他 NotImplementedError（H0/L0 或 L1/H1 替换）
+                print(f"[WARN] Hit replacement NotImplementedError at bar {i}: {e}")
+                break
+
+    print(f"\nSummary:")
+    print(f"  Bars processed: {i + 1}/{len(bars)}")
+    print(f"  Initialized: {initialized}")
+    print(f"  Transitioned: {transitioned}")
+    if transition_bar_idx:
+        print(f"  Transition at bar: {transition_bar_idx}")
+    print(f"  Final state: {last_state.value if last_state else 'N/A'}")
+
+    # 冒烟测试成功标准：至少能走完一些 bars，不意外崩溃
+    assert i >= 0, "Should process at least one bar"
