@@ -11,7 +11,8 @@ MALF v2.1 结构计算核心。吃 OHLC，吐 `CoreStateSnapshot`（包含 Core 
 - Guard 机制与 break 检测
 - Progress 追踪
 - TRANSITION 期间 Candidate 机制
-- 测试：47 passed
+- **C-07 规则**：早期 pivot 替换（H0/L0/L1/H1）✅
+- 测试：51 passed
 
 ### Range 层（✅ 已完成）
 - Range 诞生（guard break 触发）
@@ -20,7 +21,7 @@ MALF v2.1 结构计算核心。吃 OHLC，吐 `CoreStateSnapshot`（包含 Core 
 - Continuation/Reversal 分类
 - 测试：6 synthetic + 1 real data
 
-**总计测试**：54 passed, 1 skipped（真实数据在 CI 上跳过）
+**总计测试**：58 passed, 1 skipped（真实数据在 CI 上跳过）
 
 **真实数据验证**：
 - 数据源：上证 600000（浦发银行）200 bars
@@ -53,12 +54,13 @@ pip install -e ".[dev]"
 pytest
 ```
 
-**当前进度**：Core + Range 层已完成 - **54 passed, 1 skipped**
+**当前进度**：Core + Range 层已完成 - **58 passed, 1 skipped**
 
 | 刀数 | 目标 | 状态 | 测试 |
 |------|------|------|------|
 | 第一~五刀 | Core 层完整状态机 | ✅ 完成 | 47 passed |
 | **第六刀** | **Range 层** | **✅ 完成** | **6 synthetic + 1 real data** |
+| **C-07** | **早期 pivot 替换** | **✅ 完成** | **4 replacement tests** |
 
 详见 `docs/BUILD-PLAN.md`。
 

@@ -1,0 +1,67 @@
+{
+  "name": "C07-1: L0 replacement (DOWN direction)",
+  "description": "L0 confirmed, then a lower L appears before H1, L0 is replaced",
+  "symbol": "TEST",
+  "timeframe": "1d",
+  "bars": [
+    {"bar_dt": "d01", "open": 12000, "high": 15000, "low": 10000, "close": 14000},
+    {"bar_dt": "d02", "open": 14000, "high": 14000, "low": 11000, "close": 12000},
+    {"bar_dt": "d03", "open": 12000, "high": 13000, "low": 10500, "close": 12500},
+    {"bar_dt": "d04", "open": 12500, "high": 12500, "low": 9000, "close": 9500},
+    {"bar_dt": "d05", "open": 9500, "high": 13500, "low": 10000, "close": 13000},
+    {"bar_dt": "d06", "open": 13000, "high": 16000, "low": 11000, "close": 15000},
+    {"bar_dt": "d07", "open": 15000, "high": 15000, "low": 11500, "close": 13000},
+    {"bar_dt": "d08", "open": 13000, "high": 14500, "low": 12000, "close": 14000},
+    {"bar_dt": "d09", "open": 14000, "high": 13000, "low": 8000, "close": 8500},
+    {"bar_dt": "d10", "open": 8500, "high": 12500, "low": 8500, "close": 10000},
+    {"bar_dt": "d11", "open": 10000, "high": 12000, "low": 9000, "close": 11000}
+  ],
+  "pivot_detection_k": 2,
+  "expected_pivots": [
+    {
+      "pivot_type": "L",
+      "price": 10000,
+      "extreme_bar_dt": "d01",
+      "confirm_bar_dt": "d03",
+      "note": "L0_old, will be replaced"
+    },
+    {
+      "pivot_type": "L",
+      "price": 9000,
+      "extreme_bar_dt": "d04",
+      "confirm_bar_dt": "d06",
+      "note": "L0_new, replaces L0_old (9000 < 10000)"
+    },
+    {
+      "pivot_type": "H",
+      "price": 16000,
+      "extreme_bar_dt": "d06",
+      "confirm_bar_dt": "d08",
+      "note": "H1"
+    },
+    {
+      "pivot_type": "L",
+      "price": 8000,
+      "extreme_bar_dt": "d09",
+      "confirm_bar_dt": "d11",
+      "note": "L2, 8000 < 9000 (L0_new), triggers DOWN initialization"
+    }
+  ],
+  "expected_snapshots": {
+    "d11": {
+      "system_state": "down_alive",
+      "direction": "down",
+      "current_effective_guard_price": 16000,
+      "current_effective_guard_extreme_bar_dt": "d06",
+      "current_effective_guard_confirm_bar_dt": "d08",
+      "progress_extreme_price": 8000,
+      "progress_extreme_bar_dt": "d09",
+      "bar_count": 1
+    }
+  },
+  "test_verification": {
+    "key_assertion": "L0 replacement works: L0_new (9000) replaces L0_old (10000)",
+    "initialization_based_on": "L0_new, not L0_old",
+    "final_check": "L2 (8000) < L0_new (9000) triggers initialization"
+  }
+}

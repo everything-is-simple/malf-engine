@@ -103,20 +103,33 @@ def test_find_initial_wave_down_direction_implemented():
     assert result.progress_extreme_price == 95  # L2
 
 
-def test_find_initial_wave_h0_replacement_not_implemented():
-    """H0 被更高 H 替换（【填洞 C-07】）暂未实现——L1 确认前出现第二个 H 时必须显式报错。"""
+def test_find_initial_wave_h0_replacement_implemented():
+    """H0 被更高 H 替换（C-07 规则已实现）——更高的 H 替换 H0。"""
     h0 = Pivot(pivot_type=PivotType.H, price=110, extreme_bar_dt="d02", confirm_bar_dt="d04")
     h_higher = Pivot(pivot_type=PivotType.H, price=120, extreme_bar_dt="d05", confirm_bar_dt="d07")
+    l1 = Pivot(pivot_type=PivotType.L, price=96, extreme_bar_dt="d08", confirm_bar_dt="d10")
+    h2 = Pivot(pivot_type=PivotType.H, price=125, extreme_bar_dt="d11", confirm_bar_dt="d13")
 
-    with pytest.raises(NotImplementedError):
-        find_initial_wave([h0, h_higher])
+    result = find_initial_wave([h0, h_higher, l1, h2])
+
+    # H0 should be replaced by h_higher (120), and H2 (125) > h_higher (120) triggers initialization
+    assert result.confirmed is True
+    assert result.direction is Direction.UP
+    assert result.guard_price == 96  # L1
+    assert result.progress_extreme_price == 125  # H2
 
 
-def test_find_initial_wave_l1_replacement_not_implemented():
-    """L1 之后、H2 确认前又出现一个 L——spec 未明确是否替换 L1，暂未实现，必须显式报错。"""
+def test_find_initial_wave_l1_replacement_implemented():
+    """L1 之后、H2 确认前又出现一个 L（C-07 规则已实现）——更低的 L 替换 L1。"""
     h0 = Pivot(pivot_type=PivotType.H, price=110, extreme_bar_dt="d02", confirm_bar_dt="d04")
     l1 = Pivot(pivot_type=PivotType.L, price=96, extreme_bar_dt="d05", confirm_bar_dt="d07")
     l_lower = Pivot(pivot_type=PivotType.L, price=90, extreme_bar_dt="d08", confirm_bar_dt="d10")
+    h2 = Pivot(pivot_type=PivotType.H, price=115, extreme_bar_dt="d11", confirm_bar_dt="d13")
 
-    with pytest.raises(NotImplementedError):
-        find_initial_wave([h0, l1, l_lower])
+    result = find_initial_wave([h0, l1, l_lower, h2])
+
+    # L1 should be replaced by l_lower (90), which becomes the guard
+    assert result.confirmed is True
+    assert result.direction is Direction.UP
+    assert result.guard_price == 90  # l_lower replaces l1
+    assert result.progress_extreme_price == 115  # H2

@@ -1,0 +1,68 @@
+{
+  "name": "C07-3: L1 replacement (UP direction)",
+  "description": "H0->L1 confirmed, then a lower L appears before H2, L1 is replaced",
+  "symbol": "TEST",
+  "timeframe": "1d",
+  "bars": [
+    {"bar_dt": "d01", "open": 12000, "high": 13000, "low": 11000, "close": 12000},
+    {"bar_dt": "d02", "open": 12000, "high": 13500, "low": 11500, "close": 13000},
+    {"bar_dt": "d03", "open": 13000, "high": 15000, "low": 12000, "close": 14000},
+    {"bar_dt": "d04", "open": 14000, "high": 14000, "low": 11000, "close": 12000},
+    {"bar_dt": "d05", "open": 12000, "high": 13000, "low": 10500, "close": 12500},
+    {"bar_dt": "d06", "open": 12500, "high": 13500, "low": 10000, "close": 13000},
+    {"bar_dt": "d07", "open": 13000, "high": 14000, "low": 11000, "close": 13500},
+    {"bar_dt": "d08", "open": 13500, "high": 14500, "low": 9000, "close": 10000},
+    {"bar_dt": "d09", "open": 10000, "high": 12000, "low": 9500, "close": 11000},
+    {"bar_dt": "d10", "open": 11000, "high": 18000, "low": 10500, "close": 17000},
+    {"bar_dt": "d11", "open": 17000, "high": 17500, "low": 14000, "close": 16000},
+    {"bar_dt": "d12", "open": 16000, "high": 17000, "low": 15000, "close": 16000}
+  ],
+  "pivot_detection_k": 2,
+  "expected_pivots": [
+    {
+      "pivot_type": "H",
+      "price": 15000,
+      "extreme_bar_dt": "d03",
+      "confirm_bar_dt": "d05",
+      "note": "H0"
+    },
+    {
+      "pivot_type": "L",
+      "price": 10000,
+      "extreme_bar_dt": "d06",
+      "confirm_bar_dt": "d08",
+      "note": "L1_old, will be replaced"
+    },
+    {
+      "pivot_type": "L",
+      "price": 9000,
+      "extreme_bar_dt": "d08",
+      "confirm_bar_dt": "d10",
+      "note": "L1_new, replaces L1_old (9000 < 10000)"
+    },
+    {
+      "pivot_type": "H",
+      "price": 18000,
+      "extreme_bar_dt": "d10",
+      "confirm_bar_dt": "d12",
+      "note": "H2, 18000 > 15000 (H0), triggers UP initialization"
+    }
+  ],
+  "expected_snapshots": {
+    "d12": {
+      "system_state": "up_alive",
+      "direction": "up",
+      "current_effective_guard_price": 9000,
+      "current_effective_guard_extreme_bar_dt": "d08",
+      "current_effective_guard_confirm_bar_dt": "d10",
+      "progress_extreme_price": 18000,
+      "progress_extreme_bar_dt": "d10",
+      "bar_count": 1
+    }
+  },
+  "test_verification": {
+    "key_assertion": "L1 replacement works: L1_new (9000) replaces L1_old (10000)",
+    "initialization_based_on": "L1_new as guard, not L1_old",
+    "final_check": "Guard is L1_new (9000), the lower L"
+  }
+}

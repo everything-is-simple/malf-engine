@@ -1,0 +1,67 @@
+{
+  "name": "C07-2: H0 replacement (UP direction)",
+  "description": "H0 confirmed, then a higher H appears before L1, H0 is replaced",
+  "symbol": "TEST",
+  "timeframe": "1d",
+  "bars": [
+    {"bar_dt": "d01", "open": 10000, "high": 15000, "low": 8000, "close": 12000},
+    {"bar_dt": "d02", "open": 12000, "high": 14000, "low": 9000, "close": 11000},
+    {"bar_dt": "d03", "open": 11000, "high": 13000, "low": 9500, "close": 12000},
+    {"bar_dt": "d04", "open": 12000, "high": 18000, "low": 10000, "close": 17000},
+    {"bar_dt": "d05", "open": 17000, "high": 16000, "low": 9000, "close": 11000},
+    {"bar_dt": "d06", "open": 11000, "high": 13000, "low": 7000, "close": 8000},
+    {"bar_dt": "d07", "open": 8000, "high": 10000, "low": 7500, "close": 9000},
+    {"bar_dt": "d08", "open": 9000, "high": 11000, "low": 8000, "close": 10000},
+    {"bar_dt": "d09", "open": 10000, "high": 20000, "low": 9000, "close": 19000},
+    {"bar_dt": "d10", "open": 19000, "high": 18000, "low": 15000, "close": 16000},
+    {"bar_dt": "d11", "open": 16000, "high": 17000, "low": 14000, "close": 16000}
+  ],
+  "pivot_detection_k": 2,
+  "expected_pivots": [
+    {
+      "pivot_type": "H",
+      "price": 15000,
+      "extreme_bar_dt": "d01",
+      "confirm_bar_dt": "d03",
+      "note": "H0_old, will be replaced"
+    },
+    {
+      "pivot_type": "H",
+      "price": 18000,
+      "extreme_bar_dt": "d04",
+      "confirm_bar_dt": "d06",
+      "note": "H0_new, replaces H0_old (18000 > 15000)"
+    },
+    {
+      "pivot_type": "L",
+      "price": 7000,
+      "extreme_bar_dt": "d06",
+      "confirm_bar_dt": "d08",
+      "note": "L1"
+    },
+    {
+      "pivot_type": "H",
+      "price": 20000,
+      "extreme_bar_dt": "d09",
+      "confirm_bar_dt": "d11",
+      "note": "H2, 20000 > 18000 (H0_new), triggers UP initialization"
+    }
+  ],
+  "expected_snapshots": {
+    "d11": {
+      "system_state": "up_alive",
+      "direction": "up",
+      "current_effective_guard_price": 7000,
+      "current_effective_guard_extreme_bar_dt": "d06",
+      "current_effective_guard_confirm_bar_dt": "d08",
+      "progress_extreme_price": 20000,
+      "progress_extreme_bar_dt": "d09",
+      "bar_count": 1
+    }
+  },
+  "test_verification": {
+    "key_assertion": "H0 replacement works: H0_new (18000) replaces H0_old (15000)",
+    "initialization_based_on": "H0_new, not H0_old",
+    "final_check": "H2 (20000) > H0_new (18000) triggers initialization"
+  }
+}

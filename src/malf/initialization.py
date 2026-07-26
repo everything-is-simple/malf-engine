@@ -7,15 +7,14 @@
 范围声明：
 - ✅ **up 方向**的干净序列 `H0 → L1 → H2, H2 > H0`（第一刀已实现）。
 - ✅ **down 方向**的干净序列 `L0 → H1 → L2, L2 < L0`（第二刀已实现，对称 up 逻辑）。
-- **【填洞 C-07】H0/L0 替换**（H0/L0 确认后、L1/H1 出现前，又来一个更高的 H/更低的 L）：
-  spec 只说"更高的 H 可替换 H0，且替换后需重新评估条件"，但没规定替换后
-  L1 的候选范围如何变化（是否只认替换点之后的 L，还是可以是更早的 L）。
-  这是一处真正的规格模糊，本刀不猜——**任何在 L1/H1 确认前出现的第二个 H/L**
-  （无论高低）都显式报错，逼这条路径必须有专门 fixture 才能实现。
-- **L1/H1 替换**（L1/H1 确认后、H2/L2 确认前，又来一个更低的 L/更高的 H）：spec 完全没提这一支
-  是否允许替换 guard 候选。同样显式报错，不猜。
+- ✅ **【C-07】H0/L0 替换**（H0/L0 确认后、L1/H1 出现前，又来一个更高的 H/更低的 L）：
+  选择"更极端"的 pivot 作为初始参考点。更高的 H 替换 H0，更低的 L 替换 L0。
+  替换后从新位置继续，不回溯历史 pivot（保持单遍处理）。
+- ✅ **【C-07】L1/H1 替换**（L1/H1 确认后、H2/L2 确认前，又来一个更低的 L/更高的 H）：
+  选择"最极端"的 guard 候选。更低的 L 替换 L1（UP 方向），更高的 H 替换 H1（DOWN 方向）。
 
-这两处留白已记入 docs/BUILD-PLAN.md「已发现待处理」，不在代码里悄悄拍死。
+实现策略：使用状态机追踪 first/second pivot，遇到同类型 pivot 时判定是否替换（更极端则替换）。
+详细设计参见 docs/C07-RULE-ANALYSIS.md。
 """
 
 from __future__ import annotations
@@ -48,8 +47,12 @@ def find_initial_wave(pivots_in_confirm_order: Sequence[Pivot]) -> InitialWaveRe
     调用方（S6 的逐 bar 循环）负责按 bar 顺序喂入。
 
     结构不足（O6 失败规则）时返回 confirmed=False，不抛异常——这是正常状态，
-    不是错误。只有真正未实现的分支（H0/L0 替换 / L1/H1 替换）才抛
-    NotImplementedError（见模块 docstring 范围声明）。
+    不是错误。
+
+    实现 C-07 替换规则：
+    - H0/L0 替换：更高的 H 替换 H0，更低的 L 替换 L0
+    - L1/H1 替换：更低的 L 替换 L1，更高的 H 替换 H1
+    - 不满足替换条件（不够极端）的 pivot 被忽略
     """
     if not pivots_in_confirm_order:
         return InitialWaveResult(confirmed=False)
@@ -63,20 +66,22 @@ def find_initial_wave(pivots_in_confirm_order: Sequence[Pivot]) -> InitialWaveRe
 
         for p in pivots_in_confirm_order[1:]:
             if h1 is None:
-                # 还在等 H1；此时出现的任何第二个 L 都是【填洞 C-07】场景，未实现。
+                # 等待 H1；如果出现第二个 L，检查是否替换 L0（C-07 规则）
                 if p.pivot_type == PivotType.L:
-                    raise NotImplementedError(
-                        "L0 之后、H1 确认前出现第二个 L（【填洞 C-07】替换场景）暂未实现："
-                        "spec 未规定替换后 H1 候选范围如何变化，不猜。"
-                    )
+                    if p.price < l0.price:
+                        # 更低的 L 替换 L0
+                        l0 = p
+                    # else: 不够低，忽略
+                    continue
                 h1 = p  # p.pivot_type == PivotType.H
             else:
-                # H1 已定；等 L2。此时出现的任何第二个 H 是否替换 H1，spec 未提，未实现。
+                # H1 已定；等 L2。如果出现第二个 H，检查是否替换 H1（C-07 规则）
                 if p.pivot_type == PivotType.H:
-                    raise NotImplementedError(
-                        "H1 确认后、L2 确认前又出现一个 H（是否替换 guard 候选）暂未实现："
-                        "spec 未提及这一支，不猜。"
-                    )
+                    if p.price > h1.price:
+                        # 更高的 H 替换 H1
+                        h1 = p
+                    # else: 不够高，忽略
+                    continue
                 # p.pivot_type == PivotType.L，检查 L2 < L0
                 if p.price < l0.price:
                     return InitialWaveResult(
@@ -99,20 +104,22 @@ def find_initial_wave(pivots_in_confirm_order: Sequence[Pivot]) -> InitialWaveRe
 
     for p in pivots_in_confirm_order[1:]:
         if l1 is None:
-            # 还在等 L1；此时出现的任何第二个 H 都是【填洞 C-07】场景，未实现。
+            # 等待 L1；如果出现第二个 H，检查是否替换 H0（C-07 规则）
             if p.pivot_type == PivotType.H:
-                raise NotImplementedError(
-                    "H0 之后、L1 确认前出现第二个 H（【填洞 C-07】替换场景）暂未实现："
-                    "spec 未规定替换后 L1 候选范围如何变化，不猜。"
-                )
+                if p.price > h0.price:
+                    # 更高的 H 替换 H0
+                    h0 = p
+                # else: 不够高，忽略
+                continue
             l1 = p  # p.pivot_type == PivotType.L
         else:
-            # L1 已定；等 H2。此时出现的任何第二个 L 是否替换 L1，spec 未提，未实现。
+            # L1 已定；等 H2。如果出现第二个 L，检查是否替换 L1（C-07 规则）
             if p.pivot_type == PivotType.L:
-                raise NotImplementedError(
-                    "L1 确认后、H2 确认前又出现一个 L（是否替换 guard 候选）暂未实现："
-                    "spec 未提及这一支，不猜。"
-                )
+                if p.price < l1.price:
+                    # 更低的 L 替换 L1
+                    l1 = p
+                # else: 不够低，忽略
+                continue
             if p.price > h0.price:
                 return InitialWaveResult(
                     confirmed=True,
