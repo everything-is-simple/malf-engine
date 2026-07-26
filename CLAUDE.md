@@ -19,9 +19,32 @@
 - **L5 Service**：公共 API 层
 
 ### 当前实现状态
-**第一刀完成**：`uninitialized → up_alive` 转换（spec §2, S1-S9 事件序列）。
-- 16 个测试通过，1 个跳过（真实数据冒烟测试在 Windows 上需要 TDX 路径）
-- 覆盖：pivot k=2 延迟确认、first guard = L1、initial wave 创建
+
+**Core 层完成** ✅：完整状态机（UP/DOWN 双方向）
+- **第一~五刀**：Core 层完整状态机
+  - Pivot 检测（k=2 延迟确认）
+  - 初始化判定（UP/DOWN 双方向）
+  - Guard break 检测（同向/反向突破）
+  - Progress 追踪
+  - TRANSITION 期间 Candidate 机制
+  - 测试：47 passed
+
+**C-07 补丁完成** ✅：早期 Pivot 替换
+- H0/L0 替换：更高的 H 替换 H0，更低的 L 替换 L0
+- L1/H1 替换：更低的 L 替换 L1，更高的 H 替换 H1
+- 真实数据验证：offset=0 成功处理 200 bars（之前 bar 12 失败）
+- 测试：4 个替换场景全部通过
+
+**Range 层完成** ✅：震荡期结构识别
+- Range 诞生（guard break 触发）
+- Boundary 双系统（init 冻结 / now 演化）
+- Evolution 检测（pivot 突破 boundary_now）
+- Resolution 判定（pivot 突破 boundary_init，T6 定理）
+- Continuation/Reversal 分类
+- 真实数据验证：sh600000 200 bars，3 Ranges，R2 不变量全部通过
+- 测试：6 synthetic + 1 real data
+
+**总计测试**：58 passed, 1 skipped
 
 ### 核心模块
 
