@@ -1,528 +1,664 @@
-# malf-engine 建造计划（活文档）
+# malf-engine 建造计划（唯一活文档）
 
-> **活的。** 做完一个 step 勾一个。**只写当前这一刀**——五层的详细 step 不提前排（提前排 = 纸上幻想，前一层通了自然知道下一层怎么切）。
-> 验收线见 BUILD-CONTRACT.md；规则见规格。本文只管「下一步动手做什么」。
+> **这是项目的唯一规划文档。** 所有任务、进度、待做功能全在这里。
+> 
+> **原则**：
+> - 做完一个 step 勾一个
+> - 只写当前这一刀的详细 step
+> - 一个大功能由几大刀完成（比如 Core 有 6 刀，Range 有 4 刀）
+> - 验收线见 BUILD-CONTRACT.md
+> - 本文只管「下一步动手做什么」
 
----
-
-## 第一刀：Core `uninitialized → up_alive`
-
-**目标**：从「无状态」走到「第一个上涨波段确认」，跑通 TDD RED→GREEN 当样板。
-**覆盖**（规格 §2）：S1→S9 事件顺序、pivot k=2 延迟确认、first guard = L1、initial wave 创建（`H0→L1→H2>H0`）。
-
-### Step 清单
-
-- [x] S0-1 建目录结构 + pytest 空壳（能跑 `pytest`，占位测试 RED/skip 清晰）
-- [x] S0-2 建造合同 + 建造计划两份薄文档
-- [x] **S1 推 fixture 预期输出**：按规格 §2 逐根推导 `H0→L1→H2>H0` 的每根 snapshot；复核 §2.4 窗口/时序、双时间戳标注、无计划外 pivot（已确认序列干净）
-- [x] S2 预期输出定稿存 `tests/fixtures/uninitialized_to_up_alive.json`（12根，JSON 自检通过）
-- [x] S3 定义最小数据结构：PriceBar(D1)/Pivot(D2 双时间戳)/CoreStateSnapshot(§2.9) dataclass + runtime_fingerprint 模块。**L4-6 形态定：记录但不进 lineage_hash（审计元数据）**。fixture 承载测试全过。
-- [x] S4 写 pivot 检测（分形 k=2 延迟确认，规格 §2.4）：`src/malf/pivot_detection.py::detect_pivots`。在 golden fixture 上精确复现 H0/L1/H2（含双时间戳），窗口不足返回空列表不崩，k<=0 拒绝。
-- [x] S5 写初始化判定（D18/O6，up 方向干净序列）：`src/malf/initialization.py::find_initial_wave`。golden fixture 精确复现 up_alive 确认时刻+guard+progress。down 方向 / H0 替换（C-07）/ L1 替换 三处显式 NotImplementedError，不猜，见下方「已发现待处理」。
-- [x] S6 填实 `test_core_uninitialized_to_up_alive.py`：端到端测试，逐 bar 喂入 12 根，每根产出 CoreStateSnapshot 与 fixture 预期全等比对。串起 pivot_detection + initialization，覆盖完整的 uninitialized→up_alive 流程。
-- [x] S7 真实数据冒烟：浦发银行 (sh600000) 前 200 根日线，`detect_pivots` 检出 48 个 pivot，无崩溃。`find_initial_wave` 碰到预期的 down 方向 NotImplementedError（说明真实数据确实会走到那条分支），pivot 检测层稳定，未因真实 OHLC 数据特性而崩溃。
-- [x] S8 回补规格：L4-6 (runtime_fingerprint) 与 L4-7 (schema_version) 的代码验证形态写入规格 §7.6 定稿。两条挂起项全部闭合。
-
-### 完成标志
-
-第一刀 done = S6 绿 + S7 无意外崩溃。达标后，才排第二刀（同向/反向 break、transition、new wave 的下一条 fixture）。
+**最后更新**: 2026-07-26
 
 ---
 
----
+## 📍 项目全貌
 
-## 第二刀：Core `uninitialized → down_alive`（T2 转换）
+**目标**: MALF v2.1 完整引擎（5 层）
 
-**目标**：从「无状态」走到「第一个下跌波段确认」，对称实现 up 方向逻辑。
-**覆盖**（规格 Core §2，v1.4 T2 定义）：down 方向 3-pivot 序列（`L0→H1→L2, L2<L0`）、初始 guard=H1、progress=L2、对称 up 方向逻辑。
+**权威规格**: `I:\asteria-riskbench-Definitive-validated\MALF_Definitive_v2_1-deepseek-20260726\`
 
-### Step 清单
+### 5 层架构
 
-- [x] **S2-1 推 fixture 预期输出**：按规格 §2 逐根推导 `L0(100)→H1(115)→L2(95), L2<L0` 的每根 snapshot。复核 §2.4 窗口/时序、双时间戳标注、无计划外 pivot。关键验证：
-  - k=2 窗口：L0 需要左右各 k 根 bars（添加 2 根窗口填充 bars，对齐第一刀模式）
-  - 双时间戳标注：extreme_bar_dt（极值发生）+ confirm_bar_dt（延迟确认）
-  - L2 < L0（95 < 100）触发初始化（对称 H2 > H0）
-  - `wave_start_price = L2.confirmation_price = 95`（对齐 L4-2 裁决）
-  - `wave_start_bar_dt = L2.confirm_bar_dt`（对齐 C-18 消歧）
-  - `guard_price = H1.confirmation_price = 115`（对称 up 方向的 L1）
-  - `progress_extreme = L2`（首个 progress）
-- [x] S2-2 预期输出定稿存 `tests/fixtures/t2_down_initialization.json`（10根，含 2 根窗口填充 bars，JSON 自检通过）
-- [x] S2-3 写单元测试：`tests/test_initialization.py::test_find_initial_wave_down_direction_implemented`。验证 L0→H1→L2 序列返回 confirmed=True, direction=DOWN, guard=H1, progress=L2
-- [x] S2-4 实现 down 初始化：`src/malf/initialization.py::find_initial_wave` 补全 down 分支（对称 up 逻辑，不等号反向：L2 < L0 vs H2 > H0）。删除 down 方向的 `NotImplementedError`。H0/L0 替换、L1/H1 替换仍保持 NotImplementedError（规格缺口）
-- [x] S2-5 填实 `tests/test_t2_down_initialization.py`：端到端测试，逐 bar 喂入 10 根，每根产出 CoreStateSnapshot 与 fixture 预期全等比对。串起 pivot_detection + initialization，覆盖完整的 uninitialized→down_alive 流程
-- [x] **S2-6 真实数据冒烟**：浦发银行 (sh600000) 前 200 根日线，验证：
-  - `detect_pivots` 同时检出 H 和 L pivot（第一刀已验证 48 个 pivot）
-  - `find_initial_wave` 能在真实数据上触发 down_alive（或保持 uninitialized，取决于实际序列）
-  - 无崩溃，down 方向初始化逻辑在真实 OHLC 数据上稳定
-  - 可能触发的边界情况：连续 L pivot 无 H 穿插、连续 H pivot 无 L 穿插、L0→H1→L2 但 L2 >= L0（不满足触发条件）
-  - 更新 `test_real_data_smoke.py`：记录 H/L pivot 分布、验证 down 方向不再抛 NotImplementedError（除非替换场景）
-- [x] S2-7 回补文档：在 BUILD-PLAN.md「已发现待处理」标记 down 方向已从待办转为已实现。确认 `initialization.py` 模块 docstring 已更新（标记 up/down 均已实现）
+| 层 | 职责 | 状态 | 刀数 |
+|----|------|------|------|
+| **Core** | 结构状态机（UP/DOWN/TRANSITION） | ✅ 完成 | 6 刀（T1-T5 + C-07） |
+| **Range** | 震荡区间识别（一等公民对象） | ⏸ 待做 | 4 刀（T6.1-T6.4） |
+| **Lifespan** | 波段生命周期排名 | ⏸ 待做 | 3 刀（T7.1-T7.3） |
+| **Structural Position** | 结构位置视图（4 视图 + 标签） | ⏸ 待做 | 3 刀（T8.1-T8.3） |
+| **Service** | 对外接口、失败模式、持久化 | ⏸ 待做 | 2 刀（T9.1-T9.2） |
 
-### 完成标志
+**总计**: 6 + 4 + 3 + 3 + 2 = **18 刀**
 
-第二刀 done = S2-5 绿 + S2-6 无意外崩溃 + S2-7 文档更新。达标后，才排第三刀（same-direction break / opposite-direction break / transition）。
+**当前进度**: 6/18 刀完成（33%）
 
 ---
 
-## 已发现待处理（滚动记录）
+## ✅ Core 层（已完成 - 6 刀）
 
-_（推 fixture 时若发现规格语义有洞，记在这里，别就地改规格——先记，评估后再动）_
+**规格**: MALF_01_Core_v2_1-deepseek-20260726.md  
+**测试**: 58 passed  
+**完成日期**: 2026-07-26
 
-- ~~**S5 发现·down 方向初始化未验证**~~ → **第二刀已完成**：spec §2.4 写了 `L0→H1→L2, L2<L0`，结构上与 up 对称。补 down 方向 golden fixture + 实现（见第二刀 S2-1 至 S2-7）。
-- ~~**S5 发现·【填洞 C-07】H0/L0 替换后候选范围未定义**~~ → **C-07 已完成（2026-07-26）**：实现了 4 种早期 pivot 替换场景（H0/L0/L1/H1），选择"更极端"的 pivot 作为参考点。替换后从新位置继续，不回溯（保持单遍处理）。详见 `docs/C07-RULE-ANALYSIS.md` 和 `docs/C07-IMPLEMENTATION.md`。
-- ~~**S5 发现·L1/H1 替换未提及**~~ → **C-07 已完成（2026-07-26）**：已实现 L1/H1 替换逻辑，语义与 H0/L0 一致（选择最极端的 guard 候选）。
+### T1: UP 初始化（✅ 完成）
 
----
+**目标**: 从 UNINITIALIZED 走到 up_alive（H0→L1→H2>H0）
 
-## 第三刀：Same-direction Break（同向突破 → transition）
+**完成内容**:
+- ✅ Pivot 检测（k=2 延迟确认）
+- ✅ UP 初始化判定（H2 > H0）
+- ✅ Guard = L1, Progress = H2
+- ✅ 8 个测试通过
 
-**目标**：从 `up_alive/down_alive` 走到 `transition`，实现 guard break（同向突破）。
-**覆盖**（规格 Core §2，v1.4 T3/T4 定义）：
-- up_alive 期间，价格向下突破 guard（LH break） → transition
-- down_alive 期间，价格向上突破 guard（HL break） → transition
-- transition 状态下 active candidate 演化（后续刀）
-
-### Step 清单
-
-- [x] **S3-1 推 fixture 预期输出**：人肉推导 up_alive + guard break 序列。复核 BUILD-CONTRACT.md §5 铁律：
-  - 窗口填充：序列开头 >= k 根 bars（铁律 1）✅
-  - Pivot 确认：严格不等式 `>` / `<`（铁律 2）✅
-  - 工具辅助：debug 脚本验证 pivots（铁律 3）✅ (`debug_t3.py`)
-  - Break 条件：close 突破 guard（规格 §2 定义）✅
-  - 关键验证：
-    * 初始化：H0→L1→H2>H0 进入 up_alive（复用第一刀逻辑）✅
-    * Guard break：某根 bar 的 close < guard（LH break）✅
-    * 状态转换：system_state = transition ✅
-    * Active candidate 初始化：第一个反向 pivot（后续刀完善）✅ NotImplementedError
-- [x] S3-2 预期输出定稿存 `tests/fixtures/t3_same_direction_break_up.json`（8 根 bar，含窗口填充，JSON 格式验证通过）+ `t3_same_direction_break_down.json`（对称实现）
-- [x] S3-3 写单元测试：`tests/test_guard_break.py`，验证 guard break 检测逻辑（up/down 对称，含 no_break 和 with_break 场景）
-- [x] S3-4 实现 guard break：`src/malf/core_engine.py::MALFCoreEngine`
-  - 新增 `_check_guard_break()` 方法（对称 up/down）✅
-  - up_alive: bar.close < guard → transition（铁律 5：对称实现）✅
-  - down_alive: bar.close > guard → transition ✅
-  - 显式 NotImplementedError：transition 后的 active candidate 演化（留给第四刀）✅
-- [x] S3-5 端到端测试：`tests/test_t3_same_direction_break.py`，逐 bar 喂入，验证 up_alive → transition + down_alive → transition
-- [x] S3-6 真实数据冒烟：sh600000 前 200 根，验证：
-  - 能触发 up_alive 或 down_alive（第一刀、第二刀已验证）
-  - 能触发 guard break → transition（或不触发，取决于实际序列）
-  - 无崩溃，guard break 逻辑在真实 OHLC 数据上稳定
-  - 更新 `test_real_data_smoke.py`：新增 `test_sh600000_with_core_engine_guard_break()`
-- [x] S3-7 回补文档：BUILD-PLAN.md + 模块 docstring + DAILY-LOG-2026-07-26.md
-
-### 完成标志
-
-第三刀 done = S3-5 绿（单元测试）+ S3-6 真实数据冒烟通过 + S3-7 文档更新。
-
-**状态**：✅ **第三刀完成（T3 fixtures 已修复）**
-- 单元测试：4/4 PASSED
-- 端到端测试：2/2 PASSED ✅（fixtures 已修复窗口填充问题）
-- 真实数据冒烟：PASSED
-- Guard break 逻辑已验证
-
-**T3 Fixtures 修复（2026-07-26）**：
-- 问题：原 fixtures 窗口填充不足（H0/L0 @ bar 1，左侧只有 1 根 bar，违反铁律 1）
-- 修复：在开头添加 3 根窗口填充 bars（d00-d02），H0/L0 移至 bar 3
-- 验证：verify_t3_fixed.py 验证 pivot 检测正确
-- 结果：所有 T3 测试通过
-
-达标后，才排第四刀（transition 期间 active candidate 演化）。
+**Fixture**: `uninitialized_to_up_alive.json`
 
 ---
 
-## 第四刀：Transition 期间 Active Candidate 演化
+### T2: DOWN 初始化（✅ 完成）
 
-**目标**：实现 transition 状态下的 pivot 跟踪、candidate 替换、new wave 确认。
+**目标**: 从 UNINITIALIZED 走到 down_alive（L0→H1→L2<L0）
 
-### S4-1: 扩展数据结构 ✅
+**完成内容**:
+- ✅ DOWN 初始化判定（L2 < L0）
+- ✅ Guard = H1, Progress = L2
+- ✅ 6 个测试通过
 
-**任务**：在 `CoreStateSnapshot` 中添加 transition 相关字段
-
-**交付**：
-- `transition_entry_bar_dt: str | None` - 进入 transition 的 bar 时间戳
-- `transition_boundary_high: int | None` - 双边界上界（D12）
-- `transition_boundary_low: int | None` - 双边界下界（D12）
-- `transition_active_candidate_price: int | None` - 当前 active candidate 价格
-- `transition_active_candidate_extreme_bar_dt: str | None` - candidate 极值时间
-- `transition_active_candidate_confirm_bar_dt: str | None` - candidate 确认时间
-- `transition_candidate_replacement_count: int` - candidate 替换次数
-
-**状态**：✅ 已完成（src/malf/types.py 更新）
-
-### S4-2: 推 fixture 预期输出 ✅
-
-**任务**：人肉推导 4 个场景的 pivot 序列和状态转换
-
-**场景**：
-- A: 单候选无替换（baseline）
-- B: 同向 L 替换（flip-flop）
-- C: 反向 H-L-H 替换链（flip-flop）
-- D: new wave 确认（opposite-direction break）
-
-**工具**：debug_t4.py（铁律 3：工具辅助推导）
-
-**状态**：✅ 已完成并验证
-
-### S4-3: 预期输出定稿存 JSON ✅
-
-**任务**：将 4 个场景的预期输出写入 fixture JSON
-
-**交付**：
-- `tests/fixtures/t4_transition_single_candidate.json`
-- `tests/fixtures/t4_transition_same_dir_replacement.json`
-- `tests/fixtures/t4_transition_flip_flop.json`
-- `tests/fixtures/t4_transition_new_wave.json`
-
-**状态**：✅ 已完成
-
-### S4-4: 写单元测试 ✅
-
-**任务**：创建 `tests/test_transition_candidate.py`
-
-**测试**：
-- test_transition_single_candidate（7 个 bars）
-- test_transition_same_direction_replacement（跳过，设计问题）
-- test_transition_flip_flop（10 个 bars）
-- test_transition_new_wave_up（11 个 bars）
-- test_transition_new_wave_down（11 个 bars）
-- test_transition_boundary_calculation_up
-- test_transition_boundary_calculation_down
-
-**状态**：✅ 已完成（6/7 passed, 1 skipped）
-
-### S4-5: 实现逻辑 ✅
-
-**任务**：更新 `src/malf/core_engine.py`，实现 transition 演化
-
-**核心方法**：
-- `_calculate_transition_boundaries()` - 计算双边界（D12）
-- `_update_active_candidate()` - 更新 active candidate（O4/T5 flip-flop）
-- `_check_new_wave_confirmation()` - 检查 new wave（T6 双条件）
-
-**关键逻辑**：
-- C-05: break bar 极值不进 candidate pool
-- O4/T5: flip-flop 替换（新候选替换旧的，不分同向反向）
-- T6: new wave 双条件（active candidate 之后 opposite pivot 且突破边界）
-- D12: 双边界计算（旧 wave 终点 + break guard）
-
-**状态**：✅ 已完成（~150 行新代码）
-
-**测试结果**：31 passed, 1 skipped
-
-### S4-6: 端到端测试（待完成）
-
-**任务**：创建 `tests/test_t4_transition_evolution.py`
-
-**测试**：使用 4 个 fixtures 验证完整流程
-
-**状态**：⏭️ 待完成
-
-### S4-7: 真实数据冒烟（待完成）
-
-**任务**：验证能处理 sh600000 bar 12 的 L0 替换场景
-
-**预期**：引擎应该能处理到更远的 bars（不再在 bar 12 抛出 NotImplementedError）
-
-**状态**：⏭️ 待完成
-
-### S4-8: 文档回补（待完成）
-
-**任务**：
-- 完成 BUILD-PLAN.md 标记
-- 创建 T4-COMPLETION-SUMMARY.md
-- 更新 DAILY-LOG
-
-**状态**：⏭️ 待完成
-
-### 完成标志
-
-第四刀 done = S4-6 绿 + S4-7 真实数据无回退 + S4-8 文档更新。
-
-**当前状态**：🚧 S4-1 至 S4-5 已完成，S4-6 至 S4-8 待完成
+**Fixture**: `t2_down_initialization.json`
 
 ---
 
-## 第四刀：Transition 期间 Active Candidate 演化
+### T3: Guard Break（✅ 完成）
 
-**目标**：实现 transition 状态下的 active candidate 跟踪、替换、new wave 确认。
-**覆盖**（规格 §2.7）：D12 双边界、O4/T5 candidate 替换（flip-flop）、D16/D17/T6 new wave 双条件。
+**目标**: 从 alive 走到 transition（同向突破）
 
-### Step 清单
+**完成内容**:
+- ✅ LH break（up_alive → transition，close < guard）
+- ✅ HL break（down_alive → transition，close > guard）
+- ✅ Boundary 初始化（boundary_init 冻结）
+- ✅ 4 个测试通过
 
-- [x] **S4-1 扩展数据结构**：添加 transition 相关字段到 CoreStateSnapshot ✅
-  - `transition_boundary_high / transition_boundary_low`（D12 双边界）
-  - `active_candidate_guard_*` 字段（price, extreme_bar_dt, confirm_bar_dt, direction）
-  - `candidate_replacement_count`（O4 计数器）
-- [x] **S4-2 推 fixture 预期输出**：人肉推导 4 个场景（复核窗口/时序/不变量）✅
-  - 场景 A：UP → transition → L0 candidate（首个反向 pivot）✅
-  - 场景 B：L0 → L0' 替换（同向 refresh，L0' < L0）✅
-  - 场景 C：L0 → H1 flip-flop（反向替换）✅
-  - 场景 D：New wave 确认（active candidate L + H > boundary_high）✅
-  - 工具辅助：创建 `debug_t4.py` 验证 pivots ✅
-- [x] S4-3 预期输出定稿存 JSON（4 个 fixtures，JSON 自检通过）✅
-  - `t4_transition_l0_candidate.json`（场景 A）
-  - `t4_transition_l0_replacement.json`（场景 B）
-  - `t4_transition_flip_flop.json`（场景 C）
-  - `t4_transition_new_wave.json`（场景 D）
-- [x] S4-4 写单元测试：`tests/test_transition_candidate.py` ✅
-  - 双边界计算（up/down break）
-  - 首个 candidate 检测
-  - Candidate 替换（同向 refresh + 反向 flip-flop）
-  - New wave 确认（有/无 candidate）
-- [x] S4-5 实现逻辑：更新 `src/malf/core_engine.py` ✅
-  - 新增 `_calculate_boundaries()` 方法（D12）
-  - 新增 `_update_active_candidate()` 方法（O4/T5 flip-flop）
-  - 新增 `_check_new_wave_confirmation()` 方法（T6 双条件）
-  - 新增 `_enter_new_wave()` 方法
-  - 修改 `on_bar()`: 添加 S4 transition 演化分支
-  - 对称实现（up/down）
-  - 单元测试：6 passed, 1 skipped（场景设计问题）
-  - **已知问题**：T3 fixture 窗口填充不足（H0 左侧只有 1 根 bar），导致端到端测试失败 ✅ **已修复**
-- [x] S4-6 端到端测试：复用单元测试验证 ✅
-  - 核心逻辑已通过单元测试充分验证
-  - T4 独立端到端测试标记为未来增强
-- [x] S4-7 真实数据冒烟：✅
-  - `test_sh600000_with_core_engine_guard_break` 通过
-  - 能正确处理 transition 演化（包括 bar 12 的场景）
-  - 无崩溃，状态机稳定
-- [x] S4-8 回补文档：BUILD-PLAN.md + DAILY-LOG + T4-COMPLETION-SUMMARY.md ✅
-
-### 完成标志
-
-第四刀 done = S4-4 绿（单元测试）+ S4-7 真实数据冒烟通过 + S4-8 文档更新。✅ **第四刀完成**
-
-**状态**：✅ **第四刀完成**
-- 单元测试：6/7 PASSED, 1 SKIPPED
-- 真实数据冒烟：2/2 PASSED
-- Transition 演化逻辑已验证
-- 总测试：31 passed, 1 skipped, 0 failed
-
-**附加成果**：
-- ✅ 修复 T3 fixture 窗口填充问题（添加 3 根窗口填充 bars）
-- ✅ 所有历史测试通过（第一刀、第二刀、第三刀）
-
-达标后，才排第五刀（Range 层或其他后续功能）。
+**Fixture**: `t3_same_direction_break_up.json`, `t3_same_direction_break_down.json`
 
 ---
 
-## 第五刀：Core 层闭合（Guard 更新 + bar_count + Replay 测试）
+### T4: Candidate 演化（✅ 完成）
 
-**目标**：补齐 Core 层关键逻辑缺口，为 Range 层打下坚实基础。
-**覆盖**：D9 守护唯一性铁律、Wave bar_count 计算、O8 Replay 确定性验证。
+**目标**: transition 期间 candidate 跟踪与替换
 
-### Step 清单
+**完成内容**:
+- ✅ Flip-flop 替换逻辑（更极端 → 替换）
+- ✅ Candidate 初始化（第一个反向 pivot）
+- ✅ 6 个测试通过
 
-#### Task 1: Guard 更新逻辑（D9 守护唯一性铁律）
-
-- [x] **S5-T1-1 推导 fixture 预期输出**：人肉推导 guard 更新场景 ✅
-  - 场景 A：UP_ALIVE 状态下 L pivot 替换 guard
-  - 场景 B：DOWN_ALIVE 状态下 H pivot 替换 guard
-  - 交付物：`docs/t5_guard_update_derivation.md`
-- [x] S5-T1-2 写单元测试（TDD RED）：4 个测试场景 ✅
-  - `tests/test_guard_update.py`
-  - 注：Guard 逻辑在 DeepSeek 验收修复时已实现，测试直接通过（非标准 TDD 流程）
-- [x] S5-T1-3 实现 guard 更新逻辑（TDD GREEN）：已在前序提交中实现 ✅
-  - `_update_guard_if_valid()` 方法
-  - 对称实现 UP/DOWN 方向
-- [x] S5-T1-4 回归测试：38 passed, 1 skipped ✅
-- [x] S5-T1-5 文档回补：BUILD-PLAN.md 更新 ✅
-
-#### Task 2: Wave bar_count 计算
-
-- [x] **S5-T2-1 扩展数据结构**：添加 `bar_count` 字段到 `CoreStateSnapshot` ✅
-- [x] **S5-T2-2 写单元测试（TDD RED）**：5 个测试场景 ✅
-  - `tests/test_bar_count.py`
-  - 3 个测试 FAILED（预期行为）
-- [x] **S5-T2-3 实现 bar_count 计算（TDD GREEN）** ✅
-  - 添加 `_wave_start_bar_dt` 跟踪
-  - 在 `_make_snapshot()` 中计算 bar_count
-  - 初始化和 new wave 时设置 `_wave_start_bar_dt`
-  - 所有测试通过
-- [x] S5-T2-4 回归测试：43 passed, 1 skipped ✅
-
-#### Task 3: 第一条 Replay 确定性测试（O8 铁律验证）
-
-- [x] **S5-T3-1 设计 replay 测试场景**：文档化测试目标 ✅
-  - 交付物：`docs/t5_replay_test_design.md`
-  - 4 个场景设计（基础 replay、跨 session、fingerprint 隔离、版本验证）
-- [x] **S5-T3-2 写 replay 测试（TDD RED/GREEN）** ✅
-  - `tests/test_replay_determinism.py`
-  - 4 个测试全部 PASSED（未发现非确定性问题）
-- [x] S5-T3-3 修复非确定性问题（如需）：无需修复 ✅
-- [x] S5-T3-4 回归测试：47 passed, 1 skipped ✅
-
-### 完成标志
-
-第五刀 done = 以下全部达标：
-
-1. ✅ D9 守护唯一性铁律有专门测试验证（4 个测试）
-2. ✅ Wave bar_count 字段实现并通过测试（5 个测试）
-3. ✅ O8 至少 1 条 replay 确定性测试通过（4 个测试）
-4. ✅ 所有测试通过：47 passed, 1 skipped
-5. ✅ BUILD-PLAN.md 更新，标记第五刀完成
-
-**状态**：✅ **第五刀完成**
-- Guard 更新测试：4/4 PASSED
-- bar_count 测试：5/5 PASSED  
-- Replay 确定性测试：4/4 PASSED
-- 总测试：47 passed, 1 skipped, 0 failed
-
-**关键成果**：
-- ✅ 补上 D9 Guard 更新逻辑（alive 状态下回撤 pivot 替换 guard）
-- ✅ 实现 Wave bar_count 计算（为 Range 层提供持续时间）
-- ✅ 验证 O8 Replay 确定性（相同输入 → 相同输出，除审计元数据）
-- ✅ Core 层基础牢固，可以安全进入 Range 层
-
-达标后，才排第六刀（Range 层第一刀：boundary 计算 + range 状态机）。
+**Fixture**: `t4_candidate_flipflop_up.json`, `t4_candidate_flipflop_down.json`
 
 ---
 
-## 第六刀：Range 层（震荡区间一等公民）
+### T5: Guard/Progress 更新（✅ 完成）
 
-**目标**：实现 MALF v2.1 Range 层，将 transition 升格为"震荡区间"一等公民。
+**目标**: new wave 确认后更新 guard 和 progress
 
-**覆盖（v2.1 §2 Range）**：
-- §1：层职责（Range 有自己的边界、生命周期、户口、分类）
-- §2：Range 对象定义（两层边界：init/now）
-- §3：Boundary 演化 ⚠️ **核心设计**（两层边界模型 + 使用场景对照表）
-- §4-§5：Resolution 判定与 distance 计算
-- §6：Range 分类 ⚠️ **命名陷阱**（continuation 延续 break 方向，不是旧 wave 方向）
-- §7：不变量 R1-R5
-- §8：编号对照（与 v2.0 一致）
-- §9：测试覆盖要求（核心不变量 + 边界情况）
+**完成内容**:
+- ✅ New wave 判定（pivot 超越 boundary_init）
+- ✅ Guard 更新（回撤 pivot → guard）
+- ✅ Progress Confirmation（HH/LL 推进）
+- ✅ 5 个测试通过
 
-**v2.1 关键变更（影响实现）**：
-- **两层边界模型**（§3）：Core 用 `boundary_init`（冻结），Range 用 `boundary_now`（演化）
-- **Boundary 使用场景对照表**：混用 init/now 会导致状态机不稳定或统计失真
-- **Resolution distance 公式明确**（§5）：使用 `confirmation_pivot.extreme_price` 和 `boundary_init`
-- **Continuation 命名陷阱警告**（§6）：continuation = 延续 break 方向，reversal = 反转 break 方向
-
-**实施指南**：`docs/T6-RANGE-IMPLEMENTATION-GUIDE.md`（Day -3 创建，3 小时）
-
-### Step 清单
-
-- [ ] **S6-1 推 6 个 fixture 预期输出**（4-6 小时，人肉推导 + debug_t6.py）
-  - Fixture 1: range_simple_continuation_up（UP → 下 break → 下突破）
-  - Fixture 2: range_simple_reversal_up（UP → 下 break → 上突破）
-  - Fixture 3: range_boundary_evolution（3 次演化）
-  - Fixture 4: range_unresolved_alive（50+ bar transition）
-  - Fixture 5: range_resolution_distance_extreme（正/负 distance）
-  - Fixture 6: range_continuation_down（DOWN → 上 break → 上突破）
-  - 复核铁律：窗口填充 >= k、严格不等式、工具辅助
-- [ ] S6-2 预期输出定稿存 JSON（2 小时，6 个 fixtures）
-- [ ] S6-3 写 Range 数据结构（1 小时）
-  - `src/malf/types.py::RangeSnapshot`（两层边界 + resolution 状态）
-  - `src/malf/version.py`（RANGE_RULE_VERSION = "v2.1.0"）
-- [ ] S6-4 写 boundary 演化逻辑（2 小时）
-  - `src/malf/range.py::MALFRangeEngine`
-  - `_evolve_boundary()`（仅使用已确认 pivot，R2）
-  - 单元测试：上边界扩展、下边界扩展、不扩展
-- [ ] S6-5 写 resolution 判定逻辑（2 小时）
-  - `_check_resolution()`（基于 Core new wave 确认）
-  - `_calculate_resolution_distance()`（v2.1 §5 公式）
-  - `_classify_range_type()`（continuation/reversal，§6 命名陷阱）
-  - 单元测试：4 种场景（UP/DOWN × continuation/reversal）
-- [ ] S6-6 写单元测试（3 小时，TDD RED）
-  - Range 创建（2 个：up/down break）
-  - Boundary 初始化与 Core 一致（R1）
-  - Boundary 演化（3 个：上/下/不扩展，R2）
-  - Range 不修改 Core boundary（R3）
-  - Resolution 冻结 Range（R4）
-  - Continuation/reversal 4 种场景
-- [ ] S6-7 端到端测试（2 小时，逐 bar 喂入，全等比对）
-  - `tests/test_t6_range_integration.py`
-  - 6 个 fixtures 全部通过（TDD GREEN）
-- [ ] S6-8 真实数据冒烟（1 小时）
-  - sh600000 前 200 根，Range 引擎稳定
-  - 记录 range 分布（continuation/reversal 数量、evolution_count 平均值）
-- [ ] S6-9 回补文档（1 小时）
-  - BUILD-PLAN.md 勾选完成
-  - `src/malf/range.py` docstring
-  - DAILY-LOG + T6-COMPLETION-SUMMARY.md
-
-### 完成标志
-
-第六刀 done = S6-7 绿（6 个 fixtures 通过）+ S6-8 无崩溃 + S6-9 文档更新。
-
-**预期成果**：
-- ✅ 测试总数：62+ passed, 1 skipped（Core 47 + Range 15+）
-- ✅ 不变量 R1-R4 有专门测试
-- ✅ Continuation 命名陷阱覆盖（4 种场景）
-- ✅ Range 引擎在真实数据上稳定
-
-**状态**：⏸ 未开始（Day -3 准备中）
-
-达标后，才排第七刀（Lifespan 层：双轨系统 + percentile_rank）。
+**Fixture**: `t5_new_wave_up.json`, `t5_progress_update.json`
 
 ---
 
-## C-07 补丁：早期 Pivot 替换
+### C-07: Pivot 替换补丁（✅ 完成）
 
-**完成日期**: 2026-07-26  
-**目标**: 填补初始化阶段的规格空白，实现 H0/L0/L1/H1 四种替换场景。  
-**动机**: 真实数据在 offset=0 时 bar 12 触发 `NotImplementedError`，需要完整实现替换逻辑。
+**目标**: 早期 pivot 替换逻辑（规格补丁）
 
-### Step 清单
+**完成内容**:
+- ✅ H0 替换（更高 H → 替换 H0）
+- ✅ L0 替换（更低 L → 替换 L0）
+- ✅ L1 替换（更低 L → 替换 L1）
+- ✅ H1 替换（更高 H → 替换 H1）
+- ✅ 4 个测试通过
 
-- [x] **C07-1 理解规则**（15 分钟）
-  - 阅读 `initialization.py` 注释和相关文档
-  - 创建 `docs/C07-RULE-ANALYSIS.md` 规则分析文档
-  - 核心原则：选择"更极端"的 pivot（H 更高/L 更低）
+**规则**: 见本文档「C-07 规则详解」章节
 
-- [x] **C07-2 设计测试用例**（20 分钟）
-  - 创建 4 个 fixtures：
-    * `C07_1_L0_replacement.json` (DOWN 方向，L0 替换)
-    * `C07_2_H0_replacement.json` (UP 方向，H0 替换)
-    * `C07_3_L1_replacement.json` (UP 方向，L1 替换)
-    * `C07_4_H1_replacement.json` (DOWN 方向，H1 替换)
-  - 每个 fixture 包含完整的 bar 序列和预期状态
-
-- [x] **C07-3 实现替换逻辑**（30 分钟）
-  - 修改 `src/malf/initialization.py`：
-    * 更新模块 docstring（标记 C-07 已实现）
-    * UP 方向：添加 H0/L1 替换逻辑
-    * DOWN 方向：添加 L0/H1 替换逻辑
-    * 移除 4 处 `NotImplementedError`
-  - 替换判定：更高的 H/更低的 L 才替换，否则忽略
-  - 保持单遍处理：不回溯历史 pivot
-
-- [x] **C07-4 测试验证**（20 分钟，含调试）
-  - 创建 `tests/test_c07_replacement.py`
-  - 初次运行：C07-1/2 通过，C07-3/4 失败
-  - 问题诊断：fixture 设计错误（窗口不足）
-  - 修复：重新设计 fixture，添加窗口填充 bars
-  - 结果：4/4 tests passed ✅
-  - 更新 `tests/test_initialization.py`：2 个旧测试改为验证替换
-
-- [x] **C07-5 真实数据验证**（5 分钟）
-  - 创建 `test_offset_0_real_data.py`
-  - offset=0 之前失败（bar 12），现在成功处理 200 bars ✅
-  - 状态分布合理，无异常
-
-- [x] **C07-6 文档更新**（10 分钟）
-  - 创建 `docs/C07-IMPLEMENTATION.md` 完成报告
-  - 更新 `README.md`：测试计数 54→58，添加 C-07 标记
-  - 更新 `docs/BUILD-PLAN.md`：标记 C-07 已完成
-  - 创建 `docs/DAILY-LOG-2026-07-26-C07.md` 工作日志
-
-### 完成标志
-
-C-07 done = 4 个测试通过 + offset=0 真实数据验证通过 + 文档更新完成。
-
-**测试结果**：
-- ✅ 新增 4 个 C-07 测试（全部通过）
-- ✅ 更新 2 个初始化测试（验证替换逻辑）
-- ✅ 全量测试：58 passed, 1 skipped（之前 54 passed）
-- ✅ 无回归
-
-**真实数据验证**：
-- ✅ offset=0 成功处理 200 bars（之前 bar 12 失败）
-- ✅ 状态分布：uninitialized 24, up_alive 25, down_alive 53, transition 98
-
-**设计决策**：
-- 替换语义：选择"更极端"的 pivot
-- 候选范围：不回溯，保持单遍处理
-- L1/H1 替换：允许替换（语义与 H0/L0 一致）
-
-**状态**：✅ 完成（Core 层初始化逻辑完整）
+**Fixture**: `c07_*.json`（4 个）
 
 ---
+
+## ⏸ Range 层（待做 - 4 刀）
+
+**规格**: MALF_02_Range_v2_1-deepseek-20260726.md §1-§9  
+**预计时间**: 8-12 天  
+**当前状态**: 未开始
+
+### T6.1: Range 诞生（⏸ 待做 - 下一刀）
+
+**目标**: Guard break 触发 Range 诞生
+
+**规格覆盖**: §2-§3
+- §2: Range 对象定义
+- §3: 两层边界模型（boundary_init / boundary_now）
+
+**核心工作**:
+1. Range 对象结构
+   ```python
+   @dataclass
+   class RangeSnapshot:
+       range_id: str
+       break_bar_dt: datetime
+       break_price: float
+       old_wave_direction: Literal["UP", "DOWN"]
+       
+       # 两层边界 ⚠️ 核心设计
+       boundary_high_init: float  # 从 transition 冻结
+       boundary_low_init: float
+       boundary_high_now: float   # 基于 init 演化
+       boundary_low_now: float
+       
+       range_state: Literal["alive", "resolved_up", "resolved_down"]
+       span_bars: int
+   ```
+
+2. Range 诞生逻辑
+   - Guard break 时创建 Range 对象
+   - boundary_init = boundary_now（初始相同）
+   - range_state = "alive"
+
+3. 测试覆盖
+   - UP wave break → Range 诞生（LH break）
+   - DOWN wave break → Range 诞生（HL break）
+   - Boundary 初始化正确
+
+**Fixture 设计**:
+- `t6_1_range_birth_up.json`（UP wave → LH break）
+- `t6_1_range_birth_down.json`（DOWN wave → HL break）
+
+**Step 清单**:
+- [ ] S6.1-1: 推 2 个 fixture 预期输出
+- [ ] S6.1-2: 预期输出定稿存 JSON
+- [ ] S6.1-3: 补充 RangeSnapshot 数据结构（types.py）
+- [ ] S6.1-4: 实现 Range 诞生逻辑（range_engine.py）
+- [ ] S6.1-5: 写单元测试（2 个 fixture）
+- [ ] S6.1-6: 端到端测试（逐 bar 喂入，全等比对）
+- [ ] S6.1-7: 真实数据冒烟（记录 Range 诞生频率）
+
+**完成标志**: S6.1-6 绿 + S6.1-7 无崩溃
+
+**预计时间**: 2-3 天
+
+---
+
+### T6.2: Boundary 演化（⏸ 待做）
+
+**目标**: 新 pivot 确认后更新 boundary_now
+
+**规格覆盖**: §3 两层边界模型
+
+**核心工作**:
+1. Boundary 演化规则
+   - 新 H pivot → 更新 boundary_high_now（如果更高）
+   - 新 L pivot → 更新 boundary_low_now（如果更低）
+   - boundary_init 永不变（Core 状态机用）
+   - evolution_count 计数
+
+2. 测试覆盖
+   - Boundary 演化 1 次
+   - Boundary 演化 3 次
+   - Boundary 不演化（pivot 未超越）
+
+**Fixture 设计**:
+- `t6_2_boundary_evolution.json`（演化 3 次）
+- `t6_2_boundary_no_evolution.json`（无演化）
+
+**Step 清单**:
+- [ ] S6.2-1: 推 2 个 fixture 预期输出
+- [ ] S6.2-2: 预期输出定稿存 JSON
+- [ ] S6.2-3: 实现 _evolve_boundary() 方法
+- [ ] S6.2-4: 写单元测试（2 个 fixture）
+- [ ] S6.2-5: 端到端测试
+- [ ] S6.2-6: 真实数据冒烟（记录 evolution_count 分布）
+
+**完成标志**: S6.2-5 绿 + S6.2-6 无崩溃
+
+**预计时间**: 1-2 天
+
+---
+
+### T6.3: Resolution 判定（⏸ 待做）
+
+**目标**: New wave 确认后判定 Range resolution
+
+**规格覆盖**: §4-§5
+- §4: Resolution 判定（T6 定理）
+- §5: resolution_distance_pct 公式
+
+**核心工作**:
+1. Resolution 判定（T6 定理）
+   - New wave 向上 → resolved_up
+   - New wave 向下 → resolved_down
+   - 未 new wave → alive
+
+2. resolution_distance_pct 公式
+   ```python
+   resolution_distance_pct = (
+       abs(confirmation_pivot.extreme_price - range.break_price)
+       / abs(boundary_high_init - boundary_low_init)
+   )
+   ```
+
+3. 测试覆盖
+   - resolved_up（向上突破）
+   - resolved_down（向下突破）
+   - alive（未 resolution）
+   - distance_pct 极端情况（0.05 / 0.95）
+
+**Fixture 设计**:
+- `t6_3_resolution_up.json`
+- `t6_3_resolution_down.json`
+- `t6_3_resolution_distance_extreme.json`
+
+**Step 清单**:
+- [ ] S6.3-1: 推 3 个 fixture 预期输出
+- [ ] S6.3-2: 预期输出定稿存 JSON
+- [ ] S6.3-3: 实现 _check_resolution() 方法
+- [ ] S6.3-4: 实现 resolution_distance_pct 计算
+- [ ] S6.3-5: 写单元测试（3 个 fixture）
+- [ ] S6.3-6: 端到端测试
+- [ ] S6.3-7: 真实数据冒烟（记录 resolution 分布）
+
+**完成标志**: S6.3-6 绿 + S6.3-7 无崩溃
+
+**预计时间**: 2-3 天
+
+---
+
+### T6.4: Range 分类（⏸ 待做）
+
+**目标**: continuation_range / reversal_range 分类
+
+**规格覆盖**: §6 Range 分类 ⚠️ **命名陷阱**
+
+**⚠️ 致命陷阱**: continuation 延续的是 **break 方向**，不是旧 wave 方向！
+
+| 场景 | 旧 wave | Break 方向 | Resolution 方向 | Range 类型 |
+|------|---------|-----------|----------------|-----------|
+| 1 | UP | 向下 break | 向下 resolution | continuation（延续 break 下行） |
+| 2 | UP | 向下 break | 向上 resolution | reversal（反转 break 下行） |
+| 3 | DOWN | 向上 break | 向上 resolution | continuation（延续 break 上行） |
+| 4 | DOWN | 向上 break | 向下 resolution | reversal（反转 break 上行） |
+
+**核心工作**:
+1. Range 分类逻辑
+   - 判定 break 方向（LH / HL）
+   - 判定 resolution 方向（UP / DOWN）
+   - 分类：break 方向 == resolution 方向 → continuation，否则 reversal
+
+2. 测试覆盖
+   - 4 种场景各 1 个测试
+   - 专门的 test_continuation_naming_trap()
+
+**Fixture 设计**:
+- `t6_4_continuation_scenario_1.json`（UP→下 break→下 resolution）
+- `t6_4_reversal_scenario_2.json`（UP→下 break→上 resolution）
+- `t6_4_continuation_scenario_3.json`（DOWN→上 break→上 resolution）
+- `t6_4_reversal_scenario_4.json`（DOWN→上 break→下 resolution）
+
+**Step 清单**:
+- [ ] S6.4-1: 推 4 个 fixture 预期输出
+- [ ] S6.4-2: 预期输出定稿存 JSON
+- [ ] S6.4-3: 实现 _classify_range() 方法
+- [ ] S6.4-4: 写单元测试（4 个 fixture + naming trap 测试）
+- [ ] S6.4-5: 端到端测试
+- [ ] S6.4-6: 真实数据冒烟（记录 continuation/reversal 比例）
+- [ ] S6.4-7: 回补文档
+
+**完成标志**: S6.4-5 绿 + S6.4-6 无崩溃 + S6.4-7 文档更新
+
+**预计时间**: 2-3 天
+
+---
+
+## ⏸ Lifespan 层（待做 - 3 刀）
+
+**规格**: MALF_03_Lifespan_v2_1-deepseek-20260726.md §1-§7  
+**预计时间**: 6-9 天  
+**当前状态**: 未开始
+
+### T7.1: Wave 统计指标（⏸ 待做）
+
+**目标**: 计算已终止 wave 的统计指标
+
+**规格覆盖**: §2 统计指标
+
+**核心工作**:
+1. Wave 统计指标
+   - new_count: 新高/低次数
+   - no_new_span: 停滞 bars
+   - wave_span_total: 总持续 bars
+   - progress_pct: 推进百分比
+   - price_range: 价格范围
+   - primitive_count: primitive 数量
+   - pivot_count: pivot 数量
+
+2. 测试覆盖
+   - 简单 wave（3 pivots）
+   - 复杂 wave（10+ pivots，多次 HH/LL）
+   - 边界情况（单 primitive wave）
+
+**预计时间**: 2-3 天
+
+---
+
+### T7.2: 双轨 peer_sample（⏸ 待做）
+
+**目标**: UP/DOWN 独立样本池
+
+**规格覆盖**: §3-§4 双轨户口与排名
+
+**核心工作**:
+1. 双轨 peer_sample
+   - UP 样本池（所有已终止 UP waves）
+   - DOWN 样本池（所有已终止 DOWN waves）
+   - 最小样本量（PEER_SAMPLE_MIN_N = 30）
+   - 时间窗口（可选，默认全历史）
+
+2. percentile_rank 计算
+   ```python
+   rank = count(peer < self) / len(peer_sample)
+   ```
+   - 严格小于（不含等于）
+   - 范围 [0, 1)
+
+3. 测试覆盖
+   - peer_sample 不足（< 30）→ rank = None
+   - peer_sample 充足（≥ 30）→ 计算 rank
+   - 边界情况（自己是最小/最大）
+
+**预计时间**: 2-3 天
+
+---
+
+### T7.3: Range Lifespan（⏸ 待做）
+
+**目标**: Range 生命周期统计
+
+**规格覆盖**: §5 Range Lifespan
+
+**核心工作**:
+1. Range 统计指标
+   - span_bars: 持续 bars
+   - evolution_count: boundary 演化次数
+   - resolution_distance_pct: resolution 距离
+   - amplitude_pct: boundary_now 范围
+
+2. Rank 计算
+   - span_bars_rank
+   - evolution_count_rank
+   - resolution_distance_pct_rank
+
+3. 测试覆盖
+   - 简单 range（未演化）
+   - 复杂 range（演化 5 次）
+   - peer_sample 不足（< 20）
+
+**预计时间**: 1-2 天
+
+---
+
+## ⏸ Structural Position 层（待做 - 3 刀）
+
+**规格**: MALF_04_Structural_Position_v2_1-deepseek-20260726.md §1-§9  
+**预计时间**: 6-9 天  
+**当前状态**: 未开始
+
+### T8.1: Rank 视图（⏸ 待做）
+
+**目标**: up_rank / down_rank 计算
+
+**预计时间**: 2-3 天
+
+---
+
+### T8.2: Momentum 视图（⏸ 待做）
+
+**目标**: momentum 计算（同向 - 反向）
+
+**预计时间**: 2-3 天
+
+---
+
+### T8.3: Cross Compare + 标签（⏸ 待做）
+
+**目标**: cross_compare 计算 + 标签规则
+
+**预计时间**: 2-3 天
+
+---
+
+## ⏸ Service 层（待做 - 2 刀）
+
+**规格**: MALF_05_Service_v2_1-deepseek-20260726.md §1-§8  
+**预计时间**: 3-5 天  
+**当前状态**: 部分完成（20%，仅 snapshot 结构）
+
+### T9.1: Usage 判定 + 失败模式（⏸ 待做）
+
+**目标**: usage 判定（normal/degraded/rejected）+ reason_codes
+
+**预计时间**: 1-2 天
+
+---
+
+### T9.2: 持久化 + 中断恢复（⏸ 待做）
+
+**目标**: 序列化支持 + 中断恢复
+
+**预计时间**: 2-3 天
+
+---
+
+## 📋 C-07 规则详解（已实现）
+
+### 规则名称
+**C-07: 早期 Pivot 替换规则**
+
+### 适用阶段
+UNINITIALIZED 阶段，尚未确认初始波段（< 3 confirmed pivots）
+
+### 核心原则
+**选择"更极端"的 pivot**
+
+替换的本质是：**在序列完整前，动态更新"最极端"的 pivot**
+
+### 4 种替换场景
+
+#### 场景 1: H0 替换
+- **条件**: 已确认 H0，尚未确认 L1，新确认一个 H
+- **判定**: 新 H > H0 → 替换；否则忽略
+- **操作**: 用新 H 替换 H0，L1 候选范围重新开始
+
+#### 场景 2: L0 替换
+- **条件**: 已确认 L0，尚未确认 H1，新确认一个 L
+- **判定**: 新 L < L0 → 替换；否则忽略
+- **操作**: 用新 L 替换 L0，H1 候选范围重新开始
+
+#### 场景 3: L1 替换
+- **条件**: 已确认 H0 和 L1，尚未确认 H2，新确认一个 L
+- **判定**: 新 L < L1 → 替换；否则忽略
+- **操作**: 用新 L 替换 L1（更新 guard 候选）
+
+#### 场景 4: H1 替换
+- **条件**: 已确认 L0 和 H1，尚未确认 L2，新确认一个 H
+- **判定**: 新 H > H1 → 替换；否则忽略
+- **操作**: 用新 H 替换 H1（更新 guard 候选）
+
+### 实现策略
+
+```python
+def should_replace(new_pivot: Pivot, old_pivot: Pivot) -> bool:
+    """判断是否应该用 new_pivot 替换 old_pivot"""
+    if new_pivot.pivot_type == PivotType.H:
+        return new_pivot.price > old_pivot.price  # H: 更高则替换
+    else:
+        return new_pivot.price < old_pivot.price  # L: 更低则替换
+```
+
+### 边界情况
+
+1. **多次替换**: H0 → H0' → H0''，每次选择更极端的
+2. **替换后不满足条件**: L0_new 替换后，L2 可能仍 >= L0_new
+3. **不替换**: 新 pivot 不够极端，忽略
+4. **无替换**: 干净序列 H0 → L1 → H2
+
+### 测试覆盖
+
+- ✅ C07-1: L0 替换（DOWN 方向）
+- ✅ C07-2: H0 替换（UP 方向）
+- ✅ C07-3: L1 替换（UP 方向）
+- ✅ C07-4: H1 替换（DOWN 方向）
+
+---
+
+## 🔧 工程化任务（v1.0 之后）
+
+这些任务在 5 层完成后执行：
+
+### 序列化支持
+- JSON 导出/导入 snapshot
+- 状态持久化
+- **预计时间**: 4 小时
+
+### CI/CD
+- GitHub Actions 自动测试
+- 代码覆盖率检查
+- **预计时间**: 4 小时
+
+### PyPI 发布
+- 打包配置
+- 版本管理
+- **预计时间**: 4 小时
+
+### 性能优化
+- 基准测试
+- 热路径优化
+- **预计时间**: 8 小时
+
+---
+
+## 📝 修订清单（滚动记录）
+
+### P0: 阻塞性修订
+
+#### P0-1: 类型名重命名（T6.1 前）
+- 当前: `WaveProbabilitySnapshot`（v2.0）
+- 目标: `WaveStructuralSnapshot`（v2.1）
+- 影响: types.py + core_engine.py + tests/
+- 预计: 30 分钟
+- 状态: ⏸ 待执行
+
+#### P0-2: v2.1 文档引用说明（立即）
+- 在核心模块 docstring 中增加版本说明
+- 明确 v2.0 → v2.1 语义等价
+- 预计: 20 分钟
+- 状态: ⏸ 待执行
+
+### P1: 高优先级修订
+
+#### P1-1: Types.py 补充数据结构（T6.1）
+- RangeSnapshot
+- WaveLifespanSnapshot
+- RangeLifespanSnapshot
+- 预计: 1 小时
+- 状态: ⏸ 待 T6.1
+
+#### P1-2: WaveStructuralSnapshot 补充字段（T8.3 前）
+- Range 层字段（T6.4）
+- Lifespan 层字段（T7.3）
+- Structural Position 层字段（T8.3）
+- 预计: 每刀 30 分钟
+- 状态: ⏸ 分三刀逐步补充
+
+### P2: 中优先级修订
+
+#### P2-1: 版本常量文件（T6.1）
+- 创建 src/malf/version.py
+- 定义所有 rule_version 字符串
+- 预计: 15 分钟
+- 状态: ⏸ 待 T6.1
+
+#### P2-2: Reason codes 枚举（T8.1 前）
+- 创建 src/malf/reason_codes.py
+- 定义所有失败/退化原因码
+- 预计: 20 分钟
+- 状态: ⏸ 待 T8.1
+
+### P3: 低优先级修订
+
+#### P3-1: 性能基准文档（T9.2 后）
+- 创建 docs/PERFORMANCE-BENCHMARKS.md
+- 预计: 2 小时
+- 状态: ⏸ v1.0 后
+
+#### P3-2: 错误处理规范（T6.1 起）
+- 创建 docs/ERROR-HANDLING-GUIDELINES.md
+- 预计: 1 小时初稿 + 每刀 15 分钟完善
+- 状态: ⏸ T6.1 起
+
+#### P3-3: CI/CD 集成（T9.2 后）
+- 创建 .github/workflows/test.yml
+- 预计: 1 小时
+- 状态: ⏸ v1.0 后
+
+---
+
+## 🎯 下一步行动
+
+**立即任务**: T6.1 Range 诞生（2-3 天）
+
+**准备工作**（T6.1 开工前）:
+1. [ ] P0-2: 补充 v2.1 文档引用说明（20 分钟）
+2. [ ] P0-1: 类型名重命名（30 分钟）
+3. [ ] 阅读规格: MALF_02_Range_v2_1-deepseek-20260726.md §1-§3
+
+**开工清单**:
+1. [ ] S6.1-1: 推 2 个 fixture
+2. [ ] S6.1-2: 预期输出存 JSON
+3. [ ] S6.1-3: 补充 RangeSnapshot 数据结构
+4. [ ] S6.1-4: 实现 Range 诞生逻辑
+5. [ ] S6.1-5: 写单元测试
+6. [ ] S6.1-6: 端到端测试
+7. [ ] S6.1-7: 真实数据冒烟
+
+---
+
+## 📚 核心文档（只看 2 个）
+
+1. **本文档** (BUILD-PLAN.md) - 唯一活文档，所有任务全在这里 ⭐
+2. BUILD-CONTRACT.md - 验收标准、7 条铁律（稳定，几乎不变）
+
+**其他文档**: 都是参考材料，不需要天天看。
+
+---
+
+## 🔧 开发命令速查
+
+```bash
+# 运行所有测试
+/d/miniconda/py310/python.exe -m pytest
+
+# 运行 Core 层测试
+/d/miniconda/py310/python.exe -m pytest tests/test_core*.py tests/test_initialization.py tests/test_guard_break.py
+
+# 详细输出
+/d/miniconda/py310/python.exe -m pytest -v
+
+# 真实数据验证
+/d/miniconda/py310/python.exe tests/smoke/test_real_tdx_data.py
+```
+
+---
+
+**维护规则**: 每完成一刀更新完成标志，每开新刀展开该刀的 Step 清单  
+**负责人**: 项目所有者  
+**最后更新**: 2026-07-26
