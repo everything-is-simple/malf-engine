@@ -73,9 +73,13 @@ class Pivot:
 
 @dataclass(frozen=True)
 class CoreStateSnapshot:
-    """§2.9 O7 逐 bar 发布契约（第一刀最小字段集）。
+    """§2.9 O7 逐 bar 发布契约。
 
-    第一刀（uninitialized → up_alive）只需以下字段；Range/transition 相关字段等后续刀加入。
+    第一刀（uninitialized → up_alive）：最小字段集
+    第二刀（uninitialized → down_alive）：对称实现
+    第三刀（guard break → transition）：system_state = transition
+    第四刀（transition 演化）：transition_* 和 active_candidate_* 字段
+
     version 字段组含 runtime_fingerprint（L4-6，审计用，不进 lineage_hash）。
     """
 
@@ -96,6 +100,14 @@ class CoreStateSnapshot:
     # progress
     progress_extreme_price: Optional[int] = None
     progress_extreme_bar_dt: Optional[str] = None
+    # transition（第四刀：D12 双边界 + O4/T5 active candidate）
+    transition_boundary_high: Optional[int] = None
+    transition_boundary_low: Optional[int] = None
+    active_candidate_guard_price: Optional[int] = None
+    active_candidate_guard_extreme_bar_dt: Optional[str] = None
+    active_candidate_guard_confirm_bar_dt: Optional[str] = None
+    active_candidate_direction: Optional[Direction] = None
+    candidate_replacement_count: int = 0
     # version（replay 契约）
     core_rule_version: str = "core-v0.0.1"
     pivot_detection_rule_version: str = "fractal-k2-v1"

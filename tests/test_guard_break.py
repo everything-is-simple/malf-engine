@@ -54,7 +54,7 @@ class TestGuardBreakDetection:
         """
         Given: up_alive, guard=96
         When: bar.close=94 < guard (LH break)
-        Then: system_state = transition
+        Then: system_state = transition（第四刀已实现）
         """
         engine = MALFCoreEngine(k=2)
 
@@ -77,16 +77,19 @@ class TestGuardBreakDetection:
         for bar in bars:
             snapshot = engine.on_bar(bar)
 
-        # 验证已进入 up_alive，guard=96
+        # 验证已进入 up_alive，guard=96, progress=114
         assert snapshot.system_state == SystemState.UP_ALIVE
         assert snapshot.current_effective_guard_price == 96
+        assert snapshot.progress_extreme_price == 114
 
         # 喂入 LH break bar (close=94 < 96)
         bar_break = PriceBar(symbol="TEST", timeframe="day", bar_dt="d12", open=100, high=100, low=90, close=94)
+        snapshot = engine.on_bar(bar_break)
 
-        # 预期抛出 NotImplementedError（transition 后续逻辑未实现）
-        with pytest.raises(NotImplementedError, match="Transition 期间 active candidate"):
-            engine.on_bar(bar_break)
+        # 验证进入 transition（第四刀已实现）
+        assert snapshot.system_state == SystemState.TRANSITION
+        assert snapshot.transition_boundary_high == 114  # old final HH
+        assert snapshot.transition_boundary_low == 96    # broken guard
 
     def test_check_guard_break_down_alive_no_break(self):
         """
@@ -129,7 +132,7 @@ class TestGuardBreakDetection:
         """
         Given: down_alive, guard=115
         When: bar.close=117 > guard (HL break)
-        Then: system_state = transition
+        Then: system_state = transition（第四刀已实现）
         """
         engine = MALFCoreEngine(k=2)
 
@@ -150,13 +153,16 @@ class TestGuardBreakDetection:
         for bar in bars:
             snapshot = engine.on_bar(bar)
 
-        # 验证已进入 down_alive，guard=115
+        # 验证已进入 down_alive，guard=115, progress=95
         assert snapshot.system_state == SystemState.DOWN_ALIVE
         assert snapshot.current_effective_guard_price == 115
+        assert snapshot.progress_extreme_price == 95
 
         # 喂入 HL break bar (close=117 > 115)
         bar_break = PriceBar(symbol="TEST", timeframe="day", bar_dt="d10", open=100, high=120, low=100, close=117)
+        snapshot = engine.on_bar(bar_break)
 
-        # 预期抛出 NotImplementedError（transition 后续逻辑未实现）
-        with pytest.raises(NotImplementedError, match="Transition 期间 active candidate"):
-            engine.on_bar(bar_break)
+        # 验证进入 transition（第四刀已实现）
+        assert snapshot.system_state == SystemState.TRANSITION
+        assert snapshot.transition_boundary_high == 115  # broken guard
+        assert snapshot.transition_boundary_low == 95    # old final LL

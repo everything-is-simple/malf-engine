@@ -7,17 +7,19 @@
     "pivot_detection_rule_version": "fractal-k2-v1",
     "price_policy": "int_fixed"
   },
-  "derivation_note": "人肉推导：L0@bar1(98) → H1@bar2(106) → L2@bar4(90<98) 进入 down_alive，guard=106。Bar7: close=108 > guard=106 触发 HL break → transition",
+  "derivation_note": "人肉推导：L0@bar3(98) → H1@bar4(106) → L2@bar6(90<98) 进入 down_alive，guard=106。Bar9: close=108 > guard=106 触发 HL break → transition。前3根bar为窗口填充（k=2）。",
 
   "input_bars": [
-    {"idx": 0, "bar_dt": "d00", "open": 105, "high": 105, "low": 100, "close": 102},
-    {"idx": 1, "bar_dt": "d01", "open": 104, "high": 104, "low": 98, "close": 101},
-    {"idx": 2, "bar_dt": "d02", "open": 106, "high": 106, "low": 101, "close": 105},
-    {"idx": 3, "bar_dt": "d03", "open": 103, "high": 103, "low": 100, "close": 101},
-    {"idx": 4, "bar_dt": "d04", "open": 96, "high": 96, "low": 90, "close": 92},
-    {"idx": 5, "bar_dt": "d05", "open": 100, "high": 100, "low": 94, "close": 96},
-    {"idx": 6, "bar_dt": "d06", "open": 101, "high": 101, "low": 95, "close": 98},
-    {"idx": 7, "bar_dt": "d07", "open": 110, "high": 110, "low": 104, "close": 108}
+    {"idx": 0, "bar_dt": "d00", "open": 102, "high": 104, "low": 101, "close": 103},
+    {"idx": 1, "bar_dt": "d01", "open": 103, "high": 105, "low": 102, "close": 104},
+    {"idx": 2, "bar_dt": "d02", "open": 104, "high": 104, "low": 100, "close": 102},
+    {"idx": 3, "bar_dt": "d03", "open": 102, "high": 102, "low": 98, "close": 101},
+    {"idx": 4, "bar_dt": "d04", "open": 101, "high": 108, "low": 101, "close": 105},
+    {"idx": 5, "bar_dt": "d05", "open": 105, "high": 105, "low": 100, "close": 101},
+    {"idx": 6, "bar_dt": "d06", "open": 101, "high": 101, "low": 90, "close": 92},
+    {"idx": 7, "bar_dt": "d07", "open": 92, "high": 100, "low": 94, "close": 96},
+    {"idx": 8, "bar_dt": "d08", "open": 96, "high": 101, "low": 95, "close": 98},
+    {"idx": 9, "bar_dt": "d09", "open": 98, "high": 110, "low": 104, "close": 110}
   ],
 
   "expected_pivots": [
@@ -25,22 +27,22 @@
       "pivot_type": "L",
       "label": "L0",
       "price": 98,
-      "extreme_bar_dt": "d01",
-      "confirm_bar_dt": "d03"
+      "extreme_bar_dt": "d03",
+      "confirm_bar_dt": "d05"
     },
     {
       "pivot_type": "H",
       "label": "H1",
-      "price": 106,
-      "extreme_bar_dt": "d02",
-      "confirm_bar_dt": "d04"
+      "price": 108,
+      "extreme_bar_dt": "d04",
+      "confirm_bar_dt": "d06"
     },
     {
       "pivot_type": "L",
       "label": "L2",
       "price": 90,
-      "extreme_bar_dt": "d04",
-      "confirm_bar_dt": "d06"
+      "extreme_bar_dt": "d06",
+      "confirm_bar_dt": "d08"
     }
   ],
 
@@ -49,58 +51,70 @@
       "bar_dt": "d00",
       "system_state": "uninitialized",
       "direction": null,
-      "note": "窗口填充"
+      "note": "窗口填充 1/3"
     },
     {
       "bar_dt": "d01",
       "system_state": "uninitialized",
       "direction": null,
-      "note": "窗口填充完成，L0 候选"
+      "note": "窗口填充 2/3"
     },
     {
       "bar_dt": "d02",
       "system_state": "uninitialized",
       "direction": null,
-      "note": "H1 候选"
+      "note": "窗口填充 3/3"
     },
     {
       "bar_dt": "d03",
       "system_state": "uninitialized",
       "direction": null,
-      "note": "L0 确认 @ bar 1"
+      "note": "L0 候选 @ bar 3"
     },
     {
       "bar_dt": "d04",
       "system_state": "uninitialized",
       "direction": null,
-      "note": "H1 确认 @ bar 2，L2 候选"
+      "note": "H1 候选 @ bar 4"
     },
     {
       "bar_dt": "d05",
       "system_state": "uninitialized",
       "direction": null,
-      "note": "L2 确认中"
+      "note": "L0 确认 @ bar 3"
     },
     {
       "bar_dt": "d06",
-      "system_state": "down_alive",
-      "direction": "down",
-      "wave_core_state": "alive",
-      "current_effective_guard_price": 106,
-      "current_effective_guard_extreme_bar_dt": "d02",
-      "current_effective_guard_confirm_bar_dt": "d04",
-      "progress_extreme_price": 90,
-      "progress_extreme_bar_dt": "d04",
-      "note": "L2 确认，L2 < L0，进入 down_alive"
+      "system_state": "uninitialized",
+      "direction": null,
+      "note": "H1 确认 @ bar 4，L2 候选 @ bar 6"
     },
     {
       "bar_dt": "d07",
+      "system_state": "uninitialized",
+      "direction": null,
+      "note": "L2 确认中"
+    },
+    {
+      "bar_dt": "d08",
+      "system_state": "down_alive",
+      "direction": "down",
+      "wave_core_state": "alive",
+      "current_effective_guard_price": 108,
+      "current_effective_guard_extreme_bar_dt": "d04",
+      "current_effective_guard_confirm_bar_dt": "d06",
+      "progress_extreme_price": 90,
+      "progress_extreme_bar_dt": "d06",
+      "note": "L2 确认 @ bar 6，L2 < L0，进入 down_alive"
+    },
+    {
+      "bar_dt": "d09",
       "system_state": "transition",
       "direction": "down",
       "wave_core_state": "terminated",
-      "current_effective_guard_price": 106,
+      "current_effective_guard_price": 108,
       "progress_extreme_price": 90,
-      "note": "HL break: close=108 > guard=106 → transition"
+      "note": "HL break: close=110 > guard=108 → transition"
     }
   ]
 }

@@ -1,0 +1,91 @@
+{
+  "meta": {
+    "scenario": "t4_transition_new_wave",
+    "description": "场景 D：New wave 确认",
+    "design": "基于场景 A，L0 确认后出现 H1 > boundary_high，触发 new up wave",
+    "bar_count": 15,
+    "pivots": [
+      {"type": "H", "price": 120, "extreme": "2024-01-03", "confirm": "2024-01-05"},
+      {"type": "L", "price": 100, "extreme": "2024-01-05", "confirm": "2024-01-07"},
+      {"type": "H", "price": 130, "extreme": "2024-01-06", "confirm": "2024-01-08"},
+      {"type": "L", "price": 90, "extreme": "2024-01-10", "confirm": "2024-01-12"},
+      {"type": "H", "price": 135, "extreme": "2024-01-13", "confirm": "2024-01-15"}
+    ],
+    "key_moments": {
+      "bar_11": "L0 confirmed → active_candidate = L0 (price=90, direction=DOWN)",
+      "bar_14": "H1 confirmed (price=135 > boundary_high=130) → new UP wave"
+    }
+  },
+  "bars": [
+    {"symbol": "TEST", "timeframe": "D1", "bar_dt": "2024-01-01", "open": 110, "high": 115, "low": 105, "close": 110},
+    {"symbol": "TEST", "timeframe": "D1", "bar_dt": "2024-01-02", "open": 110, "high": 115, "low": 105, "close": 112},
+    {"symbol": "TEST", "timeframe": "D1", "bar_dt": "2024-01-03", "open": 112, "high": 120, "low": 110, "close": 115},
+    {"symbol": "TEST", "timeframe": "D1", "bar_dt": "2024-01-04", "open": 115, "high": 118, "low": 105, "close": 110},
+    {"symbol": "TEST", "timeframe": "D1", "bar_dt": "2024-01-05", "open": 110, "high": 115, "low": 100, "close": 105},
+    {"symbol": "TEST", "timeframe": "D1", "bar_dt": "2024-01-06", "open": 105, "high": 130, "low": 110, "close": 128},
+    {"symbol": "TEST", "timeframe": "D1", "bar_dt": "2024-01-07", "open": 128, "high": 128, "low": 115, "close": 125},
+    {"symbol": "TEST", "timeframe": "D1", "bar_dt": "2024-01-08", "open": 125, "high": 125, "low": 120, "close": 122},
+    {"symbol": "TEST", "timeframe": "D1", "bar_dt": "2024-01-09", "open": 122, "high": 127, "low": 95, "close": 95},
+    {"symbol": "TEST", "timeframe": "D1", "bar_dt": "2024-01-10", "open": 95, "high": 100, "low": 90, "close": 92},
+    {"symbol": "TEST", "timeframe": "D1", "bar_dt": "2024-01-11", "open": 92, "high": 98, "low": 91, "close": 95},
+    {"symbol": "TEST", "timeframe": "D1", "bar_dt": "2024-01-12", "open": 95, "high": 100, "low": 93, "close": 98},
+    {"symbol": "TEST", "timeframe": "D1", "bar_dt": "2024-01-13", "open": 98, "high": 135, "low": 95, "close": 132},
+    {"symbol": "TEST", "timeframe": "D1", "bar_dt": "2024-01-14", "open": 132, "high": 133, "low": 128, "close": 130},
+    {"symbol": "TEST", "timeframe": "D1", "bar_dt": "2024-01-15", "open": 130, "high": 132, "low": 127, "close": 131}
+  ],
+  "expected_snapshots": [
+    {
+      "bar_dt": "2024-01-12",
+      "system_state": "transition",
+      "direction": "up",
+      "wave_core_state": "terminated",
+      "transition_boundary_high": 130,
+      "transition_boundary_low": 100,
+      "active_candidate_guard_price": 90,
+      "active_candidate_direction": "down",
+      "candidate_replacement_count": 0,
+      "note": "L0 confirmed"
+    },
+    {
+      "bar_dt": "2024-01-13",
+      "system_state": "transition",
+      "direction": "up",
+      "wave_core_state": "terminated",
+      "transition_boundary_high": 130,
+      "transition_boundary_low": 100,
+      "active_candidate_guard_price": 90,
+      "active_candidate_direction": "down",
+      "candidate_replacement_count": 0,
+      "note": "H1 extreme bar (135)"
+    },
+    {
+      "bar_dt": "2024-01-14",
+      "system_state": "transition",
+      "direction": "up",
+      "wave_core_state": "terminated",
+      "transition_boundary_high": 130,
+      "transition_boundary_low": 100,
+      "active_candidate_guard_price": 90,
+      "active_candidate_direction": "down",
+      "candidate_replacement_count": 0,
+      "note": "H1 右1 窗口"
+    },
+    {
+      "bar_dt": "2024-01-15",
+      "system_state": "up_alive",
+      "direction": "up",
+      "wave_core_state": "alive",
+      "current_effective_guard_price": 90,
+      "current_effective_guard_extreme_bar_dt": "2024-01-10",
+      "current_effective_guard_confirm_bar_dt": "2024-01-12",
+      "progress_extreme_price": 135,
+      "progress_extreme_bar_dt": "2024-01-13",
+      "transition_boundary_high": null,
+      "transition_boundary_low": null,
+      "active_candidate_guard_price": null,
+      "active_candidate_direction": null,
+      "candidate_replacement_count": 0,
+      "note": "H1 confirmed (135 > 130) → new UP wave; guard=L0 (90), progress=H1 (135)"
+    }
+  ]
+}
