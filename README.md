@@ -11,6 +11,7 @@ MALF v2.0 结构计算核心。吃 OHLC，吐 `WaveProbabilitySnapshot`。确定
 | `../../asteria-riskbench/new-docs/MALF_v2.0_引擎规格_定稿.md` | **规范**（WHAT），唯一权威 | 查规则/公式/字段/编号 |
 | `docs/BUILD-CONTRACT.md` | 建造合同：范围 / 非目标 / 验收线 | 稳定，极少改 |
 | `docs/BUILD-PLAN.md` | 建造计划：当前这一刀的 step + 勾选 | 活的，每天看 |
+| `docs/IMPLEMENTATION-CONTRACT-PATCH.md` | 实现合同补丁：deepseek 审计的 43 条缺口闭合 | TDD 前必读 |
 
 > 本 README 与 BUILD-* 都**不复述规范**，只指向。行为的真正规格活在规格文档 + `tests/fixtures/` 的 golden fixture 里。
 
