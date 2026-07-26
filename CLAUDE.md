@@ -114,13 +114,17 @@ pip install -e ".[dev]"
 
 ## 文档层级
 
-**四个文档，各司其职**（见 README.md）：
+**入口**: [`docs/00-INDEX.md`](docs/00-INDEX.md) - 文档导航（告诉你看哪个）
 
-1. **Spec**（WHAT）：`../../asteria-riskbench/new-docs/MALF_v2.0_引擎规格_定稿.md` — 所有规则、公式、字段、编号的唯一真相源。永远不要在代码或文档中复述规格内容。
+**四个核心文档，各司其职**：
 
-2. **BUILD-CONTRACT.md**（稳定）：范围、非目标、验收标准。极少改动。**§5 经验教训**：第一刀、第二刀累积的 7 条铁律，第三刀起强制遵循。
+1. **Spec**（WHAT）：[`docs/spec/MALF_V2_1_AUTHORITY_REFERENCE.md`](docs/spec/MALF_V2_1_AUTHORITY_REFERENCE.md) — 所有规则、公式、字段、编号的唯一真相源。永远不要在代码或文档中复述规格内容。
 
-3. **BUILD-PLAN.md**（活的）：当前这一刀的 step 清单。每天更新。
+2. **BUILD-CONTRACT.md**（稳定）：[`docs/spec/BUILD-CONTRACT.md`](docs/spec/BUILD-CONTRACT.md) — 范围、非目标、验收标准。极少改动。**§5 经验教训**：第一刀、第二刀累积的 7 条铁律，第三刀起强制遵循。
+
+3. **BUILD-PLAN.md**（活的）：[`docs/dev/BUILD-PLAN.md`](docs/dev/BUILD-PLAN.md) ⭐ — 当前这一刀的 step 清单。每天更新。**这是指导系统开发的主文档**。
+
+4. **API.md**（用户）：[`docs/guide/API.md`](docs/guide/API.md) — CoreStateSnapshot 字段说明，用户手册。
 
 4. **IMPLEMENTATION-CONTRACT-PATCH.md**（实施）：deepseek 审计的 43 条缺口闭合。包含勘误、还原、消歧、立法四层。TDD 前必读。
 

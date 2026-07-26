@@ -31,14 +31,19 @@ MALF v2.1 结构计算核心。吃 OHLC，吐 `CoreStateSnapshot`（包含 Core 
 
 ## 文档（一个萝卜一个坑）
 
+**📍 入口**: [`docs/00-INDEX.md`](docs/00-INDEX.md) - 文档导航（从这里开始）
+
+### 核心文档
+
 | 文档 | 是什么 | 何时看 |
 |---|---|---|
-| `docs/MALF_V2_1_AUTHORITY_REFERENCE.md` | **v2.1 权威引用**（WHAT），唯一规范入口 | 查规则/公式/字段/编号 |
-| `docs/RANGE-LAYER-GUIDE.md` | **Range 层使用指南**，概念、示例、FAQ | 使用 Range 层功能 |
-| `docs/API.md` | **API 参考**，CoreStateSnapshot 字段说明 | 查字段含义 |
-| `docs/BUILD-CONTRACT.md` | 建造合同：范围 / 非目标 / 验收线 | 稳定，极少改 |
-| `docs/BUILD-PLAN.md` | 建造计划：当前这一刀的 step + 勾选 | 活的，每天看 |
-| `docs/IMPLEMENTATION-CONTRACT-PATCH.md` | 实现合同补丁：第 4A/4B 层立法参考 | TDD 前必读 |
+| [`docs/00-INDEX.md`](docs/00-INDEX.md) | **文档导航入口** | 不知道看哪个文档时 |
+| [`docs/spec/MALF_V2_1_AUTHORITY_REFERENCE.md`](docs/spec/MALF_V2_1_AUTHORITY_REFERENCE.md) | **v2.1 权威引用**（WHAT） | 查规则/公式/字段/编号 |
+| [`docs/guide/RANGE-LAYER-GUIDE.md`](docs/guide/RANGE-LAYER-GUIDE.md) | **Range 层使用指南** | 使用 Range 层功能 |
+| [`docs/guide/API.md`](docs/guide/API.md) | **API 参考** | 查字段含义 |
+| [`docs/spec/BUILD-CONTRACT.md`](docs/spec/BUILD-CONTRACT.md) | 建造合同：范围 / 非目标 / 验收线 | 稳定，极少改 |
+| [`docs/dev/BUILD-PLAN.md`](docs/dev/BUILD-PLAN.md) | **建造计划**：当前这一刀的 step + 勾选 | **活的，每天看** ⭐ |
+| [`docs/spec/IMPLEMENTATION-CONTRACT-PATCH.md`](docs/spec/IMPLEMENTATION-CONTRACT-PATCH.md) | 实现合同补丁：第 4A/4B 层立法参考 | TDD 前必读 |
 
 > **v2.1 更新（2026-07-26）**：权威定义已从 v2.0 升级到 v2.1 Definitive。  
 > v2.1 与 v2.0 语义等价，是"清晰表达版本"。核心变更：Probability 层 → Structural Position 层。  
