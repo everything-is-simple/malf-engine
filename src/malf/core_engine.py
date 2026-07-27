@@ -92,6 +92,7 @@ class MALFCoreEngine:
         self._active_candidate_direction: Optional[Direction] = None
         self._candidate_replacement_count: int = 0
         self._break_bar_dt: Optional[str] = None  # 记录 break bar 的时间（用于 C-05）
+        self._break_price: Optional[int] = None   # 记录 break price（UP: bar.low, DOWN: bar.high）
 
         # Range 层状态（第六刀，v2.1 Range §2-§6）
         self._range_birth_bar_dt: Optional[str] = None
@@ -159,6 +160,11 @@ class MALFCoreEngine:
                 self._system_state = SystemState.TRANSITION
                 self._wave_core_state = WaveCoreState.TERMINATED
                 self._break_bar_dt = bar.bar_dt  # 记录 break bar（用于 C-05）
+                # 记录 break price（触发 break 的价格）
+                if self._direction == Direction.UP:
+                    self._break_price = bar.low  # UP wave 向下突破
+                elif self._direction == Direction.DOWN:
+                    self._break_price = bar.high  # DOWN wave 向上突破
                 self._wave_start_bar_dt = None  # 清空 wave 开始时间（transition 期间无 active wave）
                 self._wave_bar_counter = 0  # 清空计数器
 
@@ -440,6 +446,7 @@ class MALFCoreEngine:
         self._active_candidate_direction = None
         self._candidate_replacement_count = 0
         self._break_bar_dt = None
+        self._break_price = None
 
     def _make_snapshot(self, bar: PriceBar) -> CoreStateSnapshot:
         """构造当前 bar 的状态快照。
@@ -476,6 +483,8 @@ class MALFCoreEngine:
                 progress_extreme_price=self._progress_extreme_price,
                 progress_extreme_bar_dt=self._progress_extreme_bar_dt,
                 bar_count=bar_count,  # 第五刀 Task 2: 添加 bar_count
+                break_bar_dt=self._break_bar_dt,
+                break_price=self._break_price,
                 # Transition 字段（第四刀）
                 transition_boundary_high=self._transition_boundary_high,
                 transition_boundary_low=self._transition_boundary_low,

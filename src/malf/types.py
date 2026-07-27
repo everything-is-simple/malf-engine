@@ -132,6 +132,9 @@ class CoreStateSnapshot:
     progress_extreme_bar_dt: Optional[str] = None
     # wave duration（第五刀：T2）
     bar_count: Optional[int] = None  # Wave 持续 bar 数量，uninitialized 时为 None
+    # break（guard break 触发时刻和价格）
+    break_bar_dt: Optional[str] = None  # Guard break 触发的 bar 时间
+    break_price: Optional[int] = None   # Guard break 触发的价格（UP: bar.low, DOWN: bar.high）
     # transition（第四刀：D12 双边界 + O4/T5 active candidate）
     transition_boundary_high: Optional[int] = None
     transition_boundary_low: Optional[int] = None

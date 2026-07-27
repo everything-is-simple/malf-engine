@@ -271,8 +271,8 @@ def build_wave_structural_snapshot(
         guard_price=core.current_effective_guard_price,
         guard_bar_dt=core.current_effective_guard_extreme_bar_dt,
         bar_count=core.bar_count,
-        break_bar_dt=None,  # TODO: 需要从 Range 或其他地方获取
-        break_price=None,   # TODO: 需要从 Range 或其他地方获取
+        break_bar_dt=core.break_bar_dt,
+        break_price=core.break_price,
 
         # Range 层
         transition_boundary_high=core.transition_boundary_high,
