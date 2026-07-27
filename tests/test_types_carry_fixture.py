@@ -51,6 +51,7 @@ def test_pivot_carries_double_timestamps():
             price=p["price"],
             extreme_bar_dt=p["extreme_bar_dt"],
             confirm_bar_dt=p["confirm_bar_dt"],
+            confirm_price=p.get("confirm_price", p["price"]),  # 使用 fixture 中的值，或默认为 price
         )
         for p in d["expected_pivots"]
     ]

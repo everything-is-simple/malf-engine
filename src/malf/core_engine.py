@@ -222,11 +222,11 @@ class MALFCoreEngine:
             return False
 
         if self._system_state == SystemState.UP_ALIVE:
-            # LH break: close < guard
-            return bar.close < self._guard_price
+            # LH break: bar 的 low 突破 guard（规格 D10）
+            return bar.low < self._guard_price
         elif self._system_state == SystemState.DOWN_ALIVE:
-            # HL break: close > guard
-            return bar.close > self._guard_price
+            # HL break: bar 的 high 突破 guard（规格 D10）
+            return bar.high > self._guard_price
 
         return False
 

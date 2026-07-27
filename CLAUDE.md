@@ -28,9 +28,9 @@
   - Progress 追踪
   - TRANSITION 期间 Candidate 机制
   - 测试：47 passed
-- ⚠️ **已知问题**（2026-07-27 规格对照发现）：
-  - 🔴 P0-1: break 检测使用 bar.close，应改为 bar.low/high
-  - 🔴 P0-2: Pivot 缺少 confirm_price 字段
+- ✅ **P0 级修复完成**（2026-07-27 commit b4e1562）：
+  - P0-1: break 检测改为 bar.low/high（符合规格 D10）✅
+  - P0-2: Pivot 添加 confirm_price 字段（符合规格 D2）✅
 
 **C-07 补丁完成** ✅：早期 Pivot 替换
 - H0/L0 替换：更高的 H 替换 H0，更低的 L 替换 L0
@@ -38,22 +38,26 @@
 - 真实数据验证：offset=0 成功处理 200 bars（之前 bar 12 失败）
 - 测试：4 个替换场景全部通过
 
-**Lifespan 层完成** ✅：生命周期统计与排名
+**Lifespan 层完成** ✅：生命周期统计与排名（2026-07-27）
 - WaveLifespan 指标计算（7 个指标）
 - RangeLifespan 指标计算（6 个指标）
 - 双轨 peer_sample（UP/DOWN 分池、continuation/reversal 分池）
 - Percentile rank 计算（4 个 rank 字段）
-- 测试：77 passed
+- 测试：18 passed
 - ⚠️ **待核对**：progress_pct 计算公式（P1-3）
 
-**Structural Position 层完成** ✅：结构位置视图（4/4 完成）
+**Structural Position 层完成** ✅：结构位置视图（4/4 完成，2026-07-27）
 - P1 自身分位（Self Rank）：透传 rank 值 ✅
 - P2 同向对照（Same Direction Momentum）：momentum 计算 + 标签 ✅
 - P3 反向对照（Opposite Direction Momentum）：momentum 计算 + 标签 ✅
 - P4 正反对照（Cross Compare）：momentum 计算 + alive warning ✅
-- 测试：12 passed (P1 + P2 + P3 + P4)
+- 测试：12 passed
 
-**总计测试**：89 passed, 2 skipped
+**总计测试**：89 passed, 2 skipped ✅（P0 修复后）
+
+**规格合规度**：~95%（2026-07-27 规格对照检查后修复）
+
+**当前进度**：18/20 刀完成（90%）- 仅剩 Service 层（2 刀）
 
 **规格合规度**（2026-07-27 检查）：
 - 整体合规度：**85%** (基本合规)

@@ -26,9 +26,9 @@
   ],
 
   "expected_pivots": [
-    {"pivot_type": "H", "label": "H0", "price": 110, "extreme_bar_dt": "d02", "confirm_bar_dt": "d04"},
-    {"pivot_type": "L", "label": "L1", "price": 96,  "extreme_bar_dt": "d05", "confirm_bar_dt": "d07"},
-    {"pivot_type": "H", "label": "H2", "price": 114, "extreme_bar_dt": "d09", "confirm_bar_dt": "d11"}
+    {"pivot_type": "H", "label": "H0", "price": 110, "extreme_bar_dt": "d02", "confirm_bar_dt": "d04", "confirm_price": 103},
+    {"pivot_type": "L", "label": "L1", "price": 96,  "extreme_bar_dt": "d05", "confirm_bar_dt": "d07", "confirm_price": 102},
+    {"pivot_type": "H", "label": "H2", "price": 114, "extreme_bar_dt": "d09", "confirm_bar_dt": "d11", "confirm_price": 108}
   ],
 
   "expected_snapshots": [

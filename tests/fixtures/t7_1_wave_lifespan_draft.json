@@ -19,9 +19,9 @@
     "note": "bar 1-2 填充窗口，bar 3-11 形成 UP wave，bar 12 触发 break（close < guard）"
   },
   "expected_pivots": {
-    "H0": {"bar_dt": "2024-01-03", "price": 110, "pivot_type": "H"},
-    "L1": {"bar_dt": "2024-01-06", "price": 99, "pivot_type": "L"},
-    "H2": {"bar_dt": "2024-01-09", "price": 120, "pivot_type": "H"},
+    "H0": {"bar_dt": "2024-01-03", "price": 110, "pivot_type": "H", "confirm_price": 108},
+    "L1": {"bar_dt": "2024-01-06", "price": 99, "pivot_type": "L", "confirm_price": 101},
+    "H2": {"bar_dt": "2024-01-09", "price": 120, "pivot_type": "H", "confirm_price": 118},
     "note": "H2 确认后进入 UP_ALIVE，L1 是 guard"
   },
   "expected_wave_terminated": {

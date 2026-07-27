@@ -80,12 +80,17 @@ class Pivot:
 
     双时间戳是"以后看得懂"的关键：画图时高/低点画在 extreme_bar_dt，
     旁注 confirm_bar_dt——回答"为什么这个 pivot 到这根才生效"（spec §2.4 时序不对称）。
+
+    规格 D2 要求：
+    - price: 极值价格（extreme bar 的 high/low）
+    - confirm_price: 确认 bar 的价格（confirm bar 的 close，用于审计追溯）
     """
 
     pivot_type: PivotType
-    price: int
+    price: int                      # 极值价格（extreme bar 的 high/low）
     extreme_bar_dt: str
     confirm_bar_dt: str
+    confirm_price: int              # 确认 bar 的价格（规格 D2 要求）
     pivot_id: Optional[str] = None  # 生成规则见后续；第一刀可为 None
 
 
