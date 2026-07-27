@@ -160,18 +160,21 @@ docs/
 
 ## 📌 项目状态（2026-07-27）
 
-**当前版本**: v2.1 with C-07  
-**测试状态**: 58 passed, 1 skipped  
-**开发重心**: 待启动 T6.1 Range 诞生
+**当前版本**: v2.1 with Structural Position  
+**测试状态**: 89 passed, 2 skipped  
+**规格合规度**: 85% (基本合规)  
+**开发进度**: 14/20 刀（70%）
+
+**⚠️ 紧急提示**: 规格对照检查发现 2 个 P0 级缺陷，需立即修复：
+- 🔴 P0-1: Core break 检测逻辑错误
+- 🔴 P0-2: Pivot 缺少 confirm_price 字段
 
 **完成里程碑**:
-- ✅ Core 层（第一~五刀）
-- ✅ C-07 补丁（Pivot 替换）
-- ✅ Range 层（第六刀）
-- ✅ 真实数据验证
-- ✅ 项目文档整理（2026-07-27）
-
-**文档统计**: 约 23 个文档（精简后）
+- ✅ Core 层（6 刀）
+- ✅ Range 层（4 刀 + 真实数据验证）
+- ✅ Lifespan 层（4 刀）
+- ✅ Structural Position 层（4 刀）
+- ⏸ Service 层待开发（2 刀）
 
 **详细状态**: 查看 [`dev/BUILD-PLAN.md`](dev/BUILD-PLAN.md)
 

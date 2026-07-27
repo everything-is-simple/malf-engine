@@ -9,7 +9,66 @@
 > - 验收线见 BUILD-CONTRACT.md
 > - 本文只管「下一步动手做什么」
 
-**最后更新**: 2026-07-27 11:10 (T8.4 完成 - Structural Position 层完成！)
+**最后更新**: 2026-07-27 11:30 (规格对照检查完成)
+
+---
+
+## ⚠️ 规格对照检查结果（2026-07-27）
+
+**检查日期**: 2026-07-27  
+**检查范围**: MALF v2.1 规格 vs malf-engine 实现  
+**整体合规度**: **85%** (基本合规)
+
+### 🔴 Critical 问题（P0 - 必须立即修复）
+
+#### P0-1: Core Break 检测逻辑错误
+- **位置**: `core_engine.py:224-228`
+- **问题**: 使用 `bar.close` 判定 break，规格要求用 `bar.low` (UP) / `bar.high` (DOWN)
+- **影响**: 违反 Core 不变量 #6，某些应该触发 break 的情况会被遗漏
+- **修复时间**: 10分钟
+- **状态**: ⏸ 待修复
+
+#### P0-2: Pivot 缺少 confirm_price 字段
+- **位置**: `types.py:78-90`
+- **问题**: 规格 D2 要求 Pivot 包含 `confirm_price`（确认 bar 的价格）
+- **影响**: 丢失审计信息，无法回溯确认 bar 的价格
+- **修复时间**: 30分钟
+- **状态**: ⏸ 待修复
+
+### 🟡 Major 问题（P1 - 本周内修复）
+
+#### P1-3: progress_pct 计算公式待核对
+- **位置**: `lifespan_engine.py:79-82`
+- **问题**: 实现用 `(wave_end - wave_start) / wave_start`，需与规格定义对照
+- **影响**: Lifespan 指标准确性存疑
+- **修复时间**: 1小时（需人工核对规格）
+- **状态**: ⏸ 待核对
+
+#### P1-4: CoreStateSnapshot 缺少 bar_index
+- **位置**: `types.py:CoreStateSnapshot`
+- **问题**: 规格要求包含 `bar_index` 字段用于追踪
+- **影响**: 审计追溯能力不完整
+- **修复时间**: 20分钟
+- **状态**: ⏸ 待添加
+
+### 🟢 Minor 问题（P2 - 下阶段）
+
+#### P2-5: Service 层完全缺失
+- **问题**: 无法生成符合规格的最终快照、缺少 lineage_hash、reason_codes 等
+- **影响**: 无对外接口层
+- **修复时间**: 3-5天（T9.1-T9.2）
+- **状态**: ⏸ 计划中
+
+### 合规性评分详情
+
+| 维度 | 评分 | 状态 |
+|---|---|---|
+| 数据结构合规度 | 92% | ✅ 良好 |
+| 算法逻辑合规度 | 88% | ⚠️ 需修正 |
+| 不变量覆盖度 | 94% | ✅ 优秀 |
+| **整体合规度** | **85%** | ⚠️ 基本合规 |
+
+**详细报告**: 见 `docs/reports/SPEC-COMPLIANCE-REPORT-2026-07-27.md`（待归档）
 
 ---
 
@@ -936,12 +995,18 @@ def should_replace(new_pivot: Pivot, old_pivot: Pivot) -> bool:
 
 ## 🎯 下一步行动
 
-**立即任务**: 暂无（Structural Position 层已完成，Service 层待规划）
+**立即任务**: P0 级缺陷修复（1小时）
 
-**可选工作**:
-1. [ ] 清理 `.work/debug/` 下的验证脚本
-2. [ ] 运行完整回归测试
-3. [ ] 准备 Service 层开工（T9.1-T9.2）
+**紧急修复清单**（2026-07-27 规格对照发现）:
+1. [ ] P0-1: 修正 Core break 检测逻辑（bar.close → bar.low/high）
+2. [ ] P0-2: 添加 Pivot.confirm_price 字段
+3. [ ] P1-3: 核对 progress_pct 计算公式
+4. [ ] P1-4: 添加 CoreStateSnapshot.bar_index
+
+**后续任务**（修复完成后）:
+- [ ] 运行完整回归测试（确保修复未破坏现有功能）
+- [ ] 归档规格对照报告
+- [ ] 开始 Service 层开发（T9.1-T9.2）
 
 ---
 

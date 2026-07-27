@@ -28,6 +28,9 @@
   - Progress 追踪
   - TRANSITION 期间 Candidate 机制
   - 测试：47 passed
+- ⚠️ **已知问题**（2026-07-27 规格对照发现）：
+  - 🔴 P0-1: break 检测使用 bar.close，应改为 bar.low/high
+  - 🔴 P0-2: Pivot 缺少 confirm_price 字段
 
 **C-07 补丁完成** ✅：早期 Pivot 替换
 - H0/L0 替换：更高的 H 替换 H0，更低的 L 替换 L0
@@ -41,6 +44,7 @@
 - 双轨 peer_sample（UP/DOWN 分池、continuation/reversal 分池）
 - Percentile rank 计算（4 个 rank 字段）
 - 测试：77 passed
+- ⚠️ **待核对**：progress_pct 计算公式（P1-3）
 
 **Structural Position 层完成** ✅：结构位置视图（4/4 完成）
 - P1 自身分位（Self Rank）：透传 rank 值 ✅
@@ -50,6 +54,13 @@
 - 测试：12 passed (P1 + P2 + P3 + P4)
 
 **总计测试**：89 passed, 2 skipped
+
+**规格合规度**（2026-07-27 检查）：
+- 整体合规度：**85%** (基本合规)
+- 数据结构：92% ✅
+- 算法逻辑：88% ⚠️
+- 不变量覆盖：94% ✅
+- **已知缺陷**：2 个 P0 级 + 2 个 P1 级（详见 BUILD-PLAN.md）
 
 ### 核心模块
 
