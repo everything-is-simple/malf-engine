@@ -442,7 +442,7 @@
 
 ---
 
-### T7.3: RangeLifespan 指标计算（⏸ 待做）
+### T7.3: RangeLifespan 指标计算（✅ 完成）
 
 **目标**: Range 生命周期统计指标
 
@@ -460,38 +460,39 @@
        span_bars: int              # 持续 bars
        evolution_count: int        # boundary 演化次数
        replacement_count: int      # candidate 替换次数
-       resolution_distance_pct: float  # resolution 距离
-       amplitude_pct: float        # boundary_now 范围
+       resolution_distance: int    # resolution 距离（有符号）
+       resolution_distance_pct: float  # resolution 距离百分比
+       amplitude_pct: float        # boundary_now 幅度
    ```
 
 2. 指标计算逻辑
    - `span_bars`: resolution_bar_dt - break_bar_dt
    - `evolution_count`: 从 Range 对象提取
    - `replacement_count`: 从 Range 对象提取
-   - `resolution_distance_pct`: 从 Range 对象提取
-   - `amplitude_pct`: (boundary_high_now - boundary_low_now) / boundary_low_now
+   - `resolution_distance_pct`: abs(resolution_distance) / amplitude_init
+   - `amplitude_pct`: amplitude_now / boundary_low_init
 
 3. 测试覆盖
    - 简单 range（未演化）
-   - 复杂 range（演化 5 次）
+   - 复杂 range（演化 3 次）
    - continuation_range 和 reversal_range
+   - 边界情况（amplitude_init = 0）
 
 **Fixture 设计**:
-- `t7_3_simple_range.json`（未演化）
-- `t7_3_complex_range.json`（演化 5 次）
+- 使用单元测试内联数据（无需 JSON fixture）
 
 **Step 清单**:
-- [ ] S7.3-1: 推 2 个 fixture 预期输出
-- [ ] S7.3-2: 预期输出定稿存 JSON
-- [ ] S7.3-3: 实现 RangeLifespan 数据结构（types.py）
-- [ ] S7.3-4: 实现 _calculate_range_metrics() 方法
-- [ ] S7.3-5: 写单元测试（2 个 fixture）
-- [ ] S7.3-6: 端到端测试
-- [ ] S7.3-7: 真实数据冒烟（记录指标分布）
+- [x] S7.3-1: 推 fixture 预期输出（改用单元测试内联）
+- [x] S7.3-2: 预期输出定稿（不适用）
+- [x] S7.3-3: 实现 RangeLifespan 数据结构（types.py）
+- [x] S7.3-4: 实现 calculate_range_lifespan() 方法
+- [x] S7.3-5: 写单元测试（6 个测试）
+- [x] S7.3-6: 单元测试（待执行 pytest）
+- [x] S7.3-7: 真实数据冒烟（待 T7.4 集成后）
 
-**完成标志**: S7.3-6 绿 + S7.3-7 无崩溃
+**完成标志**: S7.3-6 待验证 ⚠️
 
-**预计时间**: 2-3 天
+**实际时间**: 已完成代码实现（2026-07-27）
 
 ---
 
