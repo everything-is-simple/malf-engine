@@ -117,6 +117,7 @@ class CoreStateSnapshot:
     symbol: str
     timeframe: str
     bar_dt: str
+    bar_index: int  # 当前 bar 序号（从 0 开始）
     # system
     system_state: SystemState
     # wave（uninitialized 期间多为 None）

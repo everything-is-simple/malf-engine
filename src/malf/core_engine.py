@@ -67,6 +67,7 @@ class MALFCoreEngine:
         self.k = k
         self._bars: List[PriceBar] = []
         self._confirmed_pivots: List[Pivot] = []
+        self._bar_index: int = 0  # 当前 bar 序号（从 0 开始）
         self._system_state = SystemState.UNINITIALIZED
         self._direction: Optional[Direction] = None
         self._wave_core_state: Optional[WaveCoreState] = None
@@ -213,7 +214,9 @@ class MALFCoreEngine:
                         self._update_active_candidate(new_pivot)
 
         # 产出当前 bar 的 snapshot
-        return self._make_snapshot(bar)
+        snapshot = self._make_snapshot(bar)
+        self._bar_index += 1  # 递增 bar 序号
+        return snapshot
 
     def _check_guard_break(self, bar: PriceBar) -> bool:
         """检查当前 bar 是否突破 guard。
@@ -466,6 +469,7 @@ class MALFCoreEngine:
                 symbol=bar.symbol,
                 timeframe=bar.timeframe,
                 bar_dt=bar.bar_dt,
+                bar_index=self._bar_index,
                 system_state=SystemState.UNINITIALIZED,
                 runtime_fingerprint=runtime_fingerprint(),
             )
@@ -474,6 +478,7 @@ class MALFCoreEngine:
                 symbol=bar.symbol,
                 timeframe=bar.timeframe,
                 bar_dt=bar.bar_dt,
+                bar_index=self._bar_index,
                 system_state=self._system_state,
                 direction=self._direction,
                 wave_core_state=self._wave_core_state,

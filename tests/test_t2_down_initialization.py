@@ -77,6 +77,7 @@ def test_t2_down_initialization_end_to_end():
                 symbol=bar.symbol,
                 timeframe=bar.timeframe,
                 bar_dt=bar.bar_dt,
+                bar_index=i,
                 system_state=SystemState.DOWN_ALIVE,
                 direction=Direction.DOWN,
                 wave_core_state=WaveCoreState.ALIVE,
@@ -92,6 +93,7 @@ def test_t2_down_initialization_end_to_end():
                 symbol=bar.symbol,
                 timeframe=bar.timeframe,
                 bar_dt=bar.bar_dt,
+                bar_index=i,
                 system_state=SystemState.UNINITIALIZED,
                 runtime_fingerprint=runtime_fingerprint(),
             )

@@ -77,6 +77,7 @@ def test_uninitialized_to_up_alive_end_to_end():
                 symbol=bar.symbol,
                 timeframe=bar.timeframe,
                 bar_dt=bar.bar_dt,
+                bar_index=i,
                 system_state=SystemState.UP_ALIVE,
                 direction=Direction.UP,
                 wave_core_state=WaveCoreState.ALIVE,
@@ -92,6 +93,7 @@ def test_uninitialized_to_up_alive_end_to_end():
                 symbol=bar.symbol,
                 timeframe=bar.timeframe,
                 bar_dt=bar.bar_dt,
+                bar_index=i,
                 system_state=SystemState.UNINITIALIZED,
                 runtime_fingerprint=runtime_fingerprint(),
             )
