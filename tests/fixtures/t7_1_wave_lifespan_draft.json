@@ -1,0 +1,32 @@
+{
+  "description": "T7.1 WaveLifespan 指标计算 - UP wave 终止场景",
+  "scenario": "一个完整的 UP wave（H0→L1→H2→L3→H4），然后 break 终止",
+  "input": {
+    "bars": [
+      {"symbol": "TEST", "timeframe": "D1", "bar_dt": "2024-01-01", "open": 100, "high": 105, "low": 95, "close": 100},
+      {"symbol": "TEST", "timeframe": "D1", "bar_dt": "2024-01-02", "open": 100, "high": 105, "low": 95, "close": 102},
+      {"symbol": "TEST", "timeframe": "D1", "bar_dt": "2024-01-03", "open": 102, "high": 110, "low": 98, "close": 108},
+      {"symbol": "TEST", "timeframe": "D1", "bar_dt": "2024-01-04", "open": 108, "high": 112, "low": 102, "close": 105},
+      {"symbol": "TEST", "timeframe": "D1", "bar_dt": "2024-01-05", "open": 105, "high": 108, "low": 100, "close": 103},
+      {"symbol": "TEST", "timeframe": "D1", "bar_dt": "2024-01-06", "open": 103, "high": 107, "low": 99, "close": 101},
+      {"symbol": "TEST", "timeframe": "D1", "bar_dt": "2024-01-07", "open": 101, "high": 115, "low": 97, "close": 113},
+      {"symbol": "TEST", "timeframe": "D1", "bar_dt": "2024-01-08", "open": 113, "high": 118, "low": 110, "close": 116},
+      {"symbol": "TEST", "timeframe": "D1", "bar_dt": "2024-01-09", "open": 116, "high": 120, "low": 112, "close": 118},
+      {"symbol": "TEST", "timeframe": "D1", "bar_dt": "2024-01-10", "open": 118, "high": 122, "low": 110, "close": 115},
+      {"symbol": "TEST", "timeframe": "D1", "bar_dt": "2024-01-11", "open": 115, "high": 117, "low": 105, "close": 108},
+      {"symbol": "TEST", "timeframe": "D1", "bar_dt": "2024-01-12", "open": 108, "high": 112, "low": 98, "close": 100}
+    ],
+    "note": "bar 1-2 填充窗口，bar 3-11 形成 UP wave，bar 12 触发 break（close < guard）"
+  },
+  "expected_pivots": {
+    "H0": {"bar_dt": "2024-01-03", "price": 110, "pivot_type": "H"},
+    "L1": {"bar_dt": "2024-01-06", "price": 99, "pivot_type": "L"},
+    "H2": {"bar_dt": "2024-01-09", "price": 120, "pivot_type": "H"},
+    "note": "H2 确认后进入 UP_ALIVE，L1 是 guard"
+  },
+  "expected_wave_terminated": {
+    "bar_dt": "2024-01-12",
+    "reason": "close < guard (100 < 99 不成立，重新设计）"
+  },
+  "FIXME": "场景设计有问题，bar 12 的 close=100 > guard=99，不会触发 break。需要重新设计。"
+}

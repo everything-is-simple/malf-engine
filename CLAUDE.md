@@ -178,7 +178,34 @@ pip install -e ".[dev]"
 - `src/malf/`：领域核心实现
 - `tests/`：所有测试文件（pytest 发现 `test_*.py`）
 - `tests/fixtures/`：人肉推导预期输出的 golden fixture JSON 文件
-- `docs/`：BUILD-CONTRACT.md（稳定）和 BUILD-PLAN.md（活的清单）
+- `docs/`：文档（spec/, guide/, dev/, reports/, archive/）
+- `scripts/`：工具脚本（verify/, debug/, tools/）
+- `.work/`：临时工作区（gitignore）
+
+**文件组织规范**：详见 `docs/dev/FILE-ORGANIZATION.md`
+
+### 文件创建规则（重要！）
+
+**根目录只允许 4 个文件**：
+- ✅ `README.md`, `CLAUDE.md`, `pyproject.toml`, `.gitignore`
+
+**禁止在根目录创建**：
+- ❌ `verify_*.py`, `debug_*.py`, `run_*.py` → 应放在 `.work/debug/` 或 `scripts/`
+- ❌ `TEST-*.ps1`, `run-*.ps1` → 临时脚本，任务完成后移到 `scripts/` 或删除
+- ❌ `*-REPORT.md`, `*-COMPLETE.md` → 应归档到 `docs/archive/` 或 `docs/reports/`
+
+**创建文件前问 3 个问题**：
+1. 这是什么类型的文件？（源代码/测试/文档/脚本）
+2. 是永久的还是临时的？
+3. 任务完成后还需要吗？
+
+**任务完成后的清理**：
+- [ ] 删除 `.work/` 下的临时文件
+- [ ] 删除根目录的临时脚本
+- [ ] 归档报告到 `docs/archive/tasks/{TASK}/`
+- [ ] 运行 `git status` 检查根目录是否干净
+
+详见：`docs/dev/FILE-ORGANIZATION.md`
 
 ## 禁止事项
 

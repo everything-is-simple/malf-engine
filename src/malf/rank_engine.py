@@ -8,7 +8,7 @@
 
 实现进度：
 - ✅ T7.2：WaveLifespan rank 计算（完整）
-- ⏸ T7.4：RangeLifespan rank 计算（待实现）
+- ✅ T7.4：RangeLifespan rank 计算（完整）
 
 核心算法：
 - percentile_rank(x, sample) = count(x_i < x) / N（严格 <，不含等于）
@@ -16,7 +16,7 @@
 - 双轨分池：UP/DOWN wave 独立样本，continuation/reversal range 独立样本
 """
 
-from malf.types import WaveLifespan, Direction
+from malf.types import WaveLifespan, Direction, RangeLifespan, RangeResolutionType
 
 
 class RankEngine:
@@ -164,4 +164,114 @@ class RankEngine:
             range_rank=ranks["range_rank"],
             stagnation_rank=ranks["stagnation_rank"],
             progress_rank=ranks["progress_rank"]
+        )
+
+    def filter_range_peer_sample(
+        self,
+        all_ranges: list[RangeLifespan],
+        range_type: RangeResolutionType | None = None,
+        cutoff_bar_dt: str | None = None
+    ) -> list[RangeLifespan]:
+        """过滤 Range peer_sample（v2.1 Lifespan §5）。
+
+        过滤条件：
+        1. 同类型（continuation 或 reversal）
+        2. 防前视：range_end_bar_dt <= cutoff_bar_dt
+
+        参数：
+            all_ranges: 所有已 resolved Range
+            range_type: 过滤类型（None = 全部）
+            cutoff_bar_dt: 防前视截止时间（None = 不过滤）
+
+        返回：
+            过滤后的 RangeLifespan 列表
+        """
+        filtered = all_ranges.copy()
+
+        # 按类型过滤（continuation / reversal 分池）
+        if range_type is not None:
+            filtered = [r for r in filtered if r.range_type == range_type]
+
+        # 防前视过滤
+        if cutoff_bar_dt is not None:
+            filtered = [r for r in filtered if r.range_end_bar_dt <= cutoff_bar_dt]
+
+        return filtered
+
+    def calculate_range_ranks(
+        self,
+        current_range: RangeLifespan,
+        peer_sample: list[RangeLifespan]
+    ) -> dict[str, float | None]:
+        """计算 RangeLifespan 的 4 个 rank 字段（v2.1 Lifespan §5）。
+
+        计算：
+        - span_rank: span_bars 的 percentile_rank
+        - evolution_rank: evolution_count 的 percentile_rank
+        - replacement_rank: replacement_count 的 percentile_rank
+        - resolution_distance_rank: resolution_distance_pct 的 percentile_rank
+
+        样本不足退化：N < 30 → 所有 rank 为 None
+
+        参数：
+            current_range: 当前 Range
+            peer_sample: 同类型已 resolved Range 列表
+
+        返回：
+            字典 {"span_rank": ..., "evolution_rank": ..., ...}
+        """
+        # 样本不足退化（v2.1 Lifespan §5.2）
+        if len(peer_sample) < self.MIN_SAMPLE_SIZE:
+            return {
+                "span_rank": None,
+                "evolution_rank": None,
+                "replacement_rank": None,
+                "resolution_distance_rank": None
+            }
+
+        # 提取样本值
+        span_sample = [r.span_bars for r in peer_sample]
+        evolution_sample = [r.evolution_count for r in peer_sample]
+        replacement_sample = [r.replacement_count for r in peer_sample]
+        resolution_distance_sample = [r.resolution_distance_pct for r in peer_sample]
+
+        # 计算 rank
+        span_rank = self.calculate_percentile_rank(current_range.span_bars, span_sample)
+        evolution_rank = self.calculate_percentile_rank(current_range.evolution_count, evolution_sample)
+        replacement_rank = self.calculate_percentile_rank(current_range.replacement_count, replacement_sample)
+        resolution_distance_rank = self.calculate_percentile_rank(
+            current_range.resolution_distance_pct,
+            resolution_distance_sample
+        )
+
+        return {
+            "span_rank": span_rank,
+            "evolution_rank": evolution_rank,
+            "replacement_rank": replacement_rank,
+            "resolution_distance_rank": resolution_distance_rank
+        }
+
+    def update_range_lifespan_with_ranks(
+        self,
+        range_lifespan: RangeLifespan,
+        ranks: dict[str, float | None]
+    ) -> RangeLifespan:
+        """用计算的 rank 值更新 RangeLifespan 对象。
+
+        由于 RangeLifespan 是 frozen dataclass，需要用 replace 创建新对象。
+
+        参数：
+            range_lifespan: 原始 RangeLifespan
+            ranks: 计算的 rank 字典
+
+        返回：
+            更新后的 RangeLifespan
+        """
+        from dataclasses import replace
+        return replace(
+            range_lifespan,
+            span_rank=ranks["span_rank"],
+            evolution_rank=ranks["evolution_rank"],
+            replacement_rank=ranks["replacement_rank"],
+            resolution_distance_rank=ranks["resolution_distance_rank"]
         )

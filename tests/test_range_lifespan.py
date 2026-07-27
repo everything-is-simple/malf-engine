@@ -13,9 +13,73 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import pytest
 from malf.lifespan_engine import LifespanEngine
 from malf.types import RangeResolutionType
+
+
+def load_fixture(filename: str) -> dict:
+    """加载 golden fixture（UTF-8 编码）。"""
+    fixture_path = Path(__file__).parent / "fixtures" / filename
+    with open(fixture_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def test_range_lifespan_continuation_golden_fixture():
+    """测试 continuation_range 的 RangeLifespan 指标计算（Golden Fixture）。
+
+    场景：UP wave 向下 break → 向下 resolution（延续 break 方向）
+    """
+    fixture = load_fixture("t7_3_range_lifespan_continuation.json")
+    inp = fixture["input"]
+    expected = fixture["expected_output"]
+
+    engine = LifespanEngine()
+
+    # 调用被测方法
+    result = engine.calculate_range_lifespan(
+        range_id=inp["range_id"],
+        symbol=inp["symbol"],
+        timeframe=inp["timeframe"],
+        range_type=RangeResolutionType(inp["range_type"]),
+        range_start_bar_dt=inp["range_start_bar_dt"],
+        range_end_bar_dt=inp["range_end_bar_dt"],
+        span_bars=expected["span_bars"],
+        evolution_count=inp["evolution_count"],
+        replacement_count=inp["replacement_count"],
+        resolution_distance=inp["resolution_distance"],
+        boundary_high_init=inp["boundary_high_init"],
+        boundary_low_init=inp["boundary_low_init"],
+        boundary_high_now=inp["boundary_high_now"],
+        boundary_low_now=inp["boundary_low_now"],
+        resolution_type=inp["resolution_type"],
+        confirmation_pivot_extreme_price=inp["confirmation_pivot_extreme_price"]
+    )
+
+    # 验证所有字段
+    assert result.range_id == expected["range_id"]
+    assert result.symbol == expected["symbol"]
+    assert result.timeframe == expected["timeframe"]
+    assert result.range_type.value == expected["range_type"]
+    assert result.range_start_bar_dt == expected["range_start_bar_dt"]
+    assert result.range_end_bar_dt == expected["range_end_bar_dt"]
+    assert result.span_bars == expected["span_bars"]
+    assert result.evolution_count == expected["evolution_count"]
+    assert result.replacement_count == expected["replacement_count"]
+    assert result.resolution_distance == expected["resolution_distance"]
+    assert result.resolution_distance_pct == pytest.approx(expected["resolution_distance_pct"], abs=1e-6)
+    assert result.amplitude_init == expected["amplitude_init"]
+    assert result.amplitude_now == expected["amplitude_now"]
+    assert result.amplitude_pct == pytest.approx(expected["amplitude_pct"], abs=1e-6)
+
+    # 验证 rank 字段初始为 None
+    assert result.span_rank is None
+    assert result.evolution_rank is None
+    assert result.replacement_rank is None
+    assert result.resolution_distance_rank is None
 
 
 def test_calculate_range_lifespan_simple():
@@ -28,6 +92,7 @@ def test_calculate_range_lifespan_simple():
     - Resolution 距离：10（向上突破）
     - boundary_init: [100, 120]
     - boundary_now: [100, 120]（无演化）
+    - confirmation_pivot_extreme_price = 130（向上突破）
     """
     engine = LifespanEngine()
 
@@ -45,7 +110,9 @@ def test_calculate_range_lifespan_simple():
         boundary_high_init=120,
         boundary_low_init=100,
         boundary_high_now=120,
-        boundary_low_now=100
+        boundary_low_now=100,
+        resolution_type="up",
+        confirmation_pivot_extreme_price=130
     )
 
     # 验证基础字段
@@ -63,7 +130,8 @@ def test_calculate_range_lifespan_simple():
 
     # 验证 resolution 距离
     assert lifespan.resolution_distance == 10
-    assert lifespan.resolution_distance_pct == pytest.approx(10 / 20)  # 10 / (120 - 100)
+    # UP 突破：(130 - 120) / 120 = 10 / 120 ≈ 0.0833
+    assert lifespan.resolution_distance_pct == pytest.approx(10 / 120, abs=1e-6)
 
     # 验证 amplitude 计算
     assert lifespan.amplitude_init == 20  # 120 - 100
@@ -87,6 +155,7 @@ def test_calculate_range_lifespan_with_evolution():
     - Resolution 距离：-8（向下突破）
     - boundary_init: [80, 110]
     - boundary_now: [75, 115]（演化后扩展）
+    - confirmation_pivot_extreme_price = 72（向下突破到 72，boundary_low_now = 75）
     """
     engine = LifespanEngine()
 
@@ -104,7 +173,9 @@ def test_calculate_range_lifespan_with_evolution():
         boundary_high_init=110,
         boundary_low_init=80,
         boundary_high_now=115,
-        boundary_low_now=75
+        boundary_low_now=75,
+        resolution_type="down",
+        confirmation_pivot_extreme_price=72
     )
 
     # 验证基础字段
@@ -118,7 +189,8 @@ def test_calculate_range_lifespan_with_evolution():
 
     # 验证 resolution 距离（负数 → 向下突破）
     assert lifespan.resolution_distance == -8
-    assert lifespan.resolution_distance_pct == pytest.approx(8 / 30)  # abs(-8) / (110 - 80)
+    # DOWN 突破：(75 - 72) / 75 = 3 / 75 = 0.04
+    assert lifespan.resolution_distance_pct == pytest.approx(3 / 75, abs=1e-6)
 
     # 验证 amplitude 计算
     assert lifespan.amplitude_init == 30  # 110 - 80
@@ -145,7 +217,9 @@ def test_calculate_range_lifespan_continuation_vs_reversal():
         boundary_high_init=120,
         boundary_low_init=100,
         boundary_high_now=120,
-        boundary_low_now=100
+        boundary_low_now=100,
+        resolution_type="up",
+        confirmation_pivot_extreme_price=125
     )
 
     # Reversal Range
@@ -163,7 +237,9 @@ def test_calculate_range_lifespan_continuation_vs_reversal():
         boundary_high_init=120,
         boundary_low_init=100,
         boundary_high_now=120,
-        boundary_low_now=100
+        boundary_low_now=100,
+        resolution_type="down",
+        confirmation_pivot_extreme_price=95
     )
 
     assert continuation.range_type == RangeResolutionType.CONTINUATION
@@ -190,7 +266,9 @@ def test_record_and_get_resolved_ranges():
             boundary_high_init=120,
             boundary_low_init=100,
             boundary_high_now=120,
-            boundary_low_now=100
+            boundary_low_now=100,
+            resolution_type="up",
+            confirmation_pivot_extreme_price=125
         )
         engine.record_resolved_range(lifespan)
 
@@ -209,7 +287,9 @@ def test_record_and_get_resolved_ranges():
             boundary_high_init=120,
             boundary_low_init=100,
             boundary_high_now=120,
-            boundary_low_now=100
+            boundary_low_now=100,
+            resolution_type="down",
+            confirmation_pivot_extreme_price=95
         )
         engine.record_resolved_range(lifespan)
 
@@ -250,9 +330,12 @@ def test_resolution_distance_pct_zero_amplitude():
         boundary_high_init=100,
         boundary_low_init=100,  # 幅度为 0
         boundary_high_now=100,
-        boundary_low_now=100
+        boundary_low_now=100,
+        resolution_type="down",
+        confirmation_pivot_extreme_price=95
     )
 
-    # 验证：amplitude_init = 0 时，resolution_distance_pct = 0.0
+    # 验证：amplitude_init = 0 时，resolution_distance_pct 按公式计算
+    # DOWN 突破：(100 - 95) / 100 = 5 / 100 = 0.05
     assert lifespan.amplitude_init == 0
-    assert lifespan.resolution_distance_pct == 0.0
+    assert lifespan.resolution_distance_pct == pytest.approx(5 / 100, abs=1e-6)
