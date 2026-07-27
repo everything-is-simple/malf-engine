@@ -266,24 +266,24 @@ def build_wave_structural_snapshot(
         system_state=core.system_state.value,
         direction=core.direction.value if core.direction else None,
         active_wave_id=core.active_wave_id,
-        progress_extreme_price=core.progress_price,
-        progress_extreme_bar_dt=core.progress_bar_dt,
-        guard_price=core.guard_price,
-        guard_bar_dt=core.guard_bar_dt,
+        progress_extreme_price=core.progress_extreme_price,
+        progress_extreme_bar_dt=core.progress_extreme_bar_dt,
+        guard_price=core.current_effective_guard_price,
+        guard_bar_dt=core.current_effective_guard_extreme_bar_dt,
         bar_count=core.bar_count,
-        break_bar_dt=core.break_bar_dt,
-        break_price=core.break_price,
+        break_bar_dt=None,  # TODO: 需要从 Range 或其他地方获取
+        break_price=None,   # TODO: 需要从 Range 或其他地方获取
 
         # Range 层
-        transition_boundary_high=core.boundary_high if core.system_state == SystemState.TRANSITION else None,
-        transition_boundary_low=core.boundary_low if core.system_state == SystemState.TRANSITION else None,
-        candidate_pivot_type=core.candidate_pivot_type.value if core.candidate_pivot_type else None,
-        candidate_pivot_price=core.candidate_pivot_price,
-        range_boundary_high_now=active_range.boundary_high_now if active_range else None,
-        range_boundary_low_now=active_range.boundary_low_now if active_range else None,
+        transition_boundary_high=core.transition_boundary_high,
+        transition_boundary_low=core.transition_boundary_low,
+        candidate_pivot_type=core.active_candidate_direction.value if core.active_candidate_direction else None,
+        candidate_pivot_price=core.active_candidate_guard_price,
+        range_boundary_high_now=active_range.boundary_now_high if active_range else None,
+        range_boundary_low_now=active_range.boundary_now_low if active_range else None,
         range_evolution_count=active_range.evolution_count if active_range else None,
-        range_candidate_replacement_count=active_range.candidate_replacement_count if active_range else None,
-        range_type=active_range.range_type.value if active_range and active_range.range_type else None,
+        range_candidate_replacement_count=core.candidate_replacement_count,  # 来自 CoreStateSnapshot
+        range_type=active_range.resolution_type.value if active_range and active_range.resolution_type else None,
 
         # Lifespan 层（Wave）
         wave_span_rank=wave_lifespan.span_rank if wave_lifespan else None,
