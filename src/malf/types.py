@@ -401,3 +401,93 @@ class P4CrossCompare:
     cross_stagnation_momentum: Optional[float]   # W0.stagnation_rank - W-1.stagnation_rank
     cross_alive_warning: bool                    # True 表示 W0 为 alive，rank 不稳定
 
+
+# ============================================================================
+# Service 层数据结构（v2.1 Service §2-§4）
+# ============================================================================
+
+
+class UsageType(str, Enum):
+    """Usage 类型（v2.1 Service §3）。
+
+    用途降级：rejected > research_only > verification_only > operational
+    """
+    REJECTED = "rejected"               # 输入完整性失败，不可消费
+    RESEARCH_ONLY = "research_only"     # 数据合同不满足或模型不完整，仅研究
+    VERIFICATION_ONLY = "verification_only"  # 回测验证模式，数据完整但用途受限
+    OPERATIONAL = "operational"         # v0.1 禁用，需未来独立审批
+
+
+@dataclass(frozen=True)
+class WaveStructuralSnapshot:
+    """WaveStructuralSnapshot - Service 层唯一对外契约（v2.1 Service §2）。
+
+    这是 MALF 对下游的唯一快照结构，整合 Core + Range + Lifespan + Structural Position 四层。
+
+    铁律（v2.1 Service §6）：
+    - S1: 唯一对外契约，下游不直接访问内部对象
+    - S2: 下游不准写回，快照是只读的
+    - S3: 快照不可变，不可原地修改
+    - S4: None 不准 fallback，必须向用户展示为"未形成"
+    - S5: rule_versions 必须完整
+    - S6: reason_codes 必附（任何为 None 的字段必须说明原因）
+    """
+
+    # ========== 标识字段 ==========
+    symbol: str                             # 标的代码
+    timeframe: str                          # 周期（"D"）
+    bar_dt: str                             # 当前 bar 时间戳
+    bar_index: int                          # 当前 bar 序号
+
+    # ========== Core 层字段 ==========
+    system_state: str                       # "UP_ALIVE" | "DOWN_ALIVE" | "TRANSITION" | "UNINITIALIZED"
+    direction: Optional[str]                # "UP" | "DOWN" | None
+    active_wave_id: Optional[str]           # 当前 alive wave 的 ID
+    progress_extreme_price: Optional[int]
+    progress_extreme_bar_dt: Optional[str]
+    guard_price: Optional[int]
+    guard_bar_dt: Optional[str]
+    bar_count: Optional[int]                # 当前 wave 的 bar 数（transition 期间为 None）
+    break_bar_dt: Optional[str]
+    break_price: Optional[int]
+
+    # ========== Transition / Range 层字段 ==========
+    transition_boundary_high: Optional[int]
+    transition_boundary_low: Optional[int]
+    candidate_pivot_type: Optional[str]
+    candidate_pivot_price: Optional[int]
+    range_boundary_high_now: Optional[int]
+    range_boundary_low_now: Optional[int]
+    range_evolution_count: Optional[int]
+    range_candidate_replacement_count: Optional[int]
+    range_type: Optional[str]               # "continuation" | "reversal" | None
+
+    # ========== Lifespan 层（Wave）==========
+    wave_span_rank: Optional[float]
+    wave_range_rank: Optional[float]
+    wave_stagnation_rank: Optional[float]
+
+    # ========== Lifespan 层（Range）==========
+    range_span_rank: Optional[float]
+    range_evolution_rank: Optional[float]
+    range_replacement_rank: Optional[float]
+    range_resolution_distance_rank: Optional[float]
+
+    # ========== Structural Position 层 ==========
+    p2_same_dir_span_momentum: Optional[float]
+    p2_same_dir_range_momentum: Optional[float]
+    p2_same_dir_label: Optional[str]
+    p3_cross_dir_span_momentum: Optional[float]
+    p3_cross_dir_range_momentum: Optional[float]
+    p3_cross_dir_label: Optional[str]
+    p4_cross_span_momentum: Optional[float]
+    p4_cross_range_momentum: Optional[float]
+    p4_cross_alive_warning: bool
+
+    # ========== 元数据 ==========
+    rule_versions: dict[str, str]           # 参与计算的规则版本（v2.1 Service §5）
+    lineage_hash: Optional[str]             # 计算链路哈希（v2.1 Service §5）
+    reason_codes: list[str]                 # 字段为 None 的原因代码（v2.1 Service §6 铁律 6）
+    usage: str                              # "research_only" | "verification_only" | "rejected" | "operational"
+    freshness: str                          # "current" | "stale_research_only"
+
