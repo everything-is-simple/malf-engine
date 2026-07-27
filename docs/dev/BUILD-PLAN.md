@@ -9,7 +9,7 @@
 > - 验收线见 BUILD-CONTRACT.md
 > - 本文只管「下一步动手做什么」
 
-**最后更新**: 2026-07-27 15:45 (P0 修复完成，规格合规度提升至 ~95%)
+**最后更新**: 2026-07-27 (🎊 项目全部完成！20/20 刀，100%)
 
 ---
 
@@ -90,11 +90,11 @@
 | **Range** | 震荡区间识别（一等公民对象） | ✅ 完成 | 4 刀（T6.1-T6.4）|
 | **Lifespan** | 波段生命周期排名 | ✅ 完成 | 4 刀（T7.1-T7.4）|
 | **Structural Position** | 结构位置视图（4 视图 + 标签） | ✅ 完成 | 4 刀（T8.1-T8.4）|
-| **Service** | 对外接口、失败模式、持久化 | ⏸ 待做 | 2 刀（T9.1-T9.2） |
+| **Service** | 对外接口、失败模式、持久化 | ✅ 完成 | 2 刀（T9.1-T9.2） |
 
 **总计**: 6 + 4 + 4 + 4 + 2 = **20 刀**
 
-**当前进度**: 18/20 刀完成（90%）
+**当前进度**: 20/20 刀完成（100%）🎊
 
 ---
 
@@ -813,6 +813,131 @@
 **实际时间**: 2026-07-27 完成
 
 **注**: WaveStructuralSnapshot 组装属于 Service 层（T9），不在本任务范围。
+
+---
+
+## 🎊 Service 层（已完成 - 2 刀）
+
+**规格**: MALF_05_Service_v2_1-deepseek-20260726.md §1-§8  
+**测试**: 11 passed (5 usage + 6 persistence)  
+**完成时间**: 2026-07-27
+
+### T9.1: Usage 判定 + 失败模式（✅ 完成）
+
+**目标**: usage 判定（rejected/research_only/verification_only/operational）+ reason_codes
+
+**规格覆盖**: §2-§3, §6, §8
+
+**核心工作**:
+1. WaveStructuralSnapshot 数据结构（34 字段）
+   - 标识字段（4）：symbol, timeframe, bar_dt, bar_index
+   - Core 层字段（10）：system_state, direction, guard, progress, etc.
+   - Range 层字段（9）：boundary, evolution, candidate, etc.
+   - Lifespan 层字段（7）：wave ranks + range ranks
+   - Structural Position 层字段（9）：P2/P3/P4 momentum + labels
+   - 元数据（5）：rule_versions, lineage_hash, reason_codes, usage, freshness
+
+2. UsageType 枚举（4 个值）
+   - REJECTED: 输入完整性失败
+   - RESEARCH_ONLY: 数据合同不满足
+   - VERIFICATION_ONLY: 回测验证模式
+   - OPERATIONAL: v0.1 禁用
+
+3. ReasonCode 枚举（11 个常量）
+   - uninitialized, transition_active, wave_alive
+   - input_integrity_failure, data_stale
+   - peer_sample_insufficient
+   - same_dir_peers_absent, cross_dir_peers_absent
+   - no_prior_wave, range_alive
+   - operational_disabled
+
+4. Usage 判定逻辑（G0-G2 优先级）
+   - G0: 输入完整性失败 → rejected
+   - G1: 数据合同不满足 → research_only
+   - G2: operational v0.1 禁用 → verification_only
+
+5. Reason codes 生成逻辑
+   - 为每个 None 字段生成原因代码
+   - 11 种失败模式全覆盖
+
+**测试覆盖**:
+- test_usage_rejected_on_input_integrity_failure
+- test_usage_research_only_on_peer_sample_insufficient
+- test_usage_verification_only_on_complete_data
+- test_operational_disabled_in_v01
+- test_usage_priority_rejected_over_research_only
+
+**完成标志**: 5 passed ✅
+
+**实际时间**: 2026-07-27 完成
+
+**提交**: 73eb90f
+
+---
+
+### T9.2: 持久化 + 中断恢复（✅ 完成）
+
+**目标**: JSON 序列化 + lineage_hash + 状态持久化 + 中断恢复
+
+**规格覆盖**: §4-§5, §7
+
+**核心工作**:
+1. JSON 序列化/反序列化
+   ```python
+   serialize_snapshot(snapshot) -> str
+   deserialize_snapshot(json_str) -> WaveStructuralSnapshot
+   ```
+   - 使用 stdlib json + dataclasses.asdict()
+   - 往返一致性保证
+
+2. Lineage Hash 计算
+   ```python
+   calculate_lineage_hash(snapshot_data) -> str
+   ```
+   - SHA256 确定性哈希
+   - 只包含计算链路字段（排除元数据）
+   - 相同输入 → 相同 hash
+
+3. var/ 目录结构
+   ```
+   var/
+   ├── staging/           # 待发布快照
+   └── published/
+       └── {symbol}/
+           └── {timeframe}/
+               ├── snapshots.jsonl    # JSON Lines 格式
+               └── current.json       # 最后快照指针
+   ```
+
+4. 快照持久化
+   ```python
+   persist_snapshot(snapshot, base_path) -> Path
+   update_current_pointer(snapshot, filepath, base_path)
+   ```
+   - JSON Lines 追加写入
+   - current.json 原子更新
+
+5. 中断恢复
+   ```python
+   load_last_snapshot(base_path) -> (snapshot, bar_dt) | None
+   should_resume_from(last_bar_dt, current_bar_dt) -> bool
+   ```
+   - 从 current.json 恢复最后状态
+   - bar_dt 去重判定
+
+**测试覆盖**:
+- test_serialization_roundtrip: JSON 往返一致性
+- test_lineage_hash_determinism: Hash 确定性
+- test_var_directory_creation: 目录自动创建
+- test_snapshot_persistence: 持久化 + current.json
+- test_interrupt_recovery: 中断恢复机制
+- test_load_last_snapshot_when_none_exists: 边界情况
+
+**完成标志**: 6 passed ✅
+
+**实际时间**: 2026-07-27 完成
+
+**提交**: e6bb6bc
 
 ---
 
