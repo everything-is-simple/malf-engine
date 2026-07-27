@@ -1,9 +1,23 @@
 """MALF 数据结构定义。
 
 规格权威：MALF v2.1 Definitive (deepseek-20260726)
-- Core 层：v2.1 §1 Core（D1 PriceBar / D2 Pivot / §9 CoreStateSnapshot）
-- 版本兼容：v2.1 与 v2.0 语义等价（v2.1 是清晰表达版本）
-- 命名变更：Probability → Structural Position（v2.1 重命名，本模块未来会扩展）
+
+版本说明：
+- v2.1 与 v2.0 语义等价（v2.1 是清晰表达的重述版本）
+- 命名变更：Probability → Structural Position（v2.1 术语更新）
+- 本模块遵循 v2.1 规格的所有数据结构定义
+
+v2.1 权威文档路径：
+I:\\asteria-riskbench-Definitive-validated\\MALF_Definitive_v2_1-deepseek-20260726\\
+- MALF_01_Core_v2_1-deepseek-20260726.md（Core 层数据结构）
+- MALF_02_Range_v2_1-deepseek-20260726.md（Range 层数据结构）
+- MALF_03_Lifespan_v2_1-deepseek-20260726.md（Lifespan 层数据结构）
+
+实现层级：
+- ✅ Core 层：PriceBar, Pivot, CoreStateSnapshot（完整）
+- ✅ Range 层：RangeSnapshot, RangeState, RangeResolutionType（完整）
+- ⚠️ Lifespan 层：WaveLifespan（完整），RangeLifespan（部分，待 T7.3 补全）
+- ⏸ Structural Position 层：P1-P4 视图（待 T8.1-T8.4 实现）
 
 本文件只定义数据的形状，不含任何状态机逻辑。纯 stdlib dataclass + enum。
 
@@ -230,3 +244,84 @@ class RangeSnapshot:
     confirmation_pivot_extreme_bar_dt: Optional[str] = None  # 极值时间
     confirmation_pivot_confirm_bar_dt: Optional[str] = None  # 确认时间
     new_wave_direction: Optional[Direction] = None  # 新 wave 方向
+
+
+@dataclass(frozen=True)
+class WaveLifespan:
+    """Wave 生命周期统计指标（v2.1 Lifespan §3）。
+
+    只统计已终止的 wave（terminated），不统计 alive wave。
+    用于历史排名（percentile_rank）和结构位置视图。
+    """
+    # 标识
+    wave_id: str  # 格式："{symbol}_{timeframe}_w_{序号}"
+    symbol: str
+    timeframe: str
+    direction: Direction
+
+    # 生命周期时间窗
+    wave_start_bar_dt: str  # Wave 开始时间（confirmation bar）
+    wave_end_bar_dt: str    # Wave 结束时间（break bar）
+    span_bars: int          # 持续 bar 数
+
+    # 价格范围
+    wave_start_price: int   # Wave 起始价格（confirmation price，v2.1 L4-2）
+    wave_end_price: int     # Wave 结束价格（progress_extreme）
+    price_range: int        # 价格范围（绝对值，wave_end - wave_start）
+    progress_pct: float     # 进展百分比（(end - start) / start）
+
+    # 结构复杂度
+    primitive_count: int    # 初始化原语数量（H0/L1/H2 或 L0/H1/L2）
+    pivot_count: int        # 总 pivot 数量（含初始化 + alive 期间新增）
+    new_count: int          # Alive 期间新确认 pivot 数量（HH/LL）
+    no_new_span: int        # 最后一个新 pivot 到 break 的 bar 数
+
+    # 排名字段（计算后填充，初始为 None）
+    span_rank: Optional[float] = None           # span_bars 的 percentile_rank
+    range_rank: Optional[float] = None          # price_range 的 percentile_rank
+    stagnation_rank: Optional[float] = None     # span_bars / max(primitive_count, 1) 的 percentile_rank
+    progress_rank: Optional[float] = None       # progress_pct 的 percentile_rank
+
+
+@dataclass(frozen=True)
+class RangeLifespan:
+    """Range 生命周期统计指标（v2.1 Lifespan §2）。
+
+    只统计已 resolved 的 Range（resolved_up / resolved_down），不统计 alive Range。
+    用于历史排名（percentile_rank）和结构位置视图。
+
+    双类型分池（v2.1 Lifespan §2.2）：
+    - continuation_range 样本池
+    - reversal_range 样本池
+    最小样本量：PEER_SAMPLE_MIN_N = 20
+    """
+    # 标识
+    range_id: str  # 格式："{symbol}_{timeframe}_R{序号}"
+    symbol: str
+    timeframe: str
+    range_type: RangeResolutionType  # continuation / reversal
+
+    # 生命周期时间窗
+    range_start_bar_dt: str  # Range 开始时间（break bar）
+    range_end_bar_dt: str    # Range 结束时间（resolution bar）
+    span_bars: int           # 持续 bar 数
+
+    # Range 演化统计
+    evolution_count: int        # Boundary 演化次数（v2.1 Range §3.2）
+    replacement_count: int      # Candidate 替换次数（transition 期间）
+
+    # Resolution 距离
+    resolution_distance: int    # Resolution 距离（有符号整数，v2.1 Range §5）
+    resolution_distance_pct: float  # Resolution 距离百分比（归一化到 boundary_init 幅度）
+
+    # Boundary 幅度
+    amplitude_init: int         # boundary_init 范围（boundary_high_init - boundary_low_init）
+    amplitude_now: int          # boundary_now 范围（boundary_now_high - boundary_now_low）
+    amplitude_pct: float        # boundary_now 幅度百分比（amplitude_now / boundary_low_init）
+
+    # 排名字段（计算后填充，初始为 None）
+    span_rank: Optional[float] = None                    # span_bars 的 percentile_rank
+    evolution_rank: Optional[float] = None               # evolution_count 的 percentile_rank
+    replacement_rank: Optional[float] = None             # replacement_count 的 percentile_rank
+    resolution_distance_rank: Optional[float] = None     # resolution_distance_pct 的 percentile_rank
+

@@ -1,15 +1,20 @@
 """MALF Core Engine - 结构状态机。
 
-本模块实现 MALF v2.1 Core 层（§1-§10）。
+本模块实现 MALF v2.1 Core 层（§1-§10）和 Range 层（§2）。
 
 版本说明：
 - 设计基于：MALF v2.0 Definitive (claude-20260616)
-- 权威定义：MALF v2.1 Definitive (deepseek-20260726)
+- 权威规格：MALF v2.1 Definitive (deepseek-20260726)
 - 语义兼容性：v2.1 与 v2.0 完全等价（v2.1 是清晰表达版本）
 - 认定者：东西南北中（2026-07-26 签署）
 
-v2.1 权威文档：
+v2.1 权威文档路径：
 I:\\asteria-riskbench-Definitive-validated\\MALF_Definitive_v2_1-deepseek-20260726\\
+- MALF_01_Core_v2_1-deepseek-20260726.md（Core 层）
+- MALF_02_Range_v2_1-deepseek-20260726.md（Range 层）
+- MALF_03_Lifespan_v2_1-deepseek-20260726.md（Lifespan 层）
+- MALF_04_Structural_Position_v2_1-deepseek-20260726.md（Structural Position 层）
+- MALF_05_Service_v2_1-deepseek-20260726.md（Service 层）
 
 编号对照：
 - D1-D18：定义（Definitions）
@@ -17,17 +22,15 @@ I:\\asteria-riskbench-Definitive-validated\\MALF_Definitive_v2_1-deepseek-202607
 - O1-O8：操作边界（Operational Boundaries）
 
 本模块实现：
-- §2：Pivot 检测与确认（fractal k=2，D2）
-- §3：初始化逻辑（D18/O6）
-- §4-§8：状态机九步顺序（O2）
-- §9：快照输出与指纹
+- §1 Core 层：Pivot 检测、初始化、状态机、快照输出（完整）
+- §2 Range 层：震荡区间识别、边界演化、resolution 判定（完整）
 
 实现进度：
-- ✅ 第一~五刀：Core 层完整状态机（47 passed, 1 skipped）
-- ⏸ 第六刀：Range 层（v2.1 §2 Range）
-- ⏸ 第七刀：Lifespan 双轨（v2.1 §3 Lifespan）
-- ⏸ 第八刀：Structural Position（v2.1 §4 Structural Position）
-- ⏸ 第九刀：Service 集成（v2.1 §5 Service）
+- ✅ Core 层（6 刀）：完整状态机（58 passed, 1 skipped）
+- ✅ Range 层（4 刀）：T6.1-T6.4 全部完成（6 tests + real data）
+- ⚠️ Lifespan 层（2/4 刀）：T7.1-T7.2 完成，T7.3-T7.4 待做
+- ⏸ Structural Position 层（0 刀）：T8.1-T8.4 待做
+- ⏸ Service 层（0 刀）：T9.1-T9.2 待做
 """
 
 from __future__ import annotations

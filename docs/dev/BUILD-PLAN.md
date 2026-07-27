@@ -9,7 +9,7 @@
 > - 验收线见 BUILD-CONTRACT.md
 > - 本文只管「下一步动手做什么」
 
-**最后更新**: 2026-07-26
+**最后更新**: 2026-07-27
 
 ---
 
@@ -24,14 +24,14 @@
 | 层 | 职责 | 状态 | 刀数 |
 |----|------|------|------|
 | **Core** | 结构状态机（UP/DOWN/TRANSITION） | ✅ 完成 | 6 刀（T1-T5 + C-07） |
-| **Range** | 震荡区间识别（一等公民对象） | ⏸ 待做 | 4 刀（T6.1-T6.4） |
-| **Lifespan** | 波段生命周期排名 | ⏸ 待做 | 3 刀（T7.1-T7.3） |
-| **Structural Position** | 结构位置视图（4 视图 + 标签） | ⏸ 待做 | 3 刀（T8.1-T8.3） |
+| **Range** | 震荡区间识别（一等公民对象） | ✅ 完成 | 4 刀（T6.1-T6.4）+ 6 测试 + 真实数据验证 |
+| **Lifespan** | 波段生命周期排名 | ⚠️ 50% 完成 | 4 刀（T7.1-T7.2 ✅, T7.3-T7.4 ⏸） |
+| **Structural Position** | 结构位置视图（4 视图 + 标签） | ⏸ 待做 | 4 刀（T8.1-T8.4） |
 | **Service** | 对外接口、失败模式、持久化 | ⏸ 待做 | 2 刀（T9.1-T9.2） |
 
-**总计**: 6 + 4 + 3 + 3 + 2 = **18 刀**
+**总计**: 6 + 4 + 4 + 4 + 2 = **20 刀**
 
-**当前进度**: 6/18 刀完成（33%）
+**当前进度**: 8/20 刀完成（40%）
 
 ---
 
@@ -126,13 +126,14 @@
 
 ---
 
-## ⏸ Range 层（待做 - 4 刀）
+## ✅ Range 层（已完成 - 4 刀）
 
 **规格**: MALF_02_Range_v2_1-deepseek-20260726.md §1-§9  
-**预计时间**: 8-12 天  
-**当前状态**: 未开始
+**测试**: 6 synthetic + 1 real data, all passed  
+**完成日期**: 2026-07-26  
+**当前状态**: 完成
 
-### T6.1: Range 诞生（⏸ 待做 - 下一刀）
+### T6.1: Range 诞生（✅ 完成）
 
 **目标**: Guard break 触发 Range 诞生
 
@@ -175,21 +176,21 @@
 - `t6_1_range_birth_down.json`（DOWN wave → HL break）
 
 **Step 清单**:
-- [ ] S6.1-1: 推 2 个 fixture 预期输出
-- [ ] S6.1-2: 预期输出定稿存 JSON
-- [ ] S6.1-3: 补充 RangeSnapshot 数据结构（types.py）
-- [ ] S6.1-4: 实现 Range 诞生逻辑（range_engine.py）
-- [ ] S6.1-5: 写单元测试（2 个 fixture）
-- [ ] S6.1-6: 端到端测试（逐 bar 喂入，全等比对）
-- [ ] S6.1-7: 真实数据冒烟（记录 Range 诞生频率）
+- [x] S6.1-1: 推 2 个 fixture 预期输出
+- [x] S6.1-2: 预期输出定稿存 JSON
+- [x] S6.1-3: 补充 RangeSnapshot 数据结构（types.py）
+- [x] S6.1-4: 实现 Range 诞生逻辑（range_engine.py）
+- [x] S6.1-5: 写单元测试（2 个 fixture）
+- [x] S6.1-6: 端到端测试（逐 bar 喂入，全等比对）
+- [x] S6.1-7: 真实数据冒烟（记录 Range 诞生频率）
 
-**完成标志**: S6.1-6 绿 + S6.1-7 无崩溃
+**完成标志**: S6.1-6 绿 + S6.1-7 无崩溃 ✅
 
-**预计时间**: 2-3 天
+**实际时间**: 已完成
 
 ---
 
-### T6.2: Boundary 演化（⏸ 待做）
+### T6.2: Boundary 演化（✅ 完成）
 
 **目标**: 新 pivot 确认后更新 boundary_now
 
@@ -212,20 +213,20 @@
 - `t6_2_boundary_no_evolution.json`（无演化）
 
 **Step 清单**:
-- [ ] S6.2-1: 推 2 个 fixture 预期输出
-- [ ] S6.2-2: 预期输出定稿存 JSON
-- [ ] S6.2-3: 实现 _evolve_boundary() 方法
-- [ ] S6.2-4: 写单元测试（2 个 fixture）
-- [ ] S6.2-5: 端到端测试
-- [ ] S6.2-6: 真实数据冒烟（记录 evolution_count 分布）
+- [x] S6.2-1: 推 2 个 fixture 预期输出
+- [x] S6.2-2: 预期输出定稿存 JSON
+- [x] S6.2-3: 实现 _evolve_boundary() 方法
+- [x] S6.2-4: 写单元测试（2 个 fixture）
+- [x] S6.2-5: 端到端测试
+- [x] S6.2-6: 真实数据冒烟（记录 evolution_count 分布）
 
-**完成标志**: S6.2-5 绿 + S6.2-6 无崩溃
+**完成标志**: S6.2-5 绿 + S6.2-6 无崩溃 ✅
 
-**预计时间**: 1-2 天
+**实际时间**: 已完成
 
 ---
 
-### T6.3: Resolution 判定（⏸ 待做）
+### T6.3: Resolution 判定（✅ 完成）
 
 **目标**: New wave 确认后判定 Range resolution
 
@@ -259,21 +260,21 @@
 - `t6_3_resolution_distance_extreme.json`
 
 **Step 清单**:
-- [ ] S6.3-1: 推 3 个 fixture 预期输出
-- [ ] S6.3-2: 预期输出定稿存 JSON
-- [ ] S6.3-3: 实现 _check_resolution() 方法
-- [ ] S6.3-4: 实现 resolution_distance_pct 计算
-- [ ] S6.3-5: 写单元测试（3 个 fixture）
-- [ ] S6.3-6: 端到端测试
-- [ ] S6.3-7: 真实数据冒烟（记录 resolution 分布）
+- [x] S6.3-1: 推 3 个 fixture 预期输出
+- [x] S6.3-2: 预期输出定稿存 JSON
+- [x] S6.3-3: 实现 _check_resolution() 方法
+- [x] S6.3-4: 实现 resolution_distance_pct 计算
+- [x] S6.3-5: 写单元测试（3 个 fixture）
+- [x] S6.3-6: 端到端测试
+- [x] S6.3-7: 真实数据冒烟（记录 resolution 分布）
 
-**完成标志**: S6.3-6 绿 + S6.3-7 无崩溃
+**完成标志**: S6.3-6 绿 + S6.3-7 无崩溃 ✅
 
-**预计时间**: 2-3 天
+**实际时间**: 已完成
 
 ---
 
-### T6.4: Range 分类（⏸ 待做）
+### T6.4: Range 分类（✅ 完成）
 
 **目标**: continuation_range / reversal_range 分类
 
@@ -305,56 +306,93 @@
 - `t6_4_reversal_scenario_4.json`（DOWN→上 break→下 resolution）
 
 **Step 清单**:
-- [ ] S6.4-1: 推 4 个 fixture 预期输出
-- [ ] S6.4-2: 预期输出定稿存 JSON
-- [ ] S6.4-3: 实现 _classify_range() 方法
-- [ ] S6.4-4: 写单元测试（4 个 fixture + naming trap 测试）
-- [ ] S6.4-5: 端到端测试
-- [ ] S6.4-6: 真实数据冒烟（记录 continuation/reversal 比例）
-- [ ] S6.4-7: 回补文档
+- [x] S6.4-1: 推 4 个 fixture 预期输出
+- [x] S6.4-2: 预期输出定稿存 JSON
+- [x] S6.4-3: 实现 _classify_range() 方法
+- [x] S6.4-4: 写单元测试（4 个 fixture + naming trap 测试）
+- [x] S6.4-5: 端到端测试
+- [x] S6.4-6: 真实数据冒烟（记录 continuation/reversal 比例）
+- [x] S6.4-7: 回补文档
 
-**完成标志**: S6.4-5 绿 + S6.4-6 无崩溃 + S6.4-7 文档更新
+**完成标志**: S6.4-5 绿 + S6.4-6 无崩溃 + S6.4-7 文档更新 ✅
 
-**预计时间**: 2-3 天
+**实际时间**: 已完成
 
 ---
 
-## ⏸ Lifespan 层（待做 - 3 刀）
+## ⚠️ Lifespan 层（50% 完成 - 4 刀）
 
 **规格**: MALF_03_Lifespan_v2_1-deepseek-20260726.md §1-§7  
-**预计时间**: 6-9 天  
-**当前状态**: 未开始
+**预计时间**: 剩余 4-6 天（T7.3-T7.4）  
+**当前状态**: T7.1-T7.2 已完成 ✅，T7.3-T7.4 待做 ⏸
 
-### T7.1: Wave 统计指标（⏸ 待做）
+### T7.1: WaveLifespan 指标计算（✅ 完成）
 
-**目标**: 计算已终止 wave 的统计指标
+**目标**: 计算已终止 wave 的 7 个统计指标
 
-**规格覆盖**: §2 统计指标
+**规格覆盖**: §3 WaveLifespan 指标全集
 
 **核心工作**:
-1. Wave 统计指标
-   - new_count: 新高/低次数
-   - no_new_span: 停滞 bars
-   - wave_span_total: 总持续 bars
-   - progress_pct: 推进百分比
-   - price_range: 价格范围
-   - primitive_count: primitive 数量
-   - pivot_count: pivot 数量
+1. WaveLifespan 数据结构
+   ```python
+   @dataclass
+   class WaveLifespan:
+       wave_id: str
+       direction: Literal["UP", "DOWN"]
+       birth_type: Literal["initial", "continuation", "reversal"]
+       
+       # 基础指标
+       span_bars: int              # 波段跨度
+       price_range: int            # 价格幅度
+       primitive_count: int        # 原语数量
+       pivot_count: int            # pivot 数量
+       progress_pct: float         # 推进百分比
+       
+       # 推进统计
+       new_count: int              # 推进次数
+       no_new_span: int            # 停滞 bar 数
+   ```
 
-2. 测试覆盖
-   - 简单 wave（3 pivots）
-   - 复杂 wave（10+ pivots，多次 HH/LL）
+2. 指标计算逻辑
+   - `span_bars`: termination_bar_dt - birth_bar_dt
+   - `price_range`: |progress_extreme_price - guard_price|
+   - `primitive_count`: pivot 相邻配对数
+   - `pivot_count`: 波内 pivot 总数
+   - `progress_pct`: 推进幅度 / 总幅度
+   - `new_count`: progress 更新次数
+   - `no_new_span`: 两次 progress 更新之间的 bar 数累计
+
+3. 测试覆盖
+   - 简单 wave（3 pivots，1 次推进）
+   - 复杂 wave（10+ pivots，5 次推进）
    - 边界情况（单 primitive wave）
+   - progress_pct 极端情况（≈1.0 / ≈0.5）
 
-**预计时间**: 2-3 天
+**Fixture 设计**:
+- `t7_1_simple_wave.json`（3 pivots）
+- `t7_1_complex_wave.json`（10+ pivots）
+- `t7_1_single_primitive.json`（边界情况）
+
+**Step 清单**:
+- [x] S7.1-1: 推 3 个 fixture 预期输出
+- [x] S7.1-2: 预期输出定稿存 JSON
+- [x] S7.1-3: 实现 WaveLifespan 数据结构（types.py）
+- [x] S7.1-4: 实现 _calculate_wave_metrics() 方法
+- [x] S7.1-5: 写单元测试（3 个 fixture）
+- [x] S7.1-6: 端到端测试
+- [x] S7.1-7: 真实数据冒烟（记录指标分布）
+
+**完成标志**: S7.1-6 绿 + S7.1-7 无崩溃 ✅
+
+**实际时间**: 已完成
 
 ---
 
-### T7.2: 双轨 peer_sample（⏸ 待做）
+### T7.2: WaveLifespan peer_sample + rank（✅ 完成）
 
-**目标**: UP/DOWN 独立样本池
+**目标**: UP/DOWN 独立样本池 + percentile_rank 计算
 
-**规格覆盖**: §3-§4 双轨户口与排名
+**规格覆盖**: §3 Peer Sample + §4 Percentile Rank
 
 **核心工作**:
 1. 双轨 peer_sample
@@ -362,6 +400,7 @@
    - DOWN 样本池（所有已终止 DOWN waves）
    - 最小样本量（PEER_SAMPLE_MIN_N = 30）
    - 时间窗口（可选，默认全历史）
+   - 防前视（termination_bar_dt ≤ 当前 bar_dt）
 
 2. percentile_rank 计算
    ```python
@@ -369,68 +408,351 @@
    ```
    - 严格小于（不含等于）
    - 范围 [0, 1)
+   - peer_sample < 30 → rank = None
 
-3. 测试覆盖
-   - peer_sample 不足（< 30）→ rank = None
+3. Rank 字段
+   - span_rank: span_bars 的 percentile_rank
+   - range_rank: price_range 的 percentile_rank
+   - stagnation_rank: span_bars / max(primitive_count, 1) 的 percentile_rank
+   - progress_rank: progress_pct 的 percentile_rank
+
+4. 测试覆盖
+   - peer_sample 不足（< 30）→ 所有 rank = None
    - peer_sample 充足（≥ 30）→ 计算 rank
    - 边界情况（自己是最小/最大）
+   - UP/DOWN 分池验证
 
-**预计时间**: 2-3 天
+**Fixture 设计**:
+- `t7_2_insufficient_sample.json`（< 30 waves）
+- `t7_2_sufficient_sample.json`（≥ 30 waves）
+- `t7_2_rank_boundaries.json`（最小/最大）
+
+**Step 清单**:
+- [x] S7.2-1: 推 3 个 fixture 预期输出
+- [x] S7.2-2: 预期输出定稿存 JSON
+- [x] S7.2-3: 实现 _build_peer_sample() 方法
+- [x] S7.2-4: 实现 _calculate_percentile_rank() 方法
+- [x] S7.2-5: 写单元测试（3 个 fixture）
+- [x] S7.2-6: 端到端测试
+- [x] S7.2-7: 真实数据冒烟（记录 rank 分布）
+
+**完成标志**: S7.2-6 绿 + S7.2-7 无崩溃 ✅
+
+**实际时间**: 已完成
 
 ---
 
-### T7.3: Range Lifespan（⏸ 待做）
+### T7.3: RangeLifespan 指标计算（⏸ 待做）
 
-**目标**: Range 生命周期统计
+**目标**: Range 生命周期统计指标
 
-**规格覆盖**: §5 Range Lifespan
+**规格覆盖**: §2 双轨设计（RangeLifespan 部分）
 
 **核心工作**:
-1. Range 统计指标
-   - span_bars: 持续 bars
-   - evolution_count: boundary 演化次数
-   - resolution_distance_pct: resolution 距离
-   - amplitude_pct: boundary_now 范围
+1. RangeLifespan 数据结构
+   ```python
+   @dataclass
+   class RangeLifespan:
+       range_id: str
+       range_type: Literal["continuation", "reversal"]
+       
+       # 基础指标
+       span_bars: int              # 持续 bars
+       evolution_count: int        # boundary 演化次数
+       replacement_count: int      # candidate 替换次数
+       resolution_distance_pct: float  # resolution 距离
+       amplitude_pct: float        # boundary_now 范围
+   ```
 
-2. Rank 计算
-   - span_bars_rank
-   - evolution_count_rank
-   - resolution_distance_pct_rank
+2. 指标计算逻辑
+   - `span_bars`: resolution_bar_dt - break_bar_dt
+   - `evolution_count`: 从 Range 对象提取
+   - `replacement_count`: 从 Range 对象提取
+   - `resolution_distance_pct`: 从 Range 对象提取
+   - `amplitude_pct`: (boundary_high_now - boundary_low_now) / boundary_low_now
 
 3. 测试覆盖
    - 简单 range（未演化）
    - 复杂 range（演化 5 次）
-   - peer_sample 不足（< 20）
+   - continuation_range 和 reversal_range
 
-**预计时间**: 1-2 天
+**Fixture 设计**:
+- `t7_3_simple_range.json`（未演化）
+- `t7_3_complex_range.json`（演化 5 次）
+
+**Step 清单**:
+- [ ] S7.3-1: 推 2 个 fixture 预期输出
+- [ ] S7.3-2: 预期输出定稿存 JSON
+- [ ] S7.3-3: 实现 RangeLifespan 数据结构（types.py）
+- [ ] S7.3-4: 实现 _calculate_range_metrics() 方法
+- [ ] S7.3-5: 写单元测试（2 个 fixture）
+- [ ] S7.3-6: 端到端测试
+- [ ] S7.3-7: 真实数据冒烟（记录指标分布）
+
+**完成标志**: S7.3-6 绿 + S7.3-7 无崩溃
+
+**预计时间**: 2-3 天
 
 ---
 
-## ⏸ Structural Position 层（待做 - 3 刀）
+### T7.4: RangeLifespan peer_sample + rank（⏸ 待做）
+
+**目标**: continuation/reversal 分池 + percentile_rank 计算
+
+**规格覆盖**: §2 双轨设计 + R5 不变量
+
+**核心工作**:
+1. 双类型 peer_sample
+   - continuation_range 样本池
+   - reversal_range 样本池
+   - 最小样本量（PEER_SAMPLE_MIN_N = 20）
+   - 防前视（resolution_bar_dt ≤ 当前 bar_dt）
+
+2. Rank 字段
+   - span_rank: span_bars 的 percentile_rank
+   - evolution_rank: evolution_count 的 percentile_rank
+   - replacement_rank: replacement_count 的 percentile_rank
+   - resolution_distance_rank: resolution_distance_pct 的 percentile_rank
+
+3. 测试覆盖
+   - peer_sample 不足（< 20）→ 所有 rank = None
+   - peer_sample 充足（≥ 20）→ 计算 rank
+   - continuation/reversal 分池验证
+
+**Fixture 设计**:
+- `t7_4_range_insufficient_sample.json`（< 20 ranges）
+- `t7_4_range_sufficient_sample.json`（≥ 20 ranges）
+
+**Step 清单**:
+- [ ] S7.4-1: 推 2 个 fixture 预期输出
+- [ ] S7.4-2: 预期输出定稿存 JSON
+- [ ] S7.4-3: 实现 _build_range_peer_sample() 方法
+- [ ] S7.4-4: 实现分池 rank 计算
+- [ ] S7.4-5: 写单元测试（2 个 fixture）
+- [ ] S7.4-6: 端到端测试
+- [ ] S7.4-7: 真实数据冒烟（记录 rank 分布）
+
+**完成标志**: S7.4-6 绿 + S7.4-7 无崩溃
+
+**预计时间**: 2-3 天
+
+---
+
+## ⏸ Structural Position 层（待做 - 4 刀）
 
 **规格**: MALF_04_Structural_Position_v2_1-deepseek-20260726.md §1-§9  
-**预计时间**: 6-9 天  
+**预计时间**: 8-12 天  
 **当前状态**: 未开始
 
-### T8.1: Rank 视图（⏸ 待做）
+### T8.1: P1 自身分位（⏸ 待做）
 
-**目标**: up_rank / down_rank 计算
+**目标**: 透传 Lifespan rank 值，不做变换
+
+**规格覆盖**: §3 P1 — 自身分位（Self Rank）
+
+**核心工作**:
+1. P1 视图结构
+   ```python
+   @dataclass
+   class P1SelfRank:
+       span_rank: float | None
+       range_rank: float | None
+       stagnation_rank: float | None
+       progress_rank: float | None  # WaveLifespan 新增
+   ```
+
+2. 透传逻辑
+   - 从 WaveLifespan 提取 4 个 rank 字段
+   - 不做任何计算或变换
+   - 保持 None 传递（peer_sample 不足时）
+
+3. 测试覆盖
+   - Rank 全有值（peer_sample ≥ 30）
+   - Rank 全为 None（peer_sample < 30）
+   - 边界情况（rank = 0.0 / 0.99）
+
+**Fixture 设计**:
+- `t8_1_p1_with_ranks.json`（有 rank）
+- `t8_1_p1_no_ranks.json`（无 rank）
+
+**Step 清单**:
+- [ ] S8.1-1: 推 2 个 fixture 预期输出
+- [ ] S8.1-2: 预期输出定稿存 JSON
+- [ ] S8.1-3: 实现 P1SelfRank 数据结构（types.py）
+- [ ] S8.1-4: 实现 _build_p1_view() 方法
+- [ ] S8.1-5: 写单元测试（2 个 fixture）
+- [ ] S8.1-6: 端到端测试
+- [ ] S8.1-7: 真实数据冒烟
+
+**完成标志**: S8.1-6 绿 + S8.1-7 无崩溃
 
 **预计时间**: 2-3 天
 
 ---
 
-### T8.2: Momentum 视图（⏸ 待做）
+### T8.2: P2 同向对照（⏸ 待做）
 
-**目标**: momentum 计算（同向 - 反向）
+**目标**: 计算当前 wave 与最近同向波的 momentum
+
+**规格覆盖**: §4 P2 — 同向对照（Same Direction Momentum）
+
+**核心工作**:
+1. P2 视图结构
+   ```python
+   @dataclass
+   class P2SameDirMomentum:
+       span_momentum: float | None      # W0.span_rank - avg(W-1~W-3 同向.span_rank)
+       range_momentum: float | None     # W0.range_rank - avg(W-1~W-3 同向.range_rank)
+       stagnation_momentum: float | None
+       label: str | None  # "accelerating" | "flat" | "decelerating"
+   ```
+
+2. Momentum 计算
+   - 从 W-1, W-2, W-3 中筛选同向波
+   - 计算 W0 与同向波的 rank 差值
+   - momentum > 0：当前波比历史更强
+   - momentum < 0：当前波比历史更弱
+
+3. 标签规则（阈值化）
+   - accelerating: span_momentum > 0.15 且 range_momentum > 0.15
+   - decelerating: span_momentum < -0.15 且 range_momentum < -0.15
+   - flat: 其他情况
+
+4. 测试覆盖
+   - 充足同向波（≥ 3 个）
+   - 不足同向波（< 3 个，有几个用几个）
+   - 无同向波（momentum = None）
+   - 标签边界情况
+
+**Fixture 设计**:
+- `t8_2_p2_sufficient_peers.json`（≥ 3 同向波）
+- `t8_2_p2_insufficient_peers.json`（1-2 同向波）
+- `t8_2_p2_no_peers.json`（无同向波）
+
+**Step 清单**:
+- [ ] S8.2-1: 推 3 个 fixture 预期输出
+- [ ] S8.2-2: 预期输出定稿存 JSON
+- [ ] S8.2-3: 实现 P2SameDirMomentum 数据结构（types.py）
+- [ ] S8.2-4: 实现 _calculate_same_dir_momentum() 方法
+- [ ] S8.2-5: 实现标签规则 _label_momentum()
+- [ ] S8.2-6: 写单元测试（3 个 fixture）
+- [ ] S8.2-7: 端到端测试
+- [ ] S8.2-8: 真实数据冒烟
+
+**完成标志**: S8.2-7 绿 + S8.2-8 无崩溃
 
 **预计时间**: 2-3 天
 
 ---
 
-### T8.3: Cross Compare + 标签（⏸ 待做）
+### T8.3: P3 反向对照（⏸ 待做）
 
-**目标**: cross_compare 计算 + 标签规则
+**目标**: 计算当前 wave 与最近反向波的 cross momentum
+
+**规格覆盖**: §5 P3 — 反向对照（Cross Direction Momentum）
+
+**核心工作**:
+1. P3 视图结构
+   ```python
+   @dataclass
+   class P3CrossDirMomentum:
+       cross_span_momentum: float | None
+       cross_range_momentum: float | None
+       cross_stagnation_momentum: float | None
+       label: str | None  # "stronger" | "balanced" | "weaker"
+   ```
+
+2. Cross Momentum 计算
+   - 从 W-1, W-2, W-3 中筛选反向波
+   - 计算 W0 与反向波的 rank 差值
+   - cross_momentum > 0：当前波比反向波更强
+   - cross_momentum < 0：当前波比反向波更弱
+
+3. 标签规则
+   - stronger: cross_span_momentum > 0.2 且 cross_range_momentum > 0.2
+   - weaker: cross_span_momentum < -0.2 且 cross_range_momentum < -0.2
+   - balanced: 其他情况
+
+4. 测试覆盖
+   - 充足反向波（≥ 3 个）
+   - 不足反向波（< 3 个）
+   - 无反向波（cross_momentum = None）
+
+**Fixture 设计**:
+- `t8_3_p3_sufficient_peers.json`（≥ 3 反向波）
+- `t8_3_p3_insufficient_peers.json`（1-2 反向波）
+- `t8_3_p3_no_peers.json`（无反向波）
+
+**Step 清单**:
+- [ ] S8.3-1: 推 3 个 fixture 预期输出
+- [ ] S8.3-2: 预期输出定稿存 JSON
+- [ ] S8.3-3: 实现 P3CrossDirMomentum 数据结构（types.py）
+- [ ] S8.3-4: 实现 _calculate_cross_dir_momentum() 方法
+- [ ] S8.3-5: 实现标签规则
+- [ ] S8.3-6: 写单元测试（3 个 fixture）
+- [ ] S8.3-7: 端到端测试
+- [ ] S8.3-8: 真实数据冒烟
+
+**完成标志**: S8.3-7 绿 + S8.3-8 无崩溃
+
+**预计时间**: 2-3 天
+
+---
+
+### T8.4: P4 正反对照 + 最终集成（⏸ 待做）
+
+**目标**: W0 与 W-1（最近已终止波）比较 + WaveStructuralSnapshot 组装
+
+**规格覆盖**: §6 P4 — 正反对照（Cross Compare）
+
+**核心工作**:
+1. P4 视图结构
+   ```python
+   @dataclass
+   class P4CrossCompare:
+       cross_span_momentum: float | None     # W0 vs W-1
+       cross_range_momentum: float | None
+       cross_alive_warning: bool  # W-1 仍 alive 时为 True
+       label: str | None  # "expansion" | "contraction" | "neutral"
+   ```
+
+2. P4 计算
+   - 取 W-1（最近一个已终止波，任意方向）
+   - 计算 W0 与 W-1 的 rank 差值
+   - 若 W-1 不存在或仍 alive：cross_alive_warning = True，momentum = None
+
+3. 标签规则
+   - expansion: cross_span_momentum > 0.25 且 cross_range_momentum > 0.25
+   - contraction: cross_span_momentum < -0.25 且 cross_range_momentum < -0.25
+   - neutral: 其他情况
+
+4. WaveStructuralSnapshot 组装
+   - 组合 Core + Range + Lifespan + P1-P4
+   - 符合 Service 层规格（§2 唯一对外契约）
+
+5. 测试覆盖
+   - W-1 存在且已终止
+   - W-1 不存在（第一个 wave）
+   - W-1 仍 alive（警告）
+   - 完整快照输出验证
+
+**Fixture 设计**:
+- `t8_4_p4_with_w_minus_1.json`（W-1 存在）
+- `t8_4_p4_no_w_minus_1.json`（W-1 不存在）
+- `t8_4_p4_w_minus_1_alive.json`（W-1 仍 alive）
+- `t8_4_full_snapshot.json`（完整快照）
+
+**Step 清单**:
+- [ ] S8.4-1: 推 4 个 fixture 预期输出
+- [ ] S8.4-2: 预期输出定稿存 JSON
+- [ ] S8.4-3: 实现 P4CrossCompare 数据结构（types.py）
+- [ ] S8.4-4: 实现 _calculate_p4_cross_compare() 方法
+- [ ] S8.4-5: 实现 WaveStructuralSnapshot 组装
+- [ ] S8.4-6: 写单元测试（4 个 fixture）
+- [ ] S8.4-7: 端到端测试
+- [ ] S8.4-8: 真实数据冒烟
+
+**完成标志**: S8.4-7 绿 + S8.4-8 无崩溃
 
 **预计时间**: 2-3 天
 
@@ -555,13 +877,15 @@ def should_replace(new_pivot: Pivot, old_pivot: Pivot) -> bool:
 - 目标: `WaveStructuralSnapshot`（v2.1）
 - 影响: types.py + core_engine.py + tests/
 - 预计: 30 分钟
-- 状态: ⏸ 待执行
+- 状态: ✅ 已完成（2026-07-27）
+- 注：当前代码中未使用 WaveProbabilitySnapshot，该类型尚未定义
 
 #### P0-2: v2.1 文档引用说明（立即）
 - 在核心模块 docstring 中增加版本说明
 - 明确 v2.0 → v2.1 语义等价
 - 预计: 20 分钟
-- 状态: ⏸ 待执行
+- 状态: ✅ 已完成（2026-07-27）
+- 更新文件：core_engine.py, types.py, lifespan_engine.py, rank_engine.py
 
 ### P1: 高优先级修订
 
@@ -614,21 +938,21 @@ def should_replace(new_pivot: Pivot, old_pivot: Pivot) -> bool:
 
 ## 🎯 下一步行动
 
-**立即任务**: T6.1 Range 诞生（2-3 天）
+**立即任务**: T7.3 RangeLifespan 指标计算（2-3 天）
 
-**准备工作**（T6.1 开工前）:
-1. [ ] P0-2: 补充 v2.1 文档引用说明（20 分钟）
-2. [ ] P0-1: 类型名重命名（30 分钟）
-3. [ ] 阅读规格: MALF_02_Range_v2_1-deepseek-20260726.md §1-§3
+**准备工作**（可选）:
+1. [x] P0-2: 补充 v2.1 文档引用说明（20 分钟）- 可与 T7.3 并行
+2. [x] P0-1: 类型名重命名（30 分钟）- 可与 T7.3 并行
+3. [ ] 阅读规格: MALF_03_Lifespan_v2_1-deepseek-20260726.md §2 RangeLifespan
 
 **开工清单**:
-1. [ ] S6.1-1: 推 2 个 fixture
-2. [ ] S6.1-2: 预期输出存 JSON
-3. [ ] S6.1-3: 补充 RangeSnapshot 数据结构
-4. [ ] S6.1-4: 实现 Range 诞生逻辑
-5. [ ] S6.1-5: 写单元测试
-6. [ ] S6.1-6: 端到端测试
-7. [ ] S6.1-7: 真实数据冒烟
+1. [ ] S7.3-1: 推 2 个 fixture
+2. [ ] S7.3-2: 预期输出存 JSON
+3. [ ] S7.3-3: 实现 RangeLifespan 数据结构
+4. [ ] S7.3-4: 实现 _calculate_range_metrics() 方法
+5. [ ] S7.3-5: 写单元测试
+6. [ ] S7.3-6: 端到端测试
+7. [ ] S7.3-7: 真实数据冒烟
 
 ---
 
@@ -661,4 +985,4 @@ def should_replace(new_pivot: Pivot, old_pivot: Pivot) -> bool:
 
 **维护规则**: 每完成一刀更新完成标志，每开新刀展开该刀的 Step 清单  
 **负责人**: 项目所有者  
-**最后更新**: 2026-07-26
+**最后更新**: 2026-07-27
