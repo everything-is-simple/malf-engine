@@ -51,7 +51,9 @@ class LifespanEngine:
         primitive_count: int,
         pivot_count: int,
         new_count: int,
-        no_new_span: int
+        no_new_span: int,
+        first_pivot_price: int,
+        guard_price: int
     ) -> WaveLifespan:
         """计算 Wave 生命周期指标（v2.1 Lifespan §3）。
 
@@ -69,6 +71,8 @@ class LifespanEngine:
             pivot_count: 总 pivot 数量
             new_count: Alive 期间新确认 pivot 数量
             no_new_span: 最后新 pivot 到 break 的 bar 数
+            first_pivot_price: 初始化时第一个 pivot 价格（progress_extreme at init）
+            guard_price: Guard 价格
 
         返回：
             WaveLifespan 对象
@@ -77,9 +81,20 @@ class LifespanEngine:
         price_range = abs(wave_end_price - wave_start_price)
 
         # 计算进展百分比（v2.1 Lifespan §3.1）
-        # progress_pct = (wave_end - wave_start) / wave_start
-        # 注意：wave_start_price 不会为 0（价格必 > 0）
-        progress_pct = (wave_end_price - wave_start_price) / wave_start_price
+        # UP: (progress_extreme_price - first_pivot_price) / (progress_extreme_price - guard_price)
+        # DOWN: (first_pivot_price - progress_extreme_price) / (guard_price - progress_extreme_price)
+        if direction == Direction.UP:
+            numerator = wave_end_price - first_pivot_price
+            denominator = wave_end_price - guard_price
+        else:  # Direction.DOWN
+            numerator = first_pivot_price - wave_end_price
+            denominator = guard_price - wave_end_price
+
+        # 避免除以零
+        if denominator == 0:
+            progress_pct = 0.0
+        else:
+            progress_pct = numerator / denominator
 
         # 创建 WaveLifespan 对象（排名字段初始为 None）
         return WaveLifespan(

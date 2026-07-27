@@ -52,6 +52,8 @@ class WaveTracker:
         self.wave_counter = 0
         self.current_wave_start_bar_dt: Optional[str] = None
         self.current_wave_start_price: Optional[int] = None
+        self.current_wave_first_pivot_price: Optional[int] = None
+        self.current_wave_guard_price: Optional[int] = None
         self.current_wave_direction: Optional[Direction] = None
         self.current_wave_pivot_count = 0
         self.current_wave_new_count = 0
@@ -64,6 +66,11 @@ class WaveTracker:
 
         # 初始化时的 guard 价格就是起始价格（L1 for UP, H1 for DOWN）
         self.current_wave_start_price = snapshot.current_effective_guard_price
+        self.current_wave_guard_price = snapshot.current_effective_guard_price
+
+        # first_pivot_price 是 progress_extreme_price（初始化时的第一个推进点）
+        self.current_wave_first_pivot_price = snapshot.progress_extreme_price
+
         self.current_wave_pivot_count = 3  # 初始化原语固定 3 个 pivot
         self.current_wave_new_count = 0
 
@@ -88,11 +95,15 @@ class WaveTracker:
             "pivot_count": self.current_wave_pivot_count,
             "new_count": self.current_wave_new_count,
             "no_new_span": 0,  # 简化：暂不计算
+            "first_pivot_price": self.current_wave_first_pivot_price,
+            "guard_price": self.current_wave_guard_price,
         }
 
         # 重置追踪状态
         self.current_wave_start_bar_dt = None
         self.current_wave_start_price = None
+        self.current_wave_first_pivot_price = None
+        self.current_wave_guard_price = None
         self.current_wave_direction = None
         self.current_wave_pivot_count = 0
         self.current_wave_new_count = 0
@@ -375,8 +386,23 @@ def run_integrated_pipeline(
         if not wave_tracker.current_wave_start_price or not core_snapshot.progress_extreme_price:
             return None
 
+        if not wave_tracker.current_wave_first_pivot_price or not wave_tracker.current_wave_guard_price:
+            return None
+
         current_price_range = abs(core_snapshot.progress_extreme_price - wave_tracker.current_wave_start_price)
-        current_progress_pct = (core_snapshot.progress_extreme_price - wave_tracker.current_wave_start_price) / wave_tracker.current_wave_start_price
+
+        # 计算 progress_pct（v2.1 Lifespan §3.1）
+        if current_direction == Direction.UP:
+            numerator = core_snapshot.progress_extreme_price - wave_tracker.current_wave_first_pivot_price
+            denominator = core_snapshot.progress_extreme_price - wave_tracker.current_wave_guard_price
+        else:  # Direction.DOWN
+            numerator = wave_tracker.current_wave_first_pivot_price - core_snapshot.progress_extreme_price
+            denominator = wave_tracker.current_wave_guard_price - core_snapshot.progress_extreme_price
+
+        if denominator == 0:
+            current_progress_pct = 0.0
+        else:
+            current_progress_pct = numerator / denominator
 
         # 创建 partial WaveLifespan
         current_wave = WaveLifespan(

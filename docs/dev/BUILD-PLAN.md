@@ -40,19 +40,24 @@
 
 ### 🟡 Major 问题（P1 - 本周内修复）
 
-#### P1-3: progress_pct 计算公式待核对
+#### P1-3: progress_pct 计算公式待核对 ✅ 已修复
 - **位置**: `lifespan_engine.py:79-82`
-- **问题**: 实现用 `(wave_end - wave_start) / wave_start`，需与规格定义对照
+- **问题**: 实现用 `(wave_end - wave_start) / wave_start`，规格要求 UP/DOWN 分别计算
 - **影响**: Lifespan 指标准确性存疑
-- **修复时间**: 1小时（需人工核对规格）
-- **状态**: ⏸ 待核对
+- **修复内容**:
+  - 修改 `calculate_wave_lifespan` 函数签名，添加 `first_pivot_price` 和 `guard_price` 参数
+  - UP 方向: `(progress_extreme_price - first_pivot_price) / (progress_extreme_price - guard_price)`
+  - DOWN 方向: `(first_pivot_price - progress_extreme_price) / (guard_price - progress_extreme_price)`
+  - 修改 `v1_full_integration_pipeline.py` 的 WaveTracker 追踪这两个价格
+- **修复时间**: 1小时（实际）
+- **状态**: ✅ 已修复（2026-07-27 17:45）
+- **验证**: 4 只标的 12,296 个 snapshot 100% lineage_hash 确定性 ✅
+- **提交**: 待提交
 
-#### P1-4: CoreStateSnapshot 缺少 bar_index
-- **位置**: `types.py:CoreStateSnapshot`
-- **问题**: 规格要求包含 `bar_index` 字段用于追踪
-- **影响**: 审计追溯能力不完整
-- **修复时间**: 20分钟
-- **状态**: ⏸ 待添加
+#### P1-4: CoreStateSnapshot 缺少 bar_index ❌ 不存在
+- **位置**: `types.py:120`
+- **检查结果**: `bar_index: int` 字段已存在于代码中
+- **状态**: ❌ 误报（记录过时）
 
 ### 🟢 Minor 问题（P2 - 下阶段）
 
@@ -72,6 +77,8 @@
 | **整体合规度** | **~95%** | ✅ 高度合规 |
 
 **P0 修复后测试**: 89 passed, 2 skipped ✅  
+**P1-3 修复后测试**: 100 passed, 2 skipped ✅  
+**P1-3 修复后验证**: 4 只标的 12,296/12,296 hashes 100% 确定性 ✅  
 **详细报告**: 见 `docs/reports/SPEC-COMPLIANCE-REPORT-2026-07-27.md`（待归档）
 
 ---
