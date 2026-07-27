@@ -1,0 +1,39 @@
+{
+  "description": "T8.1 P1 自身分位 - 有完整 rank 值（peer_sample >= 30）",
+  "scenario": "当前 wave 已有 rank 值（来自 Lifespan 层），P1 直接透传",
+  "input": {
+    "wave_lifespan": {
+      "wave_id": "TEST_1min_w_5",
+      "symbol": "TEST",
+      "timeframe": "1min",
+      "direction": "up",
+      "wave_start_bar_dt": "2026-01-01T10:00:00",
+      "wave_end_bar_dt": "2026-01-01T10:15:00",
+      "span_bars": 15,
+      "wave_start_price": 10000,
+      "wave_end_price": 10500,
+      "price_range": 500,
+      "progress_pct": 0.05,
+      "primitive_count": 3,
+      "pivot_count": 8,
+      "new_count": 5,
+      "no_new_span": 3,
+      "span_rank": 0.75,
+      "range_rank": 0.82,
+      "stagnation_rank": 0.60,
+      "progress_rank": 0.70
+    }
+  },
+  "expected_output": {
+    "p1_self_rank": {
+      "span_rank": 0.75,
+      "range_rank": 0.82,
+      "stagnation_rank": 0.60,
+      "progress_rank": 0.70
+    }
+  },
+  "verification": {
+    "invariant": "P1 不变量：P1 是 Lifespan rank 的透传，不做变换",
+    "check": "所有 rank 值与输入的 WaveLifespan.rank 完全相等"
+  }
+}

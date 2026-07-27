@@ -1,0 +1,74 @@
+{
+  "description": "T8.3 P3 反向对照 - 充足反向波（≥ 1 个）",
+  "scenario": "当前 UP wave，历史中有 1 个 DOWN wave，计算 cross momentum 和标签",
+  "input": {
+    "current_wave": {
+      "wave_id": "TEST_1min_w_5",
+      "symbol": "TEST",
+      "timeframe": "1min",
+      "direction": "up",
+      "wave_start_bar_dt": "2026-01-01T10:30:00",
+      "wave_end_bar_dt": "2026-01-01T10:50:00",
+      "span_bars": 20,
+      "wave_start_price": 10000,
+      "wave_end_price": 10600,
+      "price_range": 600,
+      "progress_pct": 0.06,
+      "primitive_count": 3,
+      "pivot_count": 10,
+      "new_count": 7,
+      "no_new_span": 3,
+      "span_rank": 0.80,
+      "range_rank": 0.85,
+      "stagnation_rank": 0.75,
+      "progress_rank": 0.70
+    },
+    "terminated_waves": [
+      {
+        "wave_id": "TEST_1min_w_4",
+        "direction": "down",
+        "span_rank": 0.50,
+        "range_rank": 0.55,
+        "stagnation_rank": 0.48,
+        "wave_end_bar_dt": "2026-01-01T10:25:00"
+      },
+      {
+        "wave_id": "TEST_1min_w_3",
+        "direction": "up",
+        "span_rank": 0.60,
+        "range_rank": 0.65,
+        "stagnation_rank": 0.55,
+        "wave_end_bar_dt": "2026-01-01T10:10:00"
+      },
+      {
+        "wave_id": "TEST_1min_w_2",
+        "direction": "down",
+        "span_rank": 0.45,
+        "range_rank": 0.50,
+        "stagnation_rank": 0.42,
+        "wave_end_bar_dt": "2026-01-01T09:55:00"
+      }
+    ]
+  },
+  "expected_output": {
+    "p3_cross_dir_momentum": {
+      "cross_dir_span_momentum": 0.325,
+      "cross_dir_range_momentum": 0.325,
+      "cross_dir_stagnation_momentum": 0.30,
+      "cross_dir_label": "self_dominant"
+    }
+  },
+  "calculation": {
+    "cross_dir_peers": ["w_4 (DOWN, span=0.50)", "w_2 (DOWN, span=0.45)"],
+    "note": "规格 §5: 从 W-1, W-2, W-3 中选取反向波。W-1=w_4(DOWN,选), W-2=w_3(UP), W-3=w_2(DOWN,选)。共 2 个反向波。",
+    "span_momentum": "0.80 - mean(0.50, 0.45) = 0.80 - 0.475 = 0.325",
+    "range_momentum": "0.85 - mean(0.55, 0.50) = 0.85 - 0.525 = 0.325",
+    "stagnation_momentum": "0.75 - mean(0.48, 0.42) = 0.75 - 0.45 = 0.30",
+    "avg_momentum": "(0.325 + 0.325 + 0.30) / 3 = 0.317",
+    "label": "avg_momentum (0.317) > threshold (0.15) → self_dominant"
+  },
+  "verification": {
+    "invariant": "P2 不变量：momentum 是 rank 的向量差，不是概率",
+    "check": "所有 momentum > 0，表示当前波比历史反向波更强"
+  }
+}

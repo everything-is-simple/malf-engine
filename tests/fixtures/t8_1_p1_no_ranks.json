@@ -1,0 +1,39 @@
+{
+  "description": "T8.1 P1 自身分位 - 无 rank 值（peer_sample < 30）",
+  "scenario": "peer_sample 不足时，所有 rank 为 None，P1 透传 None",
+  "input": {
+    "wave_lifespan": {
+      "wave_id": "TEST_1min_w_1",
+      "symbol": "TEST",
+      "timeframe": "1min",
+      "direction": "up",
+      "wave_start_bar_dt": "2026-01-01T09:00:00",
+      "wave_end_bar_dt": "2026-01-01T09:08:00",
+      "span_bars": 8,
+      "wave_start_price": 10000,
+      "wave_end_price": 10300,
+      "price_range": 300,
+      "progress_pct": 0.03,
+      "primitive_count": 3,
+      "pivot_count": 5,
+      "new_count": 2,
+      "no_new_span": 2,
+      "span_rank": null,
+      "range_rank": null,
+      "stagnation_rank": null,
+      "progress_rank": null
+    }
+  },
+  "expected_output": {
+    "p1_self_rank": {
+      "span_rank": null,
+      "range_rank": null,
+      "stagnation_rank": null,
+      "progress_rank": null
+    }
+  },
+  "verification": {
+    "invariant": "P5 不变量：所有 rank 为 None 时，不 fallback、不补零、不估计",
+    "check": "所有 rank 值为 None，保持 None 透传"
+  }
+}

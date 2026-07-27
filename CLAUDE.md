@@ -35,16 +35,21 @@
 - 真实数据验证：offset=0 成功处理 200 bars（之前 bar 12 失败）
 - 测试：4 个替换场景全部通过
 
-**Range 层完成** ✅：震荡期结构识别
-- Range 诞生（guard break 触发）
-- Boundary 双系统（init 冻结 / now 演化）
-- Evolution 检测（pivot 突破 boundary_now）
-- Resolution 判定（pivot 突破 boundary_init，T6 定理）
-- Continuation/Reversal 分类
-- 真实数据验证：sh600000 200 bars，3 Ranges，R2 不变量全部通过
-- 测试：6 synthetic + 1 real data
+**Lifespan 层完成** ✅：生命周期统计与排名
+- WaveLifespan 指标计算（7 个指标）
+- RangeLifespan 指标计算（6 个指标）
+- 双轨 peer_sample（UP/DOWN 分池、continuation/reversal 分池）
+- Percentile rank 计算（4 个 rank 字段）
+- 测试：77 passed
 
-**总计测试**：58 passed, 1 skipped
+**Structural Position 层完成** ✅：结构位置视图（4/4 完成）
+- P1 自身分位（Self Rank）：透传 rank 值 ✅
+- P2 同向对照（Same Direction Momentum）：momentum 计算 + 标签 ✅
+- P3 反向对照（Opposite Direction Momentum）：momentum 计算 + 标签 ✅
+- P4 正反对照（Cross Compare）：momentum 计算 + alive warning ✅
+- 测试：12 passed (P1 + P2 + P3 + P4)
+
+**总计测试**：89 passed, 2 skipped
 
 ### 核心模块
 

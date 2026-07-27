@@ -1,0 +1,74 @@
+{
+  "description": "T8.2 P2 同向对照 - 不足同向波（1 个）",
+  "scenario": "当前 UP wave，历史只有 1 个 UP wave，仍计算 momentum（有几个用几个）",
+  "input": {
+    "current_wave": {
+      "wave_id": "TEST_1min_w_4",
+      "symbol": "TEST",
+      "timeframe": "1min",
+      "direction": "up",
+      "wave_start_bar_dt": "2026-01-01T10:00:00",
+      "wave_end_bar_dt": "2026-01-01T10:15:00",
+      "span_bars": 15,
+      "wave_start_price": 10000,
+      "wave_end_price": 10400,
+      "price_range": 400,
+      "progress_pct": 0.04,
+      "primitive_count": 3,
+      "pivot_count": 7,
+      "new_count": 4,
+      "no_new_span": 2,
+      "span_rank": 0.65,
+      "range_rank": 0.70,
+      "stagnation_rank": 0.60,
+      "progress_rank": 0.55
+    },
+    "terminated_waves": [
+      {
+        "wave_id": "TEST_1min_w_3",
+        "direction": "down",
+        "span_rank": 0.50,
+        "range_rank": 0.52,
+        "stagnation_rank": 0.48,
+        "wave_end_bar_dt": "2026-01-01T09:55:00"
+      },
+      {
+        "wave_id": "TEST_1min_w_2",
+        "direction": "up",
+        "span_rank": 0.55,
+        "range_rank": 0.60,
+        "stagnation_rank": 0.52,
+        "wave_end_bar_dt": "2026-01-01T09:40:00"
+      },
+      {
+        "wave_id": "TEST_1min_w_1",
+        "direction": "down",
+        "span_rank": 0.40,
+        "range_rank": 0.42,
+        "stagnation_rank": 0.38,
+        "wave_end_bar_dt": "2026-01-01T09:25:00"
+      }
+    ]
+  },
+  "expected_output": {
+    "p2_same_dir_momentum": {
+      "same_dir_span_momentum": 0.10,
+      "same_dir_range_momentum": 0.10,
+      "same_dir_stagnation_momentum": 0.08,
+      "same_dir_label": "flat"
+    }
+  },
+  "calculation": {
+    "same_dir_peers": ["w_2 (UP, span=0.55)"],
+    "note": "最近 3 个已终止波中只有 1 个同向波：W-1=w_3(DOWN), W-2=w_2(UP), W-3=w_1(DOWN)",
+    "span_momentum": "0.65 - mean(0.55) = 0.65 - 0.55 = 0.10",
+    "range_momentum": "0.70 - mean(0.60) = 0.70 - 0.60 = 0.10",
+    "stagnation_momentum": "0.60 - mean(0.52) = 0.60 - 0.52 = 0.08",
+    "avg_momentum": "(0.10 + 0.10 + 0.08) / 3 = 0.0933",
+    "label": "avg_momentum (0.0933) < threshold (0.10) → flat"
+  },
+  "verification": {
+    "invariant": "P2 不变量：有几个同向波用几个，不要求必须 3 个",
+    "check": "即使只有 1 个同向波，仍计算 momentum"
+  }
+}

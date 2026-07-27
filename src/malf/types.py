@@ -325,3 +325,74 @@ class RangeLifespan:
     replacement_rank: Optional[float] = None             # replacement_count 的 percentile_rank
     resolution_distance_rank: Optional[float] = None     # resolution_distance_pct 的 percentile_rank
 
+
+# ============================================================================
+# Structural Position 层数据结构（v2.1 Structural Position §3-§6）
+# ============================================================================
+
+
+@dataclass(frozen=True)
+class P1SelfRank:
+    """P1 自身分位视图（v2.1 Structural Position §3）。
+
+    直接透传 WaveLifespan 的 rank 值，不做任何变换。
+
+    警告（v2.1 SP §3）：
+    - P1 输出的是 rank（历史分位），不是概率
+    - rank=0.80 意味着"当前波大于 80% 的历史同类波"
+    - 不意味"有 80% 概率继续涨"
+    """
+    span_rank: Optional[float]           # span_bars 的 percentile_rank
+    range_rank: Optional[float]          # price_range 的 percentile_rank
+    stagnation_rank: Optional[float]     # span_bars / max(primitive_count, 1) 的 percentile_rank
+    progress_rank: Optional[float]       # progress_pct 的 percentile_rank
+
+
+@dataclass(frozen=True)
+class P2SameDirMomentum:
+    """P2 同向对照视图（v2.1 Structural Position §4）。
+
+    比较当前 wave（W0）与最近 1-3 个同方向已终止波。
+
+    警告（v2.1 SP §4）：
+    - P2 输出的是 rank 差（向量差），不是概率
+    - "accelerating" 标签是辅助性的，原始 rank 值始终保留
+    """
+    same_dir_span_momentum: Optional[float]         # W0.span_rank - mean(peers.span_rank)
+    same_dir_range_momentum: Optional[float]        # W0.range_rank - mean(peers.range_rank)
+    same_dir_stagnation_momentum: Optional[float]   # W0.stagnation_rank - mean(peers.stagnation_rank)
+    same_dir_label: Optional[str]                   # "accelerating" | "decelerating" | "flat" | None
+
+
+@dataclass(frozen=True)
+class P3CrossDirMomentum:
+    """P3 反向对照视图（v2.1 Structural Position §5）。
+
+    比较当前 wave（W0）与最近 1-3 个反方向已终止波。
+
+    警告（v2.1 SP §5）：
+    - P3 输出的是 rank 差（向量差），不是概率
+    - "self_dominant" 标签是辅助性的，原始 rank 值始终保留
+    """
+    cross_dir_span_momentum: Optional[float]         # W0.span_rank - mean(peers.span_rank)
+    cross_dir_range_momentum: Optional[float]        # W0.range_rank - mean(peers.range_rank)
+    cross_dir_stagnation_momentum: Optional[float]   # W0.stagnation_rank - mean(peers.stagnation_rank)
+    cross_dir_label: Optional[str]                   # "self_dominant" | "opposite_dominant" | "balanced" | None
+
+
+@dataclass(frozen=True)
+class P4CrossCompare:
+    """P4 正反对照视图（v2.1 Structural Position §6）。
+
+    比较当前 wave（W0）与最近已终止波（W-1，任意方向）。
+
+    警告（v2.1 SP §6）：
+    - P4 输出的是 rank 差（向量差），不是概率
+    - 当 cross_alive_warning = True 时，P4 信噪比低于 P2/P3
+    - W0 为 alive 时 rank 不稳定，与已终止的 W-1 比较是不对称的
+    """
+    cross_span_momentum: Optional[float]         # W0.span_rank - W-1.span_rank
+    cross_range_momentum: Optional[float]        # W0.range_rank - W-1.range_rank
+    cross_stagnation_momentum: Optional[float]   # W0.stagnation_rank - W-1.stagnation_rank
+    cross_alive_warning: bool                    # True 表示 W0 为 alive，rank 不稳定
+
