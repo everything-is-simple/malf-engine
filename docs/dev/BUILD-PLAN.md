@@ -52,7 +52,7 @@
 - **修复时间**: 1小时（实际）
 - **状态**: ✅ 已修复（2026-07-27 17:45）
 - **验证**: 4 只标的 12,296 个 snapshot 100% lineage_hash 确定性 ✅
-- **提交**: 待提交
+- **提交**: 448fb32
 
 #### P1-4: CoreStateSnapshot 缺少 bar_index ❌ 不存在
 - **位置**: `types.py:120`
@@ -80,6 +80,20 @@
 **P1-3 修复后测试**: 100 passed, 2 skipped ✅  
 **P1-3 修复后验证**: 4 只标的 12,296/12,296 hashes 100% 确定性 ✅  
 **详细报告**: 见 `docs/reports/SPEC-COMPLIANCE-REPORT-2026-07-27.md`（待归档）
+
+---
+
+## 🔬 引擎验证阶段（V1–V6）
+
+**V1 流水线验证** ✅ 完成：多标的 lineage_hash 100% 确定性（见 `docs/reports/VALIDATION-V1-*`）
+
+**V2 结构正确性抽查** 🔄 机器预检完成，待人工签字
+- 机器预检（2026-07-28）：15 案例 / 38 pivot / 4 break 全部通过；引擎 flag 与独立重算 0 矛盾；190 bar 与 TDX 原始数据逐字节一致
+- 脚本：`scripts/verify/v2_independent_crosscheck.py`、`scripts/verify/v2_tdx_source_check.py`
+- 报告：`docs/reports/VALIDATION-V2-MACHINE-PRECHECK.md`
+- ⏳ 待办：按 `.work/V2-validation-package/02-VALIDATION-CHECKLIST.md` 人工对照 K 线签字（门槛：Pivot>95%，Guard/Progress>90%，≥10 案例）
+
+**V3 参数校准 / V4 公式核对 / V5 bar_index 核销 / V6 文档清理**：待启动
 
 ---
 
