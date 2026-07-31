@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V2 人工验证报告 - 510300</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        header h1 { font-size: 32px; margin-bottom: 10px; }
+        header p { font-size: 16px; opacity: 0.9; }
+        .summary {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .summary h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .stat-card .label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        .case {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .case-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .case-title {
+            font-size: 22px;
+            font-weight: bold;
+            color: #333;
+        }
+        .case-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        .case-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .info-item {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+        .info-item .label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .info-item .value {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+        }
+        .chart-container {
+            margin: 25px 0;
+            text-align: center;
+        }
+        .chart-container img {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .validation-form {
+            background: #fff9e6;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #ffd54f;
+            margin-top: 20px;
+        }
+        .validation-form h3 {
+            color: #f57c00;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .checkbox-group {
+            margin: 10px 0;
+        }
+        .checkbox-group label {
+            display: block;
+            padding: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .checkbox-group label:hover {
+            background: #fff3cd;
+        }
+        .checkbox-group input {
+            margin-right: 8px;
+        }
+        textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .pivot-window {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .pivot-window table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .pivot-window th, .pivot-window td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .pivot-window th {
+            background: #e0e0e0;
+            font-weight: bold;
+        }
+        .pivot-window .extreme-row {
+            background: #fff3cd;
+            font-weight: bold;
+        }
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔍 MALF V2 人工验证报告</h1>
+            <p>标的: 510300 (沪深300ETF) | 生成时间: 2026-07-31 21:19:23</p>
+        </header>
+
+        <div class="summary">
+            <h2>📊 验证概览</h2>
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="label">验证案例总数</div>
+                    <div class="value">15</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">要求最少验证</div>
+                    <div class="value">10 案例</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Pivot 准确率要求</div>
+                    <div class="value">&gt; 95%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Guard/Progress 要求</div>
+                    <div class="value">&gt; 90%</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="case" id="case-1">
+            <div class="case-header">
+                <div class="case-title">案例 #1 - Bar #6</div>
+                <div class="case-badge">pivot_high</div>
+            </div>
+
+            <div class="case-info">
+                <div class="info-item">
+                    <div class="label">日期</div>
+                    <div class="value">2012-06-05</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">事件</div>
+                    <div class="value">pivot_confirm_h</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">状态</div>
+                    <div class="value">uninitialized</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">方向</div>
+                    <div class="value">—</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Guard</div>
+                    <div class="value">—</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Progress</div>
+                    <div class="value">—</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <img src="charts/case_01.png" alt="Case 1 Chart">
+            </div>
+
+            <div class="validation-form">
+                <h3>✅ 人工验证清单</h3>
+                <div class="checkbox-group">
+                    <label><input type="checkbox"> Pivot 识别与确认延迟正确</label>
+                    <label><input type="checkbox"> Guard 引用与方向规则正确</label>
+                    <label><input type="checkbox"> Progress 引用与方向规则正确</label>
+                    <label><input type="checkbox"> 状态转换 / break / candidate 行为正确</label>
+                </div>
+                <div style="margin-top: 15px;">
+                    <strong>结论：</strong>
+                    <label><input type="radio" name="conclusion_1" value="pass"> ✅ 通过</label>
+                    <label><input type="radio" name="conclusion_1" value="fail"> ❌ 不通过</label>
+                    <label><input type="radio" name="conclusion_1" value="pending"> ⏳ 待确认</label>
+                </div>
+                <textarea placeholder="备注（可选）..."></textarea>
+            </div>
+        </div>
+
+        <div class="case" id="case-2">
+            <div class="case-header">
+                <div class="case-title">案例 #2 - Bar #11</div>
+                <div class="case-badge">pivot_low</div>
+            </div>
+
+            <div class="case-info">
+                <div class="info-item">
+                    <div class="label">日期</div>
+                    <div class="value">2012-06-12</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">事件</div>
+                    <div class="value">pivot_confirm_l</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">状态</div>
+                    <div class="value">uninitialized</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">方向</div>
+                    <div class="value">—</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Guard</div>
+                    <div class="value">—</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Progress</div>
+                    <div class="value">—</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <img src="charts/case_02.png" alt="Case 2 Chart">
+            </div>
+
+            <div class="validation-form">
+                <h3>✅ 人工验证清单</h3>
+                <div class="checkbox-group">
+                    <label><input type="checkbox"> Pivot 识别与确认延迟正确</label>
+                    <label><input type="checkbox"> Guard 引用与方向规则正确</label>
+                    <label><input type="checkbox"> Progress 引用与方向规则正确</label>
+                    <label><input type="checkbox"> 状态转换 / break / candidate 行为正确</label>
+                </div>
+                <div style="margin-top: 15px;">
+                    <strong>结论：</strong>
+                    <label><input type="radio" name="conclusion_2" value="pass"> ✅ 通过</label>
+                    <label><input type="radio" name="conclusion_2" value="fail"> ❌ 不通过</label>
+                    <label><input type="radio" name="conclusion_2" value="pending"> ⏳ 待确认</label>
+                </div>
+                <textarea placeholder="备注（可选）..."></textarea>
+            </div>
+        </div>
+
+        <div class="case" id="case-3">
+            <div class="case-header">
+                <div class="case-title">案例 #3 - Bar #177</div>
+                <div class="case-badge">initialization</div>
+            </div>
+
+            <div class="case-info">
+                <div class="info-item">
+                    <div class="label">日期</div>
+                    <div class="value">2013-02-19</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">事件</div>
+                    <div class="value">initialization_up, guard_update, progress_update, pivot_confirm_h</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">状态</div>
+                    <div class="value">up_alive</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">方向</div>
+                    <div class="value">up</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Guard</div>
+                    <div class="value">21.380</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Progress</div>
+                    <div class="value">27.870</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <img src="charts/case_03.png" alt="Case 3 Chart">
+            </div>
+
+            <div class="validation-form">
+                <h3>✅ 人工验证清单</h3>
+                <div class="checkbox-group">
+                    <label><input type="checkbox"> Pivot 识别与确认延迟正确</label>
+                    <label><input type="checkbox"> Guard 引用与方向规则正确</label>
+                    <label><input type="checkbox"> Progress 引用与方向规则正确</label>
+                    <label><input type="checkbox"> 状态转换 / break / candidate 行为正确</label>
+                </div>
+                <div style="margin-top: 15px;">
+                    <strong>结论：</strong>
+                    <label><input type="radio" name="conclusion_3" value="pass"> ✅ 通过</label>
+                    <label><input type="radio" name="conclusion_3" value="fail"> ❌ 不通过</label>
+                    <label><input type="radio" name="conclusion_3" value="pending"> ⏳ 待确认</label>
+                </div>
+                <textarea placeholder="备注（可选）..."></textarea>
+            </div>
+        </div>
+
+        <div class="case" id="case-4">
+            <div class="case-header">
+                <div class="case-title">案例 #4 - Bar #182</div>
+                <div class="case-badge">guard_break_up</div>
+            </div>
+
+            <div class="case-info">
+                <div class="info-item">
+                    <div class="label">日期</div>
+                    <div class="value">2013-02-26</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">事件</div>
+                    <div class="value">guard_break_up</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">状态</div>
+                    <div class="value">transition</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">方向</div>
+                    <div class="value">up</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Guard</div>
+                    <div class="value">25.760</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Progress</div>
+                    <div class="value">27.870</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <img src="charts/case_04.png" alt="Case 4 Chart">
+            </div>
+
+            <div class="validation-form">
+                <h3>✅ 人工验证清单</h3>
+                <div class="checkbox-group">
+                    <label><input type="checkbox"> Pivot 识别与确认延迟正确</label>
+                    <label><input type="checkbox"> Guard 引用与方向规则正确</label>
+                    <label><input type="checkbox"> Progress 引用与方向规则正确</label>
+                    <label><input type="checkbox"> 状态转换 / break / candidate 行为正确</label>
+                </div>
+                <div style="margin-top: 15px;">
+                    <strong>结论：</strong>
+                    <label><input type="radio" name="conclusion_4" value="pass"> ✅ 通过</label>
+                    <label><input type="radio" name="conclusion_4" value="fail"> ❌ 不通过</label>
+                    <label><input type="radio" name="conclusion_4" value="pending"> ⏳ 待确认</label>
+                </div>
+                <textarea placeholder="备注（可选）..."></textarea>
+            </div>
+        </div>
+
+        <div class="case" id="case-5">
+            <div class="case-header">
+                <div class="case-title">案例 #5 - Bar #184</div>
+                <div class="case-badge">range_evolution</div>
+            </div>
+
+            <div class="case-info">
+                <div class="info-item">
+                    <div class="label">日期</div>
+                    <div class="value">2013-02-28</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">事件</div>
+                    <div class="value">range_evolution, pivot_confirm_l</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">状态</div>
+                    <div class="value">transition</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">方向</div>
+                    <div class="value">up</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Guard</div>
+                    <div class="value">25.760</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Progress</div>
+                    <div class="value">27.870</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <img src="charts/case_05.png" alt="Case 5 Chart">
+            </div>
+
+            <div class="validation-form">
+                <h3>✅ 人工验证清单</h3>
+                <div class="checkbox-group">
+                    <label><input type="checkbox"> Pivot 识别与确认延迟正确</label>
+                    <label><input type="checkbox"> Guard 引用与方向规则正确</label>
+                    <label><input type="checkbox"> Progress 引用与方向规则正确</label>
+                    <label><input type="checkbox"> 状态转换 / break / candidate 行为正确</label>
+                </div>
+                <div style="margin-top: 15px;">
+                    <strong>结论：</strong>
+                    <label><input type="radio" name="conclusion_5" value="pass"> ✅ 通过</label>
+                    <label><input type="radio" name="conclusion_5" value="fail"> ❌ 不通过</label>
+                    <label><input type="radio" name="conclusion_5" value="pending"> ⏳ 待确认</label>
+                </div>
+                <textarea placeholder="备注（可选）..."></textarea>
+            </div>
+        </div>
+
+        <div class="case" id="case-6">
+            <div class="case-header">
+                <div class="case-title">案例 #6 - Bar #187</div>
+                <div class="case-badge">candidate_start</div>
+            </div>
+
+            <div class="case-info">
+                <div class="info-item">
+                    <div class="label">日期</div>
+                    <div class="value">2013-03-05</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">事件</div>
+                    <div class="value">candidate_start, pivot_confirm_h</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">状态</div>
+                    <div class="value">transition</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">方向</div>
+                    <div class="value">up</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Guard</div>
+                    <div class="value">25.760</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Progress</div>
+                    <div class="value">27.870</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <img src="charts/case_06.png" alt="Case 6 Chart">
+            </div>
+
+            <div class="validation-form">
+                <h3>✅ 人工验证清单</h3>
+                <div class="checkbox-group">
+                    <label><input type="checkbox"> Pivot 识别与确认延迟正确</label>
+                    <label><input type="checkbox"> Guard 引用与方向规则正确</label>
+                    <label><input type="checkbox"> Progress 引用与方向规则正确</label>
+                    <label><input type="checkbox"> 状态转换 / break / candidate 行为正确</label>
+                </div>
+                <div style="margin-top: 15px;">
+                    <strong>结论：</strong>
+                    <label><input type="radio" name="conclusion_6" value="pass"> ✅ 通过</label>
+                    <label><input type="radio" name="conclusion_6" value="fail"> ❌ 不通过</label>
+                    <label><input type="radio" name="conclusion_6" value="pending"> ⏳ 待确认</label>
+                </div>
+                <textarea placeholder="备注（可选）..."></textarea>
+            </div>
+        </div>
+
+        <div class="case" id="case-7">
+            <div class="case-header">
+                <div class="case-title">案例 #7 - Bar #188</div>
+                <div class="case-badge">new_wave_down</div>
+            </div>
+
+            <div class="case-info">
+                <div class="info-item">
+                    <div class="label">日期</div>
+                    <div class="value">2013-03-06</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">事件</div>
+                    <div class="value">new_wave_down, guard_update, progress_update, range_evolution, pivot_confirm_l</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">状态</div>
+                    <div class="value">down_alive</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">方向</div>
+                    <div class="value">down</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Guard</div>
+                    <div class="value">26.770</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Progress</div>
+                    <div class="value">25.270</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <img src="charts/case_07.png" alt="Case 7 Chart">
+            </div>
+
+            <div class="validation-form">
+                <h3>✅ 人工验证清单</h3>
+                <div class="checkbox-group">
+                    <label><input type="checkbox"> Pivot 识别与确认延迟正确</label>
+                    <label><input type="checkbox"> Guard 引用与方向规则正确</label>
+                    <label><input type="checkbox"> Progress 引用与方向规则正确</label>
+                    <label><input type="checkbox"> 状态转换 / break / candidate 行为正确</label>
+                </div>
+                <div style="margin-top: 15px;">
+                    <strong>结论：</strong>
+                    <label><input type="radio" name="conclusion_7" value="pass"> ✅ 通过</label>
+                    <label><input type="radio" name="conclusion_7" value="fail"> ❌ 不通过</label>
+                    <label><input type="radio" name="conclusion_7" value="pending"> ⏳ 待确认</label>
+                </div>
+                <textarea placeholder="备注（可选）..."></textarea>
+            </div>
+        </div>
+
+        <div class="case" id="case-8">
+            <div class="case-header">
+                <div class="case-title">案例 #8 - Bar #199</div>
+                <div class="case-badge">guard_break_down</div>
+            </div>
+
+            <div class="case-info">
+                <div class="info-item">
+                    <div class="label">日期</div>
+                    <div class="value">2013-03-21</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">事件</div>
+                    <div class="value">guard_break_down, progress_update, pivot_confirm_l</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">状态</div>
+                    <div class="value">transition</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">方向</div>
+                    <div class="value">down</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Guard</div>
+                    <div class="value">26.040</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Progress</div>
+                    <div class="value">24.900</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <img src="charts/case_08.png" alt="Case 8 Chart">
+            </div>
+
+            <div class="validation-form">
+                <h3>✅ 人工验证清单</h3>
+                <div class="checkbox-group">
+                    <label><input type="checkbox"> Pivot 识别与确认延迟正确</label>
+                    <label><input type="checkbox"> Guard 引用与方向规则正确</label>
+                    <label><input type="checkbox"> Progress 引用与方向规则正确</label>
+                    <label><input type="checkbox"> 状态转换 / break / candidate 行为正确</label>
+                </div>
+                <div style="margin-top: 15px;">
+                    <strong>结论：</strong>
+                    <label><input type="radio" name="conclusion_8" value="pass"> ✅ 通过</label>
+                    <label><input type="radio" name="conclusion_8" value="fail"> ❌ 不通过</label>
+                    <label><input type="radio" name="conclusion_8" value="pending"> ⏳ 待确认</label>
+                </div>
+                <textarea placeholder="备注（可选）..."></textarea>
+            </div>
+        </div>
+
+        <div class="case" id="case-9">
+            <div class="case-header">
+                <div class="case-title">案例 #9 - Bar #209</div>
+                <div class="case-badge">candidate_replacement</div>
+            </div>
+
+            <div class="case-info">
+                <div class="info-item">
+                    <div class="label">日期</div>
+                    <div class="value">2013-04-08</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">事件</div>
+                    <div class="value">candidate_replacement, pivot_confirm_h</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">状态</div>
+                    <div class="value">transition</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">方向</div>
+                    <div class="value">down</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Guard</div>
+                    <div class="value">26.040</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Progress</div>
+                    <div class="value">24.900</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <img src="charts/case_09.png" alt="Case 9 Chart">
+            </div>
+
+            <div class="validation-form">
+                <h3>✅ 人工验证清单</h3>
+                <div class="checkbox-group">
+                    <label><input type="checkbox"> Pivot 识别与确认延迟正确</label>
+                    <label><input type="checkbox"> Guard 引用与方向规则正确</label>
+                    <label><input type="checkbox"> Progress 引用与方向规则正确</label>
+                    <label><input type="checkbox"> 状态转换 / break / candidate 行为正确</label>
+                </div>
+                <div style="margin-top: 15px;">
+                    <strong>结论：</strong>
+                    <label><input type="radio" name="conclusion_9" value="pass"> ✅ 通过</label>
+                    <label><input type="radio" name="conclusion_9" value="fail"> ❌ 不通过</label>
+                    <label><input type="radio" name="conclusion_9" value="pending"> ⏳ 待确认</label>
+                </div>
+                <textarea placeholder="备注（可选）..."></textarea>
+            </div>
+        </div>
+
+        <div class="case" id="case-10">
+            <div class="case-header">
+                <div class="case-title">案例 #10 - Bar #230</div>
+                <div class="case-badge">new_wave_up</div>
+            </div>
+
+            <div class="case-info">
+                <div class="info-item">
+                    <div class="label">日期</div>
+                    <div class="value">2013-05-10</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">事件</div>
+                    <div class="value">new_wave_up, guard_update, progress_update, range_evolution, pivot_confirm_h</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">状态</div>
+                    <div class="value">up_alive</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">方向</div>
+                    <div class="value">up</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Guard</div>
+                    <div class="value">24.180</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Progress</div>
+                    <div class="value">25.670</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <img src="charts/case_10.png" alt="Case 10 Chart">
+            </div>
+
+            <div class="validation-form">
+                <h3>✅ 人工验证清单</h3>
+                <div class="checkbox-group">
+                    <label><input type="checkbox"> Pivot 识别与确认延迟正确</label>
+                    <label><input type="checkbox"> Guard 引用与方向规则正确</label>
+                    <label><input type="checkbox"> Progress 引用与方向规则正确</label>
+                    <label><input type="checkbox"> 状态转换 / break / candidate 行为正确</label>
+                </div>
+                <div style="margin-top: 15px;">
+                    <strong>结论：</strong>
+                    <label><input type="radio" name="conclusion_10" value="pass"> ✅ 通过</label>
+                    <label><input type="radio" name="conclusion_10" value="fail"> ❌ 不通过</label>
+                    <label><input type="radio" name="conclusion_10" value="pending"> ⏳ 待确认</label>
+                </div>
+                <textarea placeholder="备注（可选）..."></textarea>
+            </div>
+        </div>
+
+        <div class="case" id="case-11">
+            <div class="case-header">
+                <div class="case-title">案例 #11 - Bar #1818</div>
+                <div class="case-badge">guard_update</div>
+            </div>
+
+            <div class="case-info">
+                <div class="info-item">
+                    <div class="label">日期</div>
+                    <div class="value">2019-11-14</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">事件</div>
+                    <div class="value">guard_update, pivot_confirm_l</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">状态</div>
+                    <div class="value">up_alive</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">方向</div>
+                    <div class="value">up</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Guard</div>
+                    <div class="value">39.380</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Progress</div>
+                    <div class="value">41.010</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <img src="charts/case_11.png" alt="Case 11 Chart">
+            </div>
+
+            <div class="validation-form">
+                <h3>✅ 人工验证清单</h3>
+                <div class="checkbox-group">
+                    <label><input type="checkbox"> Pivot 识别与确认延迟正确</label>
+                    <label><input type="checkbox"> Guard 引用与方向规则正确</label>
+                    <label><input type="checkbox"> Progress 引用与方向规则正确</label>
+                    <label><input type="checkbox"> 状态转换 / break / candidate 行为正确</label>
+                </div>
+                <div style="margin-top: 15px;">
+                    <strong>结论：</strong>
+                    <label><input type="radio" name="conclusion_11" value="pass"> ✅ 通过</label>
+                    <label><input type="radio" name="conclusion_11" value="fail"> ❌ 不通过</label>
+                    <label><input type="radio" name="conclusion_11" value="pending"> ⏳ 待确认</label>
+                </div>
+                <textarea placeholder="备注（可选）..."></textarea>
+            </div>
+        </div>
+
+        <div class="case" id="case-12">
+            <div class="case-header">
+                <div class="case-title">案例 #12 - Bar #1854</div>
+                <div class="case-badge">new_wave_up</div>
+            </div>
+
+            <div class="case-info">
+                <div class="info-item">
+                    <div class="label">日期</div>
+                    <div class="value">2020-01-06</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">事件</div>
+                    <div class="value">new_wave_up, guard_update, progress_update, range_evolution, pivot_confirm_h</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">状态</div>
+                    <div class="value">up_alive</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">方向</div>
+                    <div class="value">up</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Guard</div>
+                    <div class="value">39.620</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Progress</div>
+                    <div class="value">41.740</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <img src="charts/case_12.png" alt="Case 12 Chart">
+            </div>
+
+            <div class="validation-form">
+                <h3>✅ 人工验证清单</h3>
+                <div class="checkbox-group">
+                    <label><input type="checkbox"> Pivot 识别与确认延迟正确</label>
+                    <label><input type="checkbox"> Guard 引用与方向规则正确</label>
+                    <label><input type="checkbox"> Progress 引用与方向规则正确</label>
+                    <label><input type="checkbox"> 状态转换 / break / candidate 行为正确</label>
+                </div>
+                <div style="margin-top: 15px;">
+                    <strong>结论：</strong>
+                    <label><input type="radio" name="conclusion_12" value="pass"> ✅ 通过</label>
+                    <label><input type="radio" name="conclusion_12" value="fail"> ❌ 不通过</label>
+                    <label><input type="radio" name="conclusion_12" value="pending"> ⏳ 待确认</label>
+                </div>
+                <textarea placeholder="备注（可选）..."></textarea>
+            </div>
+        </div>
+
+        <div class="case" id="case-13">
+            <div class="case-header">
+                <div class="case-title">案例 #13 - Bar #1865</div>
+                <div class="case-badge">guard_break_up</div>
+            </div>
+
+            <div class="case-info">
+                <div class="info-item">
+                    <div class="label">日期</div>
+                    <div class="value">2020-01-21</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">事件</div>
+                    <div class="value">guard_break_up</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">状态</div>
+                    <div class="value">transition</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">方向</div>
+                    <div class="value">up</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Guard</div>
+                    <div class="value">41.350</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Progress</div>
+                    <div class="value">42.220</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <img src="charts/case_13.png" alt="Case 13 Chart">
+            </div>
+
+            <div class="validation-form">
+                <h3>✅ 人工验证清单</h3>
+                <div class="checkbox-group">
+                    <label><input type="checkbox"> Pivot 识别与确认延迟正确</label>
+                    <label><input type="checkbox"> Guard 引用与方向规则正确</label>
+                    <label><input type="checkbox"> Progress 引用与方向规则正确</label>
+                    <label><input type="checkbox"> 状态转换 / break / candidate 行为正确</label>
+                </div>
+                <div style="margin-top: 15px;">
+                    <strong>结论：</strong>
+                    <label><input type="radio" name="conclusion_13" value="pass"> ✅ 通过</label>
+                    <label><input type="radio" name="conclusion_13" value="fail"> ❌ 不通过</label>
+                    <label><input type="radio" name="conclusion_13" value="pending"> ⏳ 待确认</label>
+                </div>
+                <textarea placeholder="备注（可选）..."></textarea>
+            </div>
+        </div>
+
+        <div class="case" id="case-14">
+            <div class="case-header">
+                <div class="case-title">案例 #14 - Bar #2028</div>
+                <div class="case-badge">guard_break_down</div>
+            </div>
+
+            <div class="case-info">
+                <div class="info-item">
+                    <div class="label">日期</div>
+                    <div class="value">2020-09-22</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">事件</div>
+                    <div class="value">guard_break_down</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">状态</div>
+                    <div class="value">transition</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">方向</div>
+                    <div class="value">down</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Guard</div>
+                    <div class="value">47.550</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Progress</div>
+                    <div class="value">46.670</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <img src="charts/case_14.png" alt="Case 14 Chart">
+            </div>
+
+            <div class="validation-form">
+                <h3>✅ 人工验证清单</h3>
+                <div class="checkbox-group">
+                    <label><input type="checkbox"> Pivot 识别与确认延迟正确</label>
+                    <label><input type="checkbox"> Guard 引用与方向规则正确</label>
+                    <label><input type="checkbox"> Progress 引用与方向规则正确</label>
+                    <label><input type="checkbox"> 状态转换 / break / candidate 行为正确</label>
+                </div>
+                <div style="margin-top: 15px;">
+                    <strong>结论：</strong>
+                    <label><input type="radio" name="conclusion_14" value="pass"> ✅ 通过</label>
+                    <label><input type="radio" name="conclusion_14" value="fail"> ❌ 不通过</label>
+                    <label><input type="radio" name="conclusion_14" value="pending"> ⏳ 待确认</label>
+                </div>
+                <textarea placeholder="备注（可选）..."></textarea>
+            </div>
+        </div>
+
+        <div class="case" id="case-15">
+            <div class="case-header">
+                <div class="case-title">案例 #15 - Bar #2033</div>
+                <div class="case-badge">new_wave_down</div>
+            </div>
+
+            <div class="case-info">
+                <div class="info-item">
+                    <div class="label">日期</div>
+                    <div class="value">2020-09-29</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">事件</div>
+                    <div class="value">new_wave_down, guard_update, progress_update, range_evolution, pivot_confirm_l</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">状态</div>
+                    <div class="value">down_alive</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">方向</div>
+                    <div class="value">down</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Guard</div>
+                    <div class="value">48.500</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Progress</div>
+                    <div class="value">46.210</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <img src="charts/case_15.png" alt="Case 15 Chart">
+            </div>
+
+            <div class="validation-form">
+                <h3>✅ 人工验证清单</h3>
+                <div class="checkbox-group">
+                    <label><input type="checkbox"> Pivot 识别与确认延迟正确</label>
+                    <label><input type="checkbox"> Guard 引用与方向规则正确</label>
+                    <label><input type="checkbox"> Progress 引用与方向规则正确</label>
+                    <label><input type="checkbox"> 状态转换 / break / candidate 行为正确</label>
+                </div>
+                <div style="margin-top: 15px;">
+                    <strong>结论：</strong>
+                    <label><input type="radio" name="conclusion_15" value="pass"> ✅ 通过</label>
+                    <label><input type="radio" name="conclusion_15" value="fail"> ❌ 不通过</label>
+                    <label><input type="radio" name="conclusion_15" value="pending"> ⏳ 待确认</label>
+                </div>
+                <textarea placeholder="备注（可选）..."></textarea>
+            </div>
+        </div>
+
+        <footer>
+            <p>生成工具: scripts/verify/v2_visual_validator.py</p>
+            <p>数据源: I:\new_tdx64\vipdoc\sh\lday\sh510300.day</p>
+        </footer>
+    </div>
+</body>
+</html>
