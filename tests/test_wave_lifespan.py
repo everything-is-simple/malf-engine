@@ -26,7 +26,7 @@ def test_wave_lifespan_up_terminated():
     预期：
     - span_bars = 5（从 confirmation bar 到 break bar）
     - price_range = 23（122 - 99）
-    - progress_pct = 0.232323
+    - progress_pct = 0.086957（v2.1 结构进展公式）
     - new_count = 1（HH）
     - no_new_span = 2（最后新 pivot 到 break）
     """
@@ -53,7 +53,9 @@ def test_wave_lifespan_up_terminated():
         primitive_count=expected["primitive_count"],
         pivot_count=expected["pivot_count"],
         new_count=expected["new_count"],
-        no_new_span=expected["no_new_span"]
+        no_new_span=expected["no_new_span"],
+        first_pivot_price=expected["first_pivot_price"],
+        guard_price=expected["guard_price"],
     )
 
     # 验证计算结果
@@ -118,3 +120,4 @@ def test_wave_lifespan_down_direction():
     """测试 DOWN wave 的 WaveLifespan 计算（占位测试）。"""
     # TODO: 添加 DOWN wave fixture 和完整测试
     pytest.skip("DOWN wave fixture not yet created")
+

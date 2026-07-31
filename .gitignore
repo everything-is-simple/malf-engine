@@ -19,6 +19,9 @@ build/
 # 临时工作区（调试、验证、临时文件）
 .work/
 
+# 可重建派生数据
+var/
+
 # 临时冗余文档（待手动删除）
 CLEANUP-COMPLETED.md
 PROJECT-PROGRESS-REPORT.md
