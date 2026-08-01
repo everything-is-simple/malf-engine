@@ -352,27 +352,27 @@ def generate_html_report(cases: List[Dict], output_dir: Path):
 <body>
     <div class="container">
         <header>
-            <h1>🔍 MALF V2 人工验证报告 (Manual Validation Report)</h1>
-            <p>标的 Symbol: 510300 (沪深300ETF CSI 300 ETF) | 生成时间 Generated: """ + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + """</p>
+            <h1>🔍 MALF V2 人工验证报告</h1>
+            <p>标的: 510300 (沪深300ETF) | 生成时间: """ + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + """</p>
         </header>
 
         <div class="summary">
-            <h2>📊 验证概览 Validation Overview</h2>
+            <h2>📊 验证概览</h2>
             <div class="stats">
                 <div class="stat-card">
-                    <div class="label">验证案例总数 Total Cases</div>
+                    <div class="label">验证案例总数</div>
                     <div class="value">""" + str(len(cases)) + """</div>
                 </div>
                 <div class="stat-card">
-                    <div class="label">要求最少验证 Minimum Required</div>
-                    <div class="value">10 案例 cases</div>
+                    <div class="label">要求最少验证</div>
+                    <div class="value">10 案例</div>
                 </div>
                 <div class="stat-card">
-                    <div class="label">Pivot 准确率要求 Accuracy Required</div>
+                    <div class="label">Pivot 准确率要求</div>
                     <div class="value">&gt; 95%</div>
                 </div>
                 <div class="stat-card">
-                    <div class="label">Guard/Progress 要求 Required</div>
+                    <div class="label">Guard/Progress 要求</div>
                     <div class="value">&gt; 90%</div>
                 </div>
             </div>
@@ -391,25 +391,25 @@ def generate_html_report(cases: List[Dict], output_dir: Path):
         html_content += f"""
         <div class="case" id="case-{i}">
             <div class="case-header">
-                <div class="case-title">案例 Case #{i} - Bar #{event_bar['bar_index']}</div>
+                <div class="case-title">案例 #{i} - Bar #{event_bar['bar_index']}</div>
                 <div class="case-badge">{case['selection_category']}</div>
             </div>
 
             <div class="case-info">
                 <div class="info-item">
-                    <div class="label">日期 Date</div>
+                    <div class="label">日期</div>
                     <div class="value">{event_bar['bar_dt']}</div>
                 </div>
                 <div class="info-item">
-                    <div class="label">事件 Events</div>
+                    <div class="label">事件</div>
                     <div class="value">{', '.join(case['events'])}</div>
                 </div>
                 <div class="info-item">
-                    <div class="label">状态 State</div>
+                    <div class="label">状态</div>
                     <div class="value">{snapshot['system_state']}</div>
                 </div>
                 <div class="info-item">
-                    <div class="label">方向 Direction</div>
+                    <div class="label">方向</div>
                     <div class="value">{snapshot['direction'] or '—'}</div>
                 </div>
                 <div class="info-item">
@@ -434,15 +434,15 @@ def generate_html_report(cases: List[Dict], output_dir: Path):
                 window = pivot['strict_fractal_window']
                 html_content += """
             <div class="pivot-window">
-                <h4>📍 Pivot 确认窗口 Confirmation Window (fractal k=2)</h4>
+                <h4>📍 Pivot 确认窗口 (fractal k=2)</h4>
                 <table>
                     <tr>
-                        <th>日期 Date</th>
-                        <th>Open 开</th>
-                        <th>High 高</th>
-                        <th>Low 低</th>
-                        <th>Close 收</th>
-                        <th>标记 Marker</th>
+                        <th>日期</th>
+                        <th>Open</th>
+                        <th>High</th>
+                        <th>Low</th>
+                        <th>Close</th>
+                        <th>标记</th>
                     </tr>
 """
                 for bar_data in window:
@@ -466,17 +466,17 @@ def generate_html_report(cases: List[Dict], output_dir: Path):
         # 添加验证表单
         html_content += """
             <div class="validation-form">
-                <h3>✅ 人工验证清单 Manual Validation Checklist</h3>
+                <h3>✅ 人工验证清单</h3>
                 <div class="checkbox-group">
-                    <label><input type="checkbox"> Pivot 识别与确认延迟正确 (Pivot identification and confirmation delay correct)</label>
-                    <label><input type="checkbox"> Guard 引用与方向规则正确 (Guard reference and direction rules correct)</label>
-                    <label><input type="checkbox"> Progress 引用与方向规则正确 (Progress reference and direction rules correct)</label>
-                    <label><input type="checkbox"> 状态转换 / break / candidate 行为正确 (State transition / break / candidate behavior correct)</label>
+                    <label><input type="checkbox"> Pivot 识别与确认延迟正确</label>
+                    <label><input type="checkbox"> Guard 引用与方向规则正确</label>
+                    <label><input type="checkbox"> Progress 引用与方向规则正确</label>
+                    <label><input type="checkbox"> 状态转换 / break / candidate 行为正确</label>
                 </div>
                 <div style="margin-top: 15px;">
-                    <strong>结论 Conclusion：</strong>
-                    <label><input type="radio" name="conclusion_""" + str(i) + """" value="pass"> ✅ 通过 Pass</label>
-                    <label><input type="radio" name="conclusion_""" + str(i) + """" value="fail"> ❌ 不通过 Fail</label>
+                    <strong>结论：</strong>
+                    <label><input type="radio" name="conclusion_""" + str(i) + """" value="pass"> ✅ 通过</label>
+                    <label><input type="radio" name="conclusion_""" + str(i) + """" value="fail"> ❌ 不通过</label>
                     <label><input type="radio" name="conclusion_""" + str(i) + """" value="pending"> ⏳ 待确认</label>
                 </div>
                 <textarea placeholder="备注（可选）..."></textarea>
