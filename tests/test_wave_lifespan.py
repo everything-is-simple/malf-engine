@@ -13,6 +13,7 @@ import pytest
 from pathlib import Path
 
 from malf.types import WaveLifespan, Direction
+from malf.lifespan_engine import LifespanEngine
 
 
 def test_wave_lifespan_up_terminated():
@@ -117,7 +118,32 @@ def test_wave_lifespan_fields_structure():
 
 
 def test_wave_lifespan_down_direction():
-    """测试 DOWN wave 的 WaveLifespan 计算（占位测试）。"""
-    # TODO: 添加 DOWN wave fixture 和完整测试
-    pytest.skip("DOWN wave fixture not yet created")
+    """DOWN wave uses the mirrored progress_pct formula."""
+    engine = LifespanEngine()
+    lifespan = engine.calculate_wave_lifespan(
+        wave_id="TEST_1D_w_down",
+        symbol="TEST",
+        timeframe="1D",
+        direction=Direction.DOWN,
+        wave_start_bar_dt="2024-01-01",
+        wave_start_price=120,
+        wave_end_bar_dt="2024-01-05",
+        wave_end_price=80,
+        span_bars=5,
+        primitive_count=3,
+        pivot_count=4,
+        new_count=1,
+        no_new_span=2,
+        first_pivot_price=120,
+        guard_price=100,
+    )
+
+    assert lifespan.direction == Direction.DOWN
+    assert lifespan.price_range == 40
+    assert lifespan.progress_pct == 2.0
+    assert lifespan.span_rank is None
+    assert lifespan.range_rank is None
+    assert lifespan.stagnation_rank is None
+    assert lifespan.progress_rank is None
+
 

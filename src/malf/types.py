@@ -302,7 +302,7 @@ class RangeLifespan:
     双类型分池（v2.1 Lifespan §2.2）：
     - continuation_range 样本池
     - reversal_range 样本池
-    最小样本量：PEER_SAMPLE_MIN_N = 20
+    最小样本量：N = 30（v2.1 Lifespan §4.3）
     """
     # 标识
     range_id: str  # 格式："{symbol}_{timeframe}_R{序号}"
