@@ -35,6 +35,7 @@ I:\\asteria-riskbench-Definitive-validated\\MALF_Definitive_v2_1-deepseek-202607
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import List, Optional
 
 from malf.fingerprint import runtime_fingerprint
@@ -46,9 +47,14 @@ from malf.types import (
     Pivot,
     PivotType,
     PriceBar,
+    RangeResolutionType,
+    RangeSnapshot,
+    RangeState,
     SystemState,
     WaveCoreState,
+    WaveSnapshot,
 )
+from malf.version import RANGE_RULE_VERSION, RANGE_SNAPSHOT_SCHEMA_VERSION
 
 
 class MALFCoreEngine:
@@ -106,6 +112,23 @@ class MALFCoreEngine:
         self._range_resolution_type: Optional[str] = None
         self._range_resolution_distance: Optional[int] = None
 
+        # ==================================================================
+        # Wave / Range 生命周期事实聚合（DECISION-004）
+        # 供 _make_snapshot 构造公开 facts 对象（active_wave / terminated_wave /
+        # active_range / resolved_range / active_wave_id），driver 只读公开字段。
+        # ==================================================================
+        self._wave_seq: int = 0          # wave_id 序号（L4-1：从 1 单调递增，永不复用）
+        self._range_seq: int = 0         # range_id 序号（break 那根 bar 递增并定死）
+        self._birth_type: str = "initial"  # initial | continuation | reversal
+        self._current_wave_pivots: List[Pivot] = []  # 当前 alive wave 已确认 pivot
+        self._new_count: int = 0         # D16 progress 更新次数（Lifespan §3 new_count）
+        self._last_progress_bar_dt: Optional[str] = None
+        self._no_new_span: int = 0       # 两次 progress 更新间的 bar 数（Lifespan §3 no_new_span）
+        self._wave_start_price: Optional[int] = None  # wave 起始价（confirmation price，L4-2）
+        self._frozen_terminated_wave: Optional[WaveSnapshot] = None  # 一次性事件冻结槽
+        self._frozen_resolved_range: Optional[RangeSnapshot] = None  # 一次性事件冻结槽
+        self._active_range_snap: Optional[RangeSnapshot] = None      # range alive 期间持续态
+
     def on_bar(self, bar: PriceBar) -> CoreStateSnapshot:
         """逐 bar 推进状态机。
 
@@ -139,6 +162,17 @@ class MALFCoreEngine:
                 self._wave_start_bar_dt = bar.bar_dt  # 第五刀 Task 2: 记录 wave 开始时间
                 self._wave_bar_counter = 1  # 初始化时计数器从 1 开始
 
+                # DECISION-004: 初始 wave 聚合（L4-1 seq 从 1 开始）
+                self._wave_seq += 1
+                self._birth_type = "initial"
+                self._current_wave_pivots = list(self._init_result.pivots)
+                self._new_count = 0
+                self._last_progress_bar_dt = None
+                self._no_new_span = 0
+                self._wave_start_price = (
+                    self._init_result.pivots[-1].price if self._init_result.pivots else None
+                )  # L4-2 confirmation price（初始化确认 pivot = 最后一个）
+
                 if self._direction == Direction.UP:
                     self._system_state = SystemState.UP_ALIVE
                 elif self._direction == Direction.DOWN:
@@ -148,12 +182,22 @@ class MALFCoreEngine:
         elif self._system_state in [SystemState.UP_ALIVE, SystemState.DOWN_ALIVE]:
             # 递增 bar 计数器（每根新 bar）
             self._wave_bar_counter += 1
+            # DECISION-004: 每根 alive bar 递增 no_new_span（无新推进 bar 数）
+            self._no_new_span += 1
 
             # D16 Progress Confirmation + D9 Guard Update: 检查是否有新 pivot 确认
             if bar.bar_dt in pivots_by_confirm_dt:
                 new_pivot = pivots_by_confirm_dt[bar.bar_dt]
+                old_progress = self._progress_extreme_price
                 self._update_progress_if_better(new_pivot)
+                # DECISION-004: D16 progress 更新时 new_count += 1、重置 no_new_span
+                if self._progress_extreme_price != old_progress:
+                    self._new_count += 1
+                    self._last_progress_bar_dt = bar.bar_dt
+                    self._no_new_span = 0
                 self._update_guard_if_valid(new_pivot)
+                # DECISION-004: 追加到当前 wave 的 pivot 列表（Core D5 pivots：按时间顺序）
+                self._current_wave_pivots.append(new_pivot)
 
             if self._check_guard_break(bar):
                 # 计算双边界（D12）
@@ -166,8 +210,41 @@ class MALFCoreEngine:
                     self._break_price = bar.low  # UP wave 向下突破
                 elif self._direction == Direction.DOWN:
                     self._break_price = bar.high  # DOWN wave 向上突破
+
+                # DECISION-004: 冻结 terminated wave facts（在清空实时值之前）
+                self._frozen_terminated_wave = WaveSnapshot(
+                    symbol=bar.symbol,
+                    timeframe=bar.timeframe,
+                    wave_id=f"{bar.symbol}_{bar.timeframe}_{self._wave_seq}",
+                    direction=self._direction,
+                    birth_type=self._birth_type,
+                    wave_state=WaveCoreState.TERMINATED,
+                    pivots=tuple(self._current_wave_pivots),
+                    start_bar_dt=self._wave_start_bar_dt,
+                    start_price=self._wave_start_price,
+                    progress_extreme_price=self._progress_extreme_price,
+                    progress_extreme_bar_dt=self._progress_extreme_bar_dt,
+                    guard_price=self._guard_price,
+                    guard_bar_dt=self._guard_extreme_bar_dt,
+                    bar_count=self._wave_bar_counter,  # 冻结值（不再清零丢失）
+                    break_bar_dt=self._break_bar_dt,
+                    break_price=self._break_price,
+                    wave_end_price=self._progress_extreme_price,  # = progress_extreme（Lifespan §3）
+                    primitive_count=max(len(self._current_wave_pivots) - 1, 0),
+                    pivot_count=len(self._current_wave_pivots),
+                    first_pivot_price=(
+                        self._current_wave_pivots[0].price if self._current_wave_pivots else None
+                    ),
+                    new_count=self._new_count,
+                    no_new_span=self._no_new_span,
+                )
+
                 self._wave_start_bar_dt = None  # 清空 wave 开始时间（transition 期间无 active wave）
-                self._wave_bar_counter = 0  # 清空计数器
+                self._wave_bar_counter = 0  # 清空计数器（冻结值已存进 facts）
+                # DECISION-004: wave 已终止，实时聚合清空（transition 期间无 active wave）
+                self._current_wave_pivots = []
+                self._new_count = 0
+                self._no_new_span = 0
 
                 # Range 诞生（第六刀，v2.1 Range §2）
                 # Range 在 guard break 时刻诞生，继承 transition boundary 作为 init 值
@@ -179,6 +256,28 @@ class MALFCoreEngine:
                 self._range_evolution_count = 0
                 # Resolution 信息在 new wave 确认时填充
 
+                # DECISION-004: range 序号在 break 诞生那根 bar 递增并定死（fixture R1：d14 诞生即 R1）
+                self._range_seq += 1
+                break_direction = (
+                    Direction.DOWN if self._direction == Direction.UP else Direction.UP
+                )
+                self._active_range_snap = RangeSnapshot(
+                    symbol=bar.symbol,
+                    timeframe=bar.timeframe,
+                    bar_dt=bar.bar_dt,
+                    range_id=f"{bar.symbol}_{bar.timeframe}_R{self._range_seq}",
+                    range_state=RangeState.ALIVE,
+                    birth_bar_dt=bar.bar_dt,
+                    boundary_init_high=self._range_boundary_init_high,
+                    boundary_init_low=self._range_boundary_init_low,
+                    boundary_now_high=self._range_boundary_now_high,
+                    boundary_now_low=self._range_boundary_now_low,
+                    break_direction=break_direction,
+                    old_wave_direction=self._direction,
+                    range_rule_version=RANGE_RULE_VERSION,
+                    schema_version=RANGE_SNAPSHOT_SCHEMA_VERSION,
+                )
+
                 # 初始化 candidate 状态
                 self._active_candidate_guard_price = None
                 self._active_candidate_guard_extreme_bar_dt = None
@@ -188,19 +287,36 @@ class MALFCoreEngine:
 
         # S4: Transition 期间 active candidate 演化（第四刀）
         elif self._system_state == SystemState.TRANSITION:
+            # DECISION-004: 每根 bar 同步 active_range 的 bar_dt（持续态字段）
+            if self._active_range_snap is not None:
+                self._active_range_snap = replace(self._active_range_snap, bar_dt=bar.bar_dt)
+
             # 检测当前 bar 是否有新确认的 pivot
             if bar.bar_dt in pivots_by_confirm_dt:
                 new_pivot = pivots_by_confirm_dt[bar.bar_dt]
 
                 # Range boundary 演化（第六刀，R2 不变量）
                 # boundary_now 只能单调扩展：high 只能增，low 只能减
+                boundary_changed = False
                 if new_pivot.pivot_type == PivotType.H and new_pivot.price > self._range_boundary_now_high:
                     self._range_boundary_now_high = new_pivot.price
                     self._range_evolution_count += 1
+                    boundary_changed = True
 
                 if new_pivot.pivot_type == PivotType.L and new_pivot.price < self._range_boundary_now_low:
                     self._range_boundary_now_low = new_pivot.price
                     self._range_evolution_count += 1
+                    boundary_changed = True
+
+                # DECISION-004: 边界演化后同步 active_range_snap（持续态）
+                if boundary_changed and self._active_range_snap is not None:
+                    self._active_range_snap = replace(
+                        self._active_range_snap,
+                        bar_dt=bar.bar_dt,
+                        boundary_now_high=self._range_boundary_now_high,
+                        boundary_now_low=self._range_boundary_now_low,
+                        evolution_count=self._range_evolution_count,
+                    )
 
                 # C-05: break bar 自身的极值不进 candidate 逻辑
                 if new_pivot.extreme_bar_dt != self._break_bar_dt:
@@ -216,6 +332,11 @@ class MALFCoreEngine:
         # 产出当前 bar 的 snapshot
         snapshot = self._make_snapshot(bar)
         self._bar_index += 1  # 递增 bar 序号
+        # DECISION-004: 一次性事件消费后清空冻结槽
+        # terminated_wave / resolved_range 只在事件发生的 bar 上非空一次，下一根 bar 必须为 None
+        # （测试 test_core_lifecycle_facts.py 行 51-52 / 74-75 强制）
+        self._frozen_terminated_wave = None
+        self._frozen_resolved_range = None
         return snapshot
 
     def _check_guard_break(self, bar: PriceBar) -> bool:
@@ -434,6 +555,40 @@ class MALFCoreEngine:
         self._progress_extreme_price = confirmation_pivot.price
         self._progress_extreme_bar_dt = confirmation_pivot.extreme_bar_dt
 
+        # DECISION-004: 冻结 resolved range facts（一次性事件；resolution 时不递增 range_seq）
+        if self._active_range_snap is not None:
+            if new_direction == Direction.UP:
+                denom = self._range_boundary_now_high
+                pct = (confirmation_pivot.price - denom) / denom if denom else 0.0
+            else:
+                denom = self._range_boundary_now_low
+                pct = (denom - confirmation_pivot.price) / denom if denom else 0.0
+            self._frozen_resolved_range = replace(
+                self._active_range_snap,
+                bar_dt=confirmation_pivot.confirm_bar_dt,
+                range_state=RangeState.RESOLVED,
+                resolution_bar_dt=confirmation_pivot.confirm_bar_dt,
+                resolution_type=RangeResolutionType(self._range_resolution_type),
+                resolution_distance=self._range_resolution_distance,
+                resolution_distance_pct=float(pct),
+                confirmation_pivot_extreme_price=confirmation_pivot.price,
+                confirmation_pivot_extreme_bar_dt=confirmation_pivot.extreme_bar_dt,
+                confirmation_pivot_confirm_bar_dt=confirmation_pivot.confirm_bar_dt,
+                new_wave_direction=new_direction,
+            )
+            self._active_range_snap = None
+
+        # DECISION-004: 新 wave 聚合重置（wave_seq 继续递增不复用——L4-6；birth_type 按方向）
+        self._wave_seq += 1
+        self._birth_type = (
+            "continuation" if new_direction == old_wave_direction else "reversal"
+        )
+        self._current_wave_pivots = [confirmation_pivot]
+        self._new_count = 0
+        self._last_progress_bar_dt = None
+        self._no_new_span = 0
+        self._wave_start_price = confirmation_pivot.price
+
         # 更新方向和状态
         self._direction = new_direction
         self._wave_core_state = WaveCoreState.ALIVE
@@ -474,6 +629,37 @@ class MALFCoreEngine:
                 runtime_fingerprint=runtime_fingerprint(),
             )
         else:
+            # DECISION-004: 构造公开 facts 对象（alive 期间 active_wave 持续态；transition 期间 None）
+            if self._system_state in [SystemState.UP_ALIVE, SystemState.DOWN_ALIVE]:
+                active_wave_id = f"{bar.symbol}_{bar.timeframe}_{self._wave_seq}"
+                active_wave = WaveSnapshot(
+                    symbol=bar.symbol,
+                    timeframe=bar.timeframe,
+                    wave_id=active_wave_id,
+                    direction=self._direction,
+                    birth_type=self._birth_type,
+                    wave_state=WaveCoreState.ALIVE,
+                    pivots=tuple(self._current_wave_pivots),
+                    start_bar_dt=self._wave_start_bar_dt,
+                    start_price=self._wave_start_price,
+                    progress_extreme_price=self._progress_extreme_price,
+                    progress_extreme_bar_dt=self._progress_extreme_bar_dt,
+                    guard_price=self._guard_price,
+                    guard_bar_dt=self._guard_extreme_bar_dt,
+                    bar_count=self._wave_bar_counter,
+                    wave_end_price=self._progress_extreme_price,
+                    primitive_count=max(len(self._current_wave_pivots) - 1, 0),
+                    pivot_count=len(self._current_wave_pivots),
+                    first_pivot_price=(
+                        self._current_wave_pivots[0].price if self._current_wave_pivots else None
+                    ),
+                    new_count=self._new_count,
+                    no_new_span=self._no_new_span,
+                )
+            else:
+                active_wave_id = None
+                active_wave = None
+
             return CoreStateSnapshot(
                 symbol=bar.symbol,
                 timeframe=bar.timeframe,
@@ -482,6 +668,11 @@ class MALFCoreEngine:
                 system_state=self._system_state,
                 direction=self._direction,
                 wave_core_state=self._wave_core_state,
+                active_wave_id=active_wave_id,
+                active_wave=active_wave,
+                terminated_wave=self._frozen_terminated_wave,
+                active_range=self._active_range_snap,
+                resolved_range=self._frozen_resolved_range,
                 current_effective_guard_price=self._guard_price,
                 current_effective_guard_extreme_bar_dt=self._guard_extreme_bar_dt,
                 current_effective_guard_confirm_bar_dt=self._guard_confirm_bar_dt,

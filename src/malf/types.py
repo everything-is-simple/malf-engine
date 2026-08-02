@@ -95,6 +95,38 @@ class Pivot:
 
 
 @dataclass(frozen=True)
+class WaveSnapshot:
+    """公开的 Core Wave 事实（MALF v2.1 Core D5）。
+
+    这是 engine -> adapter 的只读领域对象；Service 仍只对外发布 44 字段
+    ``WaveStructuralSnapshot``。
+    """
+
+    symbol: str
+    timeframe: str
+    wave_id: str
+    direction: Direction
+    birth_type: str
+    wave_state: WaveCoreState
+    pivots: tuple[Pivot, ...]
+    start_bar_dt: str
+    start_price: int
+    progress_extreme_price: int
+    progress_extreme_bar_dt: str
+    guard_price: int
+    guard_bar_dt: str
+    bar_count: int
+    wave_end_price: int  # Wave 结束价格（= progress_extreme_price，Lifespan §3 wave_end_price 别名；DECISION-004 §2.1）
+    break_bar_dt: Optional[str] = None
+    break_price: Optional[int] = None
+    primitive_count: int = 0
+    pivot_count: int = 0
+    first_pivot_price: Optional[int] = None
+    new_count: int = 0
+    no_new_span: int = 0
+
+
+@dataclass(frozen=True)
 class CoreStateSnapshot:
     """Core 层状态快照（v2.1 Core §9）。
 
@@ -124,6 +156,10 @@ class CoreStateSnapshot:
     direction: Optional[Direction] = None
     wave_core_state: Optional[WaveCoreState] = None
     active_wave_id: Optional[str] = None
+    active_wave: Optional[WaveSnapshot] = None
+    terminated_wave: Optional[WaveSnapshot] = None
+    active_range: Optional[RangeSnapshot] = None
+    resolved_range: Optional[RangeSnapshot] = None
     # guard（first guard = 触发确认的那个 HL/LH）
     current_effective_guard_price: Optional[int] = None
     current_effective_guard_extreme_bar_dt: Optional[str] = None
@@ -157,6 +193,7 @@ class CoreStateSnapshot:
     # Range 层字段（第六刀，v2.1 Range §2-§6）
     # ========================================================================
     # Range 诞生和边界
+    range_id: Optional[str] = None  # 格式：{symbol}_{timeframe}_R{序号}
     range_birth_bar_dt: Optional[str] = None  # Range 诞生时间（guard break 那根 bar）
     range_boundary_init_high: Optional[int] = None  # 初始上边界（冻结，用于 resolution 判定）
     range_boundary_init_low: Optional[int] = None   # 初始下边界（冻结）
@@ -211,7 +248,7 @@ class RangeSnapshot:
 
     使用场景对照表：
     - Resolution 判定（T6）：使用 boundary_init
-    - Resolution distance 计算：使用 boundary_init
+    - Resolution distance 计算：使用 boundary_now
     - Range 统计（width, evolution_count）：使用 boundary_now
     - Range 分类（continuation/reversal）：基于 break_direction
 
@@ -249,6 +286,7 @@ class RangeSnapshot:
     resolution_bar_dt: Optional[str] = None  # Resolution 确认时间
     resolution_type: Optional[RangeResolutionType] = None  # continuation / reversal
     resolution_distance: Optional[int] = None  # 突破距离（有符号整数，v2.1 Range §5）
+    resolution_distance_pct: Optional[float] = None  # 基于 boundary_now 的突破百分比
     confirmation_pivot_extreme_price: Optional[int] = None  # 触发 resolution 的 pivot 极值价格
     confirmation_pivot_extreme_bar_dt: Optional[str] = None  # 极值时间
     confirmation_pivot_confirm_bar_dt: Optional[str] = None  # 确认时间

@@ -37,6 +37,8 @@ class InitialWaveResult:
     guard_confirm_bar_dt: Optional[str] = None
     progress_extreme_price: Optional[int] = None
     progress_extreme_bar_dt: Optional[str] = None
+    pivots: tuple[Pivot, ...] = ()
+    birth_type: str = "initial"
 
 
 def find_initial_wave(pivots_in_confirm_order: Sequence[Pivot]) -> InitialWaveResult:
@@ -93,6 +95,7 @@ def find_initial_wave(pivots_in_confirm_order: Sequence[Pivot]) -> InitialWaveRe
                         guard_confirm_bar_dt=h1.confirm_bar_dt,
                         progress_extreme_price=p.price,
                         progress_extreme_bar_dt=p.extreme_bar_dt,
+                        pivots=(l0, h1, p),
                     )
                 # p.price >= l0.price：不满足严格突破（O3），继续等下一个 L（O6 失败规则）。
 
@@ -130,6 +133,7 @@ def find_initial_wave(pivots_in_confirm_order: Sequence[Pivot]) -> InitialWaveRe
                     guard_confirm_bar_dt=l1.confirm_bar_dt,
                     progress_extreme_price=p.price,
                     progress_extreme_bar_dt=p.extreme_bar_dt,
+                    pivots=(h0, l1, p),
                 )
             # p.price <= h0.price：不满足严格突破（O3），继续等下一个 H（O6 失败规则）。
 

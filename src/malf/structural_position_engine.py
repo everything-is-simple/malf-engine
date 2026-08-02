@@ -107,7 +107,8 @@ class StructuralPositionEngine:
         - P2: P2/P3/P4 的 momentum 是 rank 的向量差，不是概率
         - P3: 标签（accelerating 等）是辅助性的，rank 值始终保留
         """
-        # 1. 筛选同向波（从 W-1, W-2, W-3 中选）
+        # 1. 筛选同向波（从 W-1, W-2, W-3 中选；terminated_waves 约定按时间倒序，
+        #    最近的在前，[:3] 即 W-1, W-2, W-3；调用方（driver）必须传倒序）
         same_dir_peers = [
             w for w in terminated_waves[:3]
             if w.direction == current_wave.direction
@@ -238,7 +239,8 @@ class StructuralPositionEngine:
         - P2: P2/P3/P4 的 momentum 是 rank 的向量差，不是概率
         - P3: 标签（self_dominant 等）是辅助性的，rank 值始终保留
         """
-        # 1. 筛选反向波（从 W-1, W-2, W-3 中选）
+        # 1. 筛选反向波（从 W-1, W-2, W-3 中选；terminated_waves 约定按时间倒序，
+        #    最近的在前，[:3] 即 W-1, W-2, W-3；调用方（driver）必须传倒序）
         cross_dir_peers = [
             w for w in terminated_waves[:3]
             if w.direction != current_wave.direction
