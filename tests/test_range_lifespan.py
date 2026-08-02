@@ -55,7 +55,7 @@ def test_range_lifespan_continuation_golden_fixture():
         boundary_low_init=inp["boundary_low_init"],
         boundary_high_now=inp["boundary_high_now"],
         boundary_low_now=inp["boundary_low_now"],
-        resolution_type=inp["resolution_type"],
+        breakout_direction=inp["resolution_type"],
         confirmation_pivot_extreme_price=inp["confirmation_pivot_extreme_price"]
     )
 
@@ -111,7 +111,7 @@ def test_calculate_range_lifespan_simple():
         boundary_low_init=100,
         boundary_high_now=120,
         boundary_low_now=100,
-        resolution_type="up",
+        breakout_direction="up",
         confirmation_pivot_extreme_price=130
     )
 
@@ -174,7 +174,7 @@ def test_calculate_range_lifespan_with_evolution():
         boundary_low_init=80,
         boundary_high_now=115,
         boundary_low_now=75,
-        resolution_type="down",
+        breakout_direction="down",
         confirmation_pivot_extreme_price=72
     )
 
@@ -218,7 +218,7 @@ def test_calculate_range_lifespan_continuation_vs_reversal():
         boundary_low_init=100,
         boundary_high_now=120,
         boundary_low_now=100,
-        resolution_type="up",
+        breakout_direction="up",
         confirmation_pivot_extreme_price=125
     )
 
@@ -238,7 +238,7 @@ def test_calculate_range_lifespan_continuation_vs_reversal():
         boundary_low_init=100,
         boundary_high_now=120,
         boundary_low_now=100,
-        resolution_type="down",
+        breakout_direction="down",
         confirmation_pivot_extreme_price=95
     )
 
@@ -267,7 +267,7 @@ def test_record_and_get_resolved_ranges():
             boundary_low_init=100,
             boundary_high_now=120,
             boundary_low_now=100,
-            resolution_type="up",
+            breakout_direction="up",
             confirmation_pivot_extreme_price=125
         )
         engine.record_resolved_range(lifespan)
@@ -288,7 +288,7 @@ def test_record_and_get_resolved_ranges():
             boundary_low_init=100,
             boundary_high_now=120,
             boundary_low_now=100,
-            resolution_type="down",
+            breakout_direction="down",
             confirmation_pivot_extreme_price=95
         )
         engine.record_resolved_range(lifespan)
@@ -331,7 +331,7 @@ def test_resolution_distance_pct_zero_amplitude():
         boundary_low_init=100,  # 幅度为 0
         boundary_high_now=100,
         boundary_low_now=100,
-        resolution_type="down",
+        breakout_direction="down",
         confirmation_pivot_extreme_price=95
     )
 

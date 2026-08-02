@@ -284,7 +284,11 @@ class RangeSnapshot:
 
     # Resolution 信息（resolved 时填充，带默认值）
     resolution_bar_dt: Optional[str] = None  # Resolution 确认时间
-    resolution_type: Optional[RangeResolutionType] = None  # continuation / reversal
+    resolution_type: Optional[RangeResolutionType] = None  # 分类 continuation/reversal
+    # 命名警告（术语表 §二.2）：本字段存【分类】，而 Definitive Range §47 的
+    # resolution_type 是【突破方向 up/down】——字段同名内容不同。突破方向在实现中
+    # 从 new_wave_direction 推导（见 driver）；本字段的【方向】对应参数见
+    # lifespan_engine.calculate_range_lifespan(breakout_direction=)。
     resolution_distance: Optional[int] = None  # 突破距离（有符号整数，v2.1 Range §5）
     resolution_distance_pct: Optional[float] = None  # 基于 boundary_now 的突破百分比
     confirmation_pivot_extreme_price: Optional[int] = None  # 触发 resolution 的 pivot 极值价格
@@ -315,7 +319,9 @@ class WaveLifespan:
     wave_start_price: int   # Wave 起始价格（confirmation price，v2.1 L4-2）
     wave_end_price: int     # Wave 结束价格（progress_extreme）
     price_range: int        # 价格范围（绝对值，wave_end - wave_start）
-    progress_pct: float     # 进展百分比（(end - start) / start）
+    progress_pct: float     # 价格推进幅度 / guard 距离的比例（Lifespan §3）
+                            #   UP: (progress_extreme_price - first_pivot_price) / (progress_extreme_price - guard_price)
+                            #   DOWN: (first_pivot_price - progress_extreme_price) / (guard_price - progress_extreme_price)
 
     # 结构复杂度
     primitive_count: int    # 初始化原语数量（H0/L1/H2 或 L0/H1/L2）

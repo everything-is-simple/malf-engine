@@ -79,7 +79,7 @@ def test_v4_range_resolution_distance_uses_evolved_boundary():
         boundary_low_init=90,
         boundary_high_now=120,
         boundary_low_now=85,
-        resolution_type="up",
+        breakout_direction="up",
         confirmation_pivot_extreme_price=126,
     )
     down = engine.calculate_range_lifespan(
@@ -97,7 +97,7 @@ def test_v4_range_resolution_distance_uses_evolved_boundary():
         boundary_low_init=90,
         boundary_high_now=115,
         boundary_low_now=80,
-        resolution_type="down",
+        breakout_direction="down",
         confirmation_pivot_extreme_price=76,
     )
 

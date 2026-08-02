@@ -157,7 +157,7 @@ class LifespanEngine:
         boundary_low_init: int,
         boundary_high_now: int,
         boundary_low_now: int,
-        resolution_type: str,
+        breakout_direction: str,
         confirmation_pivot_extreme_price: int
     ) -> RangeLifespan:
         """计算 Range 生命周期指标（v2.1 Lifespan §2）。
@@ -177,7 +177,8 @@ class LifespanEngine:
             boundary_low_init: 初始下边界
             boundary_high_now: 当前上边界
             boundary_low_now: 当前下边界
-            resolution_type: Resolution 方向（"up" / "down"）
+            breakout_direction: 突破方向（"up" / "down"；Definitive Range §47 resolution_type，
+                参数名改名避免与 RangeSnapshot.resolution_type（分类）同构混淆——术语表 §二.2）
             confirmation_pivot_extreme_price: 确认 pivot 的极值价格
 
         返回：
@@ -197,14 +198,14 @@ class LifespanEngine:
         # 计算 resolution_distance_pct（v2.1 Range §5）
         # UP 突破：(confirmation_pivot.extreme_price - boundary_high_now) / boundary_high_now
         # DOWN 突破：(boundary_low_now - confirmation_pivot.extreme_price) / boundary_low_now
-        if resolution_type == "up":
+        if breakout_direction == "up":
             if boundary_high_now != 0:
                 resolution_distance_pct = (
                     confirmation_pivot_extreme_price - boundary_high_now
                 ) / boundary_high_now
             else:
                 resolution_distance_pct = 0.0
-        elif resolution_type == "down":
+        elif breakout_direction == "down":
             if boundary_low_now != 0:
                 resolution_distance_pct = (
                     boundary_low_now - confirmation_pivot_extreme_price
@@ -212,7 +213,7 @@ class LifespanEngine:
             else:
                 resolution_distance_pct = 0.0
         else:
-            # 未知 resolution_type，防御性编程
+            # 未知 breakout_direction，防御性编程
             resolution_distance_pct = 0.0
 
         # 创建 RangeLifespan 对象（排名字段初始为 None）
