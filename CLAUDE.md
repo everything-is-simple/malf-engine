@@ -76,7 +76,7 @@
   - 测试：6 passed
   - 提交：e6bb6bc
 
-**总计测试**：100 passed, 2 skipped ✅
+**总计测试**：112 passed, 0 skipped ✅（2026-08-02 实测；含 DECISION-004 的 3 个 lifecycle facts 测试）
 
 **规格合规度**：~95%（2026-07-27 规格对照检查后修复）
 
