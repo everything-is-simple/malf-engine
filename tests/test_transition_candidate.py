@@ -161,49 +161,48 @@ def test_first_candidate_detection():
 
 
 def test_candidate_replacement_same_direction():
-    """测试同向 candidate 替换（refresh）。
+    """同向 candidate refresh 只替换 candidate，不触发 new wave。
 
-    场景：L0 → L0' (L0' < L0，但不突破 boundary_low)
-    验证：
-    - active_candidate 从 L0 替换为 L0'
-    - candidate_replacement_count += 1
+    该 fixture 先产生一个 UP candidate，再产生 DOWN candidate，随后
+    连续产生第二个 DOWN candidate。第二个 DOWN candidate 仍在
+    ``transition_boundary_low`` 之上，因此不会满足 new-wave 确认条件，
+    但必须按 latest-wins 规则替换旧 candidate。
     """
     engine = MALFCoreEngine(k=2)
-
-    # 复用场景 A 到 L0 确认（12 根 bars）
     bars = [
         PriceBar("TEST", "D1", "2024-01-01", 110, 115, 105, 110),
-        PriceBar("TEST", "D1", "2024-01-02", 110, 115, 105, 112),
-        PriceBar("TEST", "D1", "2024-01-03", 112, 120, 110, 115),
-        PriceBar("TEST", "D1", "2024-01-04", 115, 118, 105, 110),
-        PriceBar("TEST", "D1", "2024-01-05", 110, 115, 100, 105),
-        PriceBar("TEST", "D1", "2024-01-06", 105, 130, 110, 128),
-        PriceBar("TEST", "D1", "2024-01-07", 128, 128, 115, 125),
-        PriceBar("TEST", "D1", "2024-01-08", 125, 125, 120, 122),
-        PriceBar("TEST", "D1", "2024-01-09", 122, 127, 95, 95),
-        PriceBar("TEST", "D1", "2024-01-10", 95, 100, 90, 92),
-        PriceBar("TEST", "D1", "2024-01-11", 92, 98, 91, 95),
-        PriceBar("TEST", "D1", "2024-01-12", 95, 100, 93, 98),  # L0 confirmed
+        PriceBar("TEST", "D1", "2024-01-02", 110, 115, 105, 108),
+        PriceBar("TEST", "D1", "2024-01-03", 108, 110, 100, 105),
+        PriceBar("TEST", "D1", "2024-01-04", 105, 112, 101, 110),
+        PriceBar("TEST", "D1", "2024-01-05", 110, 115, 102, 112),
+        PriceBar("TEST", "D1", "2024-01-06", 112, 113, 90, 92),
+        PriceBar("TEST", "D1", "2024-01-07", 92, 100, 91, 95),
+        PriceBar("TEST", "D1", "2024-01-08", 95, 98, 93, 96),
+        PriceBar("TEST", "D1", "2024-01-09", 96, 120, 95, 118),  # break
+        PriceBar("TEST", "D1", "2024-02-01", 118, 125, 117, 118),
+        PriceBar("TEST", "D1", "2024-02-02", 118, 127, 106, 114),
+        PriceBar("TEST", "D1", "2024-02-03", 114, 119, 106, 114),
+        PriceBar("TEST", "D1", "2024-02-04", 114, 124, 109, 113),  # H candidate
+        PriceBar("TEST", "D1", "2024-02-05", 113, 120, 108, 117),
+        PriceBar("TEST", "D1", "2024-02-06", 117, 119, 99, 109),
+        PriceBar("TEST", "D1", "2024-02-07", 109, 118, 95, 105),
+        PriceBar("TEST", "D1", "2024-02-08", 105, 110, 95, 97),
+        PriceBar("TEST", "D1", "2024-02-09", 97, 110, 91, 108),  # L candidate
+        PriceBar("TEST", "D1", "2024-02-10", 108, 120, 106, 111),
+        PriceBar("TEST", "D1", "2024-02-11", 111, 118, 104, 110),
+        PriceBar("TEST", "D1", "2024-02-12", 110, 121, 101, 117),  # L refresh
+        PriceBar("TEST", "D1", "2024-02-13", 117, 128, 108, 120),
+        PriceBar("TEST", "D1", "2024-02-14", 120, 121, 107, 116),
     ]
 
-    for bar in bars:
-        snapshot = engine.on_bar(bar)
+    snapshots = [engine.on_bar(bar) for bar in bars]
+    snapshot = snapshots[-1]
 
-    # 验证 L0 已确认，boundary_low = 100
-    assert snapshot.active_candidate_guard_price == 90
-    assert snapshot.candidate_replacement_count == 0
-    assert snapshot.transition_boundary_low == 100
-
-    # L0' 出现（更低，但不突破 boundary_low=100）
-    # L0' = 88，88 < 90 但 88 > boundary_low=100 是不可能的
-    # 修正：在 transition 中，L candidate 本身就是向下的，不会突破 boundary_low（下边界）
-    # 应该检查是否会触发反向 new wave（需要 H pivot）
-    # 这个测试场景设计有问题，同向 L refresh 在这个规格下会触发 new down wave
-
-    # 重新设计：使用 H candidate flip-flop 后的同向 refresh
-    # 跳过此测试，标记为设计问题
-    pytest.skip("Scenario design issue: same-direction L refresh triggers new wave in this setup")
-
+    assert snapshot.system_state == SystemState.TRANSITION
+    assert snapshot.transition_boundary_low == 90
+    assert snapshot.active_candidate_guard_price == 101
+    assert snapshot.active_candidate_direction == Direction.DOWN
+    assert snapshot.candidate_replacement_count == 2
 
 def test_candidate_flip_flop_opposite_direction():
     """测试反向 candidate 替换（flip-flop）。

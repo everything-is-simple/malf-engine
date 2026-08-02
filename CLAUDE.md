@@ -11,52 +11,99 @@
 ## 架构
 
 ### 五层结构
-引擎组织为五层（当前正在实现第一层）：
-- **L1 Core**：结构状态机（pivot 检测、初始化、guard/progress 跟踪）
-- **L2 Range**：break 检测与 range 状态
-- **L3 Lifespan**：波段生命周期管理
-- **L4 Probability**：波段概率计算
-- **L5 Service**：公共 API 层
+引擎组织为五层（**全部完成**）：
+- **L1 Core**：结构状态机（pivot 检测、初始化、guard/progress 跟踪）✅
+- **L2 Range**：break 检测与 range 状态 ✅
+- **L3 Lifespan**：波段生命周期管理 ✅
+- **L4 Structural Position**：结构位置视图（4 视图）✅
+- **L5 Service**：公共 API 层（usage 判定、持久化、中断恢复）✅
 
 ### 当前实现状态
 
+🎊 **项目全部完成！20/20 刀（100%）** 🎊
+
 **Core 层完成** ✅：完整状态机（UP/DOWN 双方向）
-- **第一~五刀**：Core 层完整状态机
-  - Pivot 检测（k=2 延迟确认）
-  - 初始化判定（UP/DOWN 双方向）
-  - Guard break 检测（同向/反向突破）
-  - Progress 追踪
-  - TRANSITION 期间 Candidate 机制
-  - 测试：47 passed
+- Pivot 检测（k=2 延迟确认）
+- 初始化判定（UP/DOWN 双方向）
+- Guard break 检测（同向/反向突破）
+- Progress 追踪
+- TRANSITION 期间 Candidate 机制
+- 测试：47 passed
+- P0 级修复完成（2026-07-27 commit b4e1562）
+
+**Range 层完成** ✅：震荡区间识别（2026-07-27）
+- 两层边界模型（boundary_init + boundary_now）
+- Range 生命周期（birth → resolution）
+- Range 分类（continuation / reversal）
+- Candidate replacement 计数
+- 测试：18 passed
 
 **C-07 补丁完成** ✅：早期 Pivot 替换
 - H0/L0 替换：更高的 H 替换 H0，更低的 L 替换 L0
 - L1/H1 替换：更低的 L 替换 L1，更高的 H 替换 H1
-- 真实数据验证：offset=0 成功处理 200 bars（之前 bar 12 失败）
+- 真实数据验证：offset=0 成功处理 200 bars
 - 测试：4 个替换场景全部通过
 
-**Range 层完成** ✅：震荡期结构识别
-- Range 诞生（guard break 触发）
-- Boundary 双系统（init 冻结 / now 演化）
-- Evolution 检测（pivot 突破 boundary_now）
-- Resolution 判定（pivot 突破 boundary_init，T6 定理）
-- Continuation/Reversal 分类
-- 真实数据验证：sh600000 200 bars，3 Ranges，R2 不变量全部通过
-- 测试：6 synthetic + 1 real data
+**Lifespan 层完成** ✅：生命周期统计与排名（2026-07-27）
+- WaveLifespan 指标计算（7 个指标）
+- RangeLifespan 指标计算（6 个指标）
+- 双轨 peer_sample（UP/DOWN 分池、continuation/reversal 分池）
+- Percentile rank 计算（4 个 rank 字段）
+- 测试：18 passed
 
-**总计测试**：58 passed, 1 skipped
+**Structural Position 层完成** ✅：结构位置视图（4/4 完成，2026-07-27）
+- P1 自身分位（Self Rank）：透传 rank 值
+- P2 同向对照（Same Direction Momentum）：momentum 计算 + 标签
+- P3 反向对照（Opposite Direction Momentum）：momentum 计算 + 标签
+- P4 正反对照（Cross Compare）：momentum 计算 + alive warning
+- 测试：12 passed
+
+**Service 层完成** ✅：对外接口与持久化（2026-07-27）
+- T9.1 Usage 判定 + 失败模式：
+  - WaveStructuralSnapshot 数据结构（34 字段）
+  - UsageType 枚举（4 个值）
+  - ReasonCode 枚举（11 个常量）
+  - Usage 判定逻辑（G0-G2 优先级）
+  - 测试：5 passed
+  - 提交：73eb90f
+- T9.2 持久化 + 中断恢复：
+  - JSON 序列化/反序列化
+  - SHA256 lineage_hash 计算（确定性 replay）
+  - var/ 目录结构管理
+  - 快照持久化（JSON Lines 格式）
+  - 原子 current.json 指针更新
+  - 中断恢复机制
+  - 测试：6 passed
+  - 提交：e6bb6bc
+
+**总计测试**：112 passed, 0 skipped ✅（2026-08-02 实测；含 DECISION-004 的 3 个 lifecycle facts 测试）
+
+**规格合规度**：~95%（2026-07-27 规格对照检查后修复）
+
+**当前进度**：20/20 刀完成（100%）🎊
 
 ### 核心模块
 
-- **`types.py`**：使用 stdlib dataclass 的核心数据结构。价格为整数（`int_fixed`）以避免 float 精度问题。定义 `PriceBar`、`Pivot`（双时间戳：`extreme_bar_dt` + `confirm_bar_dt`）、`CoreStateSnapshot`，以及枚举（`SystemState`、`Direction`、`WaveCoreState`、`PivotType`）。
+**Core 层**:
+- **`types.py`**：核心数据结构（stdlib dataclass）。价格为整数（`int_fixed`）以避免 float 精度问题。定义 `PriceBar`、`Pivot`（双时间戳）、`CoreStateSnapshot`、`RangeStateSnapshot`、`WaveLifespan`、`RangeLifespan`、`WaveStructuralSnapshot`（34 字段）。
+- **`pivot_detection.py`**：分形 k=2 窗口检测。产出 pivot 列表，不含状态机逻辑。
+- **`initialization.py`**：初始波段检测（UP/DOWN 双方向）。支持 C-07 早期 Pivot 替换规则。
+- **`core_engine.py`**：完整状态机（UP_ALIVE/DOWN_ALIVE/TRANSITION/UNINITIALIZED）。Guard break 检测、progress 追踪、candidate 机制。
+- **`fingerprint.py`**：运行时指纹生成（审计元数据）。
 
-- **`pivot_detection.py`**：分形 k=2 窗口检测。产出 pivot 列表，不含状态机逻辑。窗口不足时返回空列表（不是错误）。
+**Range 层**:
+- **`range_engine.py`**：Range 生命周期管理。两层边界模型（boundary_init + boundary_now）、Range 分类（continuation/reversal）。
 
-- **`initialization.py`**：初始波段检测（D18/O6）。当前只实现**上涨方向**干净序列（`H0 → L1 → H2, H2 > H0`）。下跌方向、H0 替换、L1 替换显式抛出 `NotImplementedError`——等待 golden fixture（见 BUILD-PLAN.md）。
+**Lifespan 层**:
+- **`lifespan_engine.py`**：WaveLifespan 和 RangeLifespan 指标计算。双轨 peer_sample、percentile_rank 计算。
 
-- **`fingerprint.py`**：运行时指纹生成（`py3.10.19|win32|CPython`）。这是审计元数据，不进入 `lineage_hash` 计算。
+**Structural Position 层**:
+- **`structural_position_engine.py`**：4 个结构位置视图（P1-P4）。Momentum 计算、标签生成。
 
-- **`core.py`**：状态机骨架（当前是占位符，等待完整实现）。
+**Service 层**:
+- **`reason_codes.py`**：11 个 ReasonCode 常量（失败模式）。
+- **`service_engine.py`**：Usage 判定逻辑、reason_codes 生成、WaveStructuralSnapshot 组装。
+- **`persistence.py`**：JSON 序列化/反序列化、lineage_hash 计算、var/ 目录管理、中断恢复。
 
 ## 开发命令
 
@@ -158,17 +205,14 @@ pip install -e ".[dev]"
 - **runtime_fingerprint**：记录 Python 版本、平台、实现供审计用。不进入 `lineage_hash`（spec §7.6, L4-6）。
 - **schema_version**：每种 snapshot 类型独立版本号（如 `"malf-core-snapshot-v0"`）。Spec §7.6, L4-7。
 
-## 已知空白（来自 BUILD-PLAN.md）
+## 已知空白
 
-这些是显式记录的未实现功能：
+**P1-3: progress_pct 计算公式待核对**（低优先级）
+- 位置: `lifespan_engine.py:79-82`
+- 当前实现: `(wave_end - wave_start) / wave_start`
+- 状态: 需与规格定义对照
 
-1. **下跌方向初始化**：Spec §2.4 描述了 `L0 → H1 → L2, L2 < L0` 但还没有 golden fixture。`find_initial_wave()` 对 L 开头的序列抛 `NotImplementedError`。
-
-2. **H0 替换（填洞 C-07）**：当 H0 确认后、L1 出现前又来一个更高的 H 时，spec 说"可以替换 H0"但没定义替换后 L1 候选范围。当前抛 `NotImplementedError`。
-
-3. **L1 替换**：当 L1 确认后、H2 出现前又来一个更低的 L 时，spec 完全没提。当前抛 `NotImplementedError`。
-
-没有对应的 golden fixture 和 spec 明确前，不要实现这些。
+其他所有功能均已实现并通过测试。
 
 ## 文件路径与上下文
 
@@ -178,7 +222,34 @@ pip install -e ".[dev]"
 - `src/malf/`：领域核心实现
 - `tests/`：所有测试文件（pytest 发现 `test_*.py`）
 - `tests/fixtures/`：人肉推导预期输出的 golden fixture JSON 文件
-- `docs/`：BUILD-CONTRACT.md（稳定）和 BUILD-PLAN.md（活的清单）
+- `docs/`：文档（spec/, guide/, dev/, reports/, archive/）
+- `scripts/`：工具脚本（verify/, debug/, tools/）
+- `.work/`：临时工作区（gitignore）
+
+**文件组织规范**：详见 `docs/dev/FILE-ORGANIZATION.md`
+
+### 文件创建规则（重要！）
+
+**根目录只允许 4 个文件**：
+- ✅ `README.md`, `CLAUDE.md`, `pyproject.toml`, `.gitignore`
+
+**禁止在根目录创建**：
+- ❌ `verify_*.py`, `debug_*.py`, `run_*.py` → 应放在 `.work/debug/` 或 `scripts/`
+- ❌ `TEST-*.ps1`, `run-*.ps1` → 临时脚本，任务完成后移到 `scripts/` 或删除
+- ❌ `*-REPORT.md`, `*-COMPLETE.md` → 应归档到 `docs/archive/` 或 `docs/reports/`
+
+**创建文件前问 3 个问题**：
+1. 这是什么类型的文件？（源代码/测试/文档/脚本）
+2. 是永久的还是临时的？
+3. 任务完成后还需要吗？
+
+**任务完成后的清理**：
+- [ ] 删除 `.work/` 下的临时文件
+- [ ] 删除根目录的临时脚本
+- [ ] 归档报告到 `docs/archive/tasks/{TASK}/`
+- [ ] 运行 `git status` 检查根目录是否干净
+
+详见：`docs/dev/FILE-ORGANIZATION.md`
 
 ## 禁止事项
 

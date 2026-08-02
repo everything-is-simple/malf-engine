@@ -1,51 +1,124 @@
 {
   "fixture_id": "t3_same_direction_break_down",
   "purpose": "第三刀：down_alive 期间 guard break（HL break）→ transition",
-  "spec_refs": ["Core §2", "v1.4 T4"],
+  "spec_refs": [
+    "Core §2",
+    "v1.4 T4"
+  ],
   "params": {
     "k": 2,
     "pivot_detection_rule_version": "fractal-k2-v1",
     "price_policy": "int_fixed"
   },
   "derivation_note": "人肉推导：L0@bar3(98) → H1@bar4(106) → L2@bar6(90<98) 进入 down_alive，guard=106。Bar9: close=108 > guard=106 触发 HL break → transition。前3根bar为窗口填充（k=2）。",
-
   "input_bars": [
-    {"idx": 0, "bar_dt": "d00", "open": 102, "high": 104, "low": 101, "close": 103},
-    {"idx": 1, "bar_dt": "d01", "open": 103, "high": 105, "low": 102, "close": 104},
-    {"idx": 2, "bar_dt": "d02", "open": 104, "high": 104, "low": 100, "close": 102},
-    {"idx": 3, "bar_dt": "d03", "open": 102, "high": 102, "low": 98, "close": 101},
-    {"idx": 4, "bar_dt": "d04", "open": 101, "high": 108, "low": 101, "close": 105},
-    {"idx": 5, "bar_dt": "d05", "open": 105, "high": 105, "low": 100, "close": 101},
-    {"idx": 6, "bar_dt": "d06", "open": 101, "high": 101, "low": 90, "close": 92},
-    {"idx": 7, "bar_dt": "d07", "open": 92, "high": 100, "low": 94, "close": 96},
-    {"idx": 8, "bar_dt": "d08", "open": 96, "high": 101, "low": 95, "close": 98},
-    {"idx": 9, "bar_dt": "d09", "open": 98, "high": 110, "low": 104, "close": 110}
+    {
+      "idx": 0,
+      "bar_dt": "d00",
+      "open": 102,
+      "high": 104,
+      "low": 101,
+      "close": 103
+    },
+    {
+      "idx": 1,
+      "bar_dt": "d01",
+      "open": 103,
+      "high": 105,
+      "low": 102,
+      "close": 104
+    },
+    {
+      "idx": 2,
+      "bar_dt": "d02",
+      "open": 104,
+      "high": 104,
+      "low": 100,
+      "close": 102
+    },
+    {
+      "idx": 3,
+      "bar_dt": "d03",
+      "open": 102,
+      "high": 102,
+      "low": 98,
+      "close": 101
+    },
+    {
+      "idx": 4,
+      "bar_dt": "d04",
+      "open": 101,
+      "high": 108,
+      "low": 101,
+      "close": 105
+    },
+    {
+      "idx": 5,
+      "bar_dt": "d05",
+      "open": 105,
+      "high": 105,
+      "low": 100,
+      "close": 101
+    },
+    {
+      "idx": 6,
+      "bar_dt": "d06",
+      "open": 101,
+      "high": 101,
+      "low": 90,
+      "close": 92
+    },
+    {
+      "idx": 7,
+      "bar_dt": "d07",
+      "open": 92,
+      "high": 100,
+      "low": 94,
+      "close": 96
+    },
+    {
+      "idx": 8,
+      "bar_dt": "d08",
+      "open": 96,
+      "high": 101,
+      "low": 95,
+      "close": 98
+    },
+    {
+      "idx": 9,
+      "bar_dt": "d09",
+      "open": 98,
+      "high": 110,
+      "low": 104,
+      "close": 110
+    }
   ],
-
   "expected_pivots": [
     {
       "pivot_type": "L",
       "label": "L0",
       "price": 98,
       "extreme_bar_dt": "d03",
-      "confirm_bar_dt": "d05"
+      "confirm_bar_dt": "d05",
+      "confirm_price": 98
     },
     {
       "pivot_type": "H",
       "label": "H1",
       "price": 108,
       "extreme_bar_dt": "d04",
-      "confirm_bar_dt": "d06"
+      "confirm_bar_dt": "d06",
+      "confirm_price": 108
     },
     {
       "pivot_type": "L",
       "label": "L2",
       "price": 90,
       "extreme_bar_dt": "d06",
-      "confirm_bar_dt": "d08"
+      "confirm_bar_dt": "d08",
+      "confirm_price": 90
     }
   ],
-
   "expected_snapshots": [
     {
       "bar_dt": "d00",

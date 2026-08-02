@@ -1,0 +1,174 @@
+{
+  "description": "T7.1 WaveLifespan 指标计算 - UP wave 终止后统计",
+  "scenario": "一个完整的 UP wave 从初始化到 alive，然后 LH break 终止，计算 WaveLifespan 指标",
+  "human_reasoning": {
+    "wave_structure": "H0(110) → L1(99) → H2(120) 确认 UP，guard=L1(99)",
+    "alive_phase": "H2 确认后进入 UP_ALIVE，progress 追踪到 H_progress(122)",
+    "termination": "bar_12 low=97 < guard=99 触发 LH break，wave terminated",
+    "lifespan_indicators": {
+      "span_bars": "从 H2 confirmation bar 到 break bar，共计算",
+      "price_range": "H_progress(122) - wave_start(L1=99) = 23",
+      "progress_pct": "(H_progress(122)-H2(120))/(H_progress(122)-guard(99)) = 2/23",
+      "new_count": "alive 期间新确认 pivot 数量（HH/LL）",
+      "no_new_span": "最后一个新 pivot 到 break 的 bar 数"
+    }
+  },
+  "input_bars": [
+    {
+      "symbol": "TEST",
+      "timeframe": "1D",
+      "bar_dt": "2024-01-01",
+      "open": 100,
+      "high": 105,
+      "low": 95,
+      "close": 100,
+      "note": "窗口填充 bar 1"
+    },
+    {
+      "symbol": "TEST",
+      "timeframe": "1D",
+      "bar_dt": "2024-01-02",
+      "open": 100,
+      "high": 105,
+      "low": 95,
+      "close": 102,
+      "note": "窗口填充 bar 2"
+    },
+    {
+      "symbol": "TEST",
+      "timeframe": "1D",
+      "bar_dt": "2024-01-03",
+      "open": 102,
+      "high": 110,
+      "low": 98,
+      "close": 108,
+      "note": "H0 extreme"
+    },
+    {
+      "symbol": "TEST",
+      "timeframe": "1D",
+      "bar_dt": "2024-01-04",
+      "open": 108,
+      "high": 109,
+      "low": 102,
+      "close": 105,
+      "note": "确认 H0=110"
+    },
+    {
+      "symbol": "TEST",
+      "timeframe": "1D",
+      "bar_dt": "2024-01-05",
+      "open": 105,
+      "high": 107,
+      "low": 99,
+      "close": 101,
+      "note": "L1 extreme"
+    },
+    {
+      "symbol": "TEST",
+      "timeframe": "1D",
+      "bar_dt": "2024-01-06",
+      "open": 101,
+      "high": 106,
+      "low": 100,
+      "close": 103,
+      "note": "确认 L1=99"
+    },
+    {
+      "symbol": "TEST",
+      "timeframe": "1D",
+      "bar_dt": "2024-01-07",
+      "open": 103,
+      "high": 120,
+      "low": 102,
+      "close": 118,
+      "note": "H2 extreme=120 > H0=110"
+    },
+    {
+      "symbol": "TEST",
+      "timeframe": "1D",
+      "bar_dt": "2024-01-08",
+      "open": 118,
+      "high": 119,
+      "low": 115,
+      "close": 117,
+      "note": "确认 H2=120 → UP_ALIVE, guard=L1=99"
+    },
+    {
+      "symbol": "TEST",
+      "timeframe": "1D",
+      "bar_dt": "2024-01-09",
+      "open": 117,
+      "high": 122,
+      "low": 114,
+      "close": 120,
+      "note": "HH extreme=122 > H2=120, progress 更新"
+    },
+    {
+      "symbol": "TEST",
+      "timeframe": "1D",
+      "bar_dt": "2024-01-10",
+      "open": 120,
+      "high": 121,
+      "low": 116,
+      "close": 118,
+      "note": "确认 HH=122（新 pivot）"
+    },
+    {
+      "symbol": "TEST",
+      "timeframe": "1D",
+      "bar_dt": "2024-01-11",
+      "open": 118,
+      "high": 119,
+      "low": 110,
+      "close": 115,
+      "note": "alive 持续"
+    },
+    {
+      "symbol": "TEST",
+      "timeframe": "1D",
+      "bar_dt": "2024-01-12",
+      "open": 115,
+      "high": 117,
+      "low": 97,
+      "close": 98,
+      "note": "low=97 < guard=99 → LH break, wave terminated"
+    }
+  ],
+  "expected_wave_lifespan": {
+    "wave_id": "TEST_1D_w_1",
+    "direction": "UP",
+    "wave_start_price": 99,
+    "wave_end_price": 122,
+    "span_bars": 5,
+    "span_bars_reasoning": "从 H2 confirmation bar(2024-01-08) 到 break bar(2024-01-12)，共 5 bars",
+    "price_range": 23,
+    "price_range_reasoning": "progress_extreme(122) - wave_start(99) = 23",
+    "progress_pct": 0.086957,
+    "progress_pct_reasoning": "(122 - 120) / (122 - 99) = 2 / 23 = 0.0869565...",
+    "primitive_count": 3,
+    "primitive_count_reasoning": "H0, L1, H2（初始化 primitive）",
+    "pivot_count": 4,
+    "pivot_count_reasoning": "H0(110), L1(99), H2(120), HH(122)",
+    "new_count": 1,
+    "new_count_reasoning": "alive 期间新确认 pivot: HH(122) 1 个",
+    "no_new_span": 2,
+    "no_new_span_reasoning": "最后一个新 pivot 确认 bar(2024-01-10) 到 break bar(2024-01-12)，共 2 bars",
+    "first_pivot_price": 120,
+    "guard_price": 99
+  },
+  "test_assertion": {
+    "at_bar": "2024-01-12",
+    "wave_terminated": true,
+    "lifespan_calculated": true,
+    "check_fields": [
+      "wave_id",
+      "direction",
+      "span_bars",
+      "price_range",
+      "progress_pct",
+      "new_count",
+      "no_new_span"
+    ]
+  }
+}

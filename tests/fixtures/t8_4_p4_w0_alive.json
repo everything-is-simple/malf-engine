@@ -1,0 +1,55 @@
+{
+  "description": "T8.4 P4 正反对照 - W0 为 alive（warning = True）",
+  "scenario": "当前 wave 为 alive，rank 不稳定，cross_alive_warning = True",
+  "input": {
+    "current_wave": {
+      "wave_id": "TEST_1min_w_3",
+      "symbol": "TEST",
+      "timeframe": "1min",
+      "direction": "down",
+      "wave_start_bar_dt": "2026-01-01T09:30:00",
+      "wave_end_bar_dt": "2026-01-01T09:45:00",
+      "span_bars": 15,
+      "wave_start_price": 10000,
+      "wave_end_price": 9700,
+      "price_range": 300,
+      "progress_pct": -0.03,
+      "primitive_count": 3,
+      "pivot_count": 6,
+      "new_count": 3,
+      "no_new_span": 3,
+      "span_rank": 0.50,
+      "range_rank": 0.55,
+      "stagnation_rank": 0.48,
+      "progress_rank": 0.45
+    },
+    "w_minus_1": {
+      "wave_id": "TEST_1min_w_2",
+      "direction": "up",
+      "span_rank": 0.60,
+      "range_rank": 0.65,
+      "stagnation_rank": 0.58,
+      "wave_end_bar_dt": "2026-01-01T09:25:00"
+    },
+    "current_wave_is_alive": true
+  },
+  "expected_output": {
+    "p4_cross_compare": {
+      "cross_span_momentum": -0.10,
+      "cross_range_momentum": -0.10,
+      "cross_stagnation_momentum": -0.10,
+      "cross_alive_warning": true
+    }
+  },
+  "calculation": {
+    "w_minus_1": "w_2 (UP, span=0.60)",
+    "span_momentum": "0.50 - 0.60 = -0.10",
+    "range_momentum": "0.55 - 0.65 = -0.10",
+    "stagnation_momentum": "0.48 - 0.58 = -0.10",
+    "cross_alive_warning": "W0 为 alive → True"
+  },
+  "verification": {
+    "invariant": "P4 不变量：cross_alive_warning 必须真实反映当前 wave 的 alive 状态",
+    "check": "W0 为 alive，warning = True，提示下游消费者 P4 信噪比低"
+  }
+}

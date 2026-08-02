@@ -53,6 +53,7 @@ def detect_pivots(bars: Sequence[PriceBar], k: int) -> List[Pivot]:
                     price=bars[i].high,
                     extreme_bar_dt=bars[i].bar_dt,
                     confirm_bar_dt=confirm_bar.bar_dt,
+                    confirm_price=confirm_bar.close,  # 确认 bar 的 close（规格 D2）
                 )
             )
         if is_low:
@@ -62,6 +63,7 @@ def detect_pivots(bars: Sequence[PriceBar], k: int) -> List[Pivot]:
                     price=bars[i].low,
                     extreme_bar_dt=bars[i].bar_dt,
                     confirm_bar_dt=confirm_bar.bar_dt,
+                    confirm_price=confirm_bar.close,  # 确认 bar 的 close（规格 D2）
                 )
             )
 

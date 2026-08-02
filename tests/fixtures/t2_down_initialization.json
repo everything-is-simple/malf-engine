@@ -24,9 +24,9 @@
   ],
 
   "expected_pivots": [
-    {"pivot_type": "L", "label": "L0", "price": 100, "extreme_bar_dt": "2024-01-01T09:00:00", "confirm_bar_dt": "2024-01-01T09:10:00"},
-    {"pivot_type": "H", "label": "H1", "price": 115, "extreme_bar_dt": "2024-01-01T09:15:00", "confirm_bar_dt": "2024-01-01T09:25:00"},
-    {"pivot_type": "L", "label": "L2", "price": 95, "extreme_bar_dt": "2024-01-01T09:25:00", "confirm_bar_dt": "2024-01-01T09:35:00"}
+    {"pivot_type": "L", "label": "L0", "price": 100, "extreme_bar_dt": "2024-01-01T09:00:00", "confirm_bar_dt": "2024-01-01T09:10:00", "confirm_price": 111},
+    {"pivot_type": "H", "label": "H1", "price": 115, "extreme_bar_dt": "2024-01-01T09:15:00", "confirm_bar_dt": "2024-01-01T09:25:00", "confirm_price": 96},
+    {"pivot_type": "L", "label": "L2", "price": 95, "extreme_bar_dt": "2024-01-01T09:25:00", "confirm_bar_dt": "2024-01-01T09:35:00", "confirm_price": 101}
   ],
 
   "expected_snapshots": [

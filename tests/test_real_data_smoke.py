@@ -21,12 +21,33 @@ from __future__ import annotations
 
 import struct
 from pathlib import Path
+import os
 
 from malf.core_engine import MALFCoreEngine
 from malf.initialization import find_initial_wave
 from malf.pivot_detection import detect_pivots
 from malf.types import PriceBar, SystemState
 
+
+
+def _tdx_file(symbol: str = "sh600000") -> Path:
+    """Resolve the repository-authoritative TDX root without VM-specific paths."""
+    configured = os.environ.get("MALF_TDX_ROOT")
+    candidates = []
+    if configured:
+        root = Path(configured)
+        candidates.append(root / "vipdoc" / "sh" / "lday" / f"{symbol}.day")
+        candidates.append(root / "sh" / "lday" / f"{symbol}.day")
+    candidates.extend(
+        [
+            Path(f"Z:/new_tdx64/vipdoc/sh/lday/{symbol}.day"),
+            Path(f"I:/new_tdx64/vipdoc/sh/lday/{symbol}.day"),
+        ]
+    )
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return candidates[0]
 
 def _read_tdx_day(path: Path, offset: int = 0, limit: int = 200) -> list[PriceBar]:
     """读取 TDX .day 文件的 [offset, offset+limit) 根 bar（用于冒烟测试，不需要全部数据）。
@@ -76,7 +97,7 @@ def test_sh600000_first_200_bars_no_crash():
 
     第二刀更新：验证 down 方向初始化也能正常工作（第一刀时 down 会抛 NotImplementedError）。
     """
-    tdx_file = Path("I:/new_tdx64/vipdoc/sh/lday/sh600000.day")
+    tdx_file = _tdx_file("sh600000")
     if not tdx_file.exists():
         # 在 Windows 机器上路径不同，跳过（这是 VM 专属测试）
         import pytest
@@ -119,7 +140,7 @@ def test_sh600000_with_core_engine_guard_break():
     - 能触发 guard break → transition（或不触发，取决于实际序列）
     - transition 后抛出预期的 NotImplementedError（active candidate 演化未实现）
     """
-    tdx_file = Path("I:/new_tdx64/vipdoc/sh/lday/sh600000.day")
+    tdx_file = _tdx_file("sh600000")
     if not tdx_file.exists():
         import pytest
         pytest.skip(f"TDX file not found: {tdx_file}")
@@ -188,7 +209,7 @@ def test_sh600000_range_layer_smoke():
 
     注：使用 offset=100 跳过早期存在 L0 替换场景的数据。
     """
-    tdx_file = Path("I:/new_tdx64/vipdoc/sh/lday/sh600000.day")
+    tdx_file = _tdx_file("sh600000")
     if not tdx_file.exists():
         import pytest
         pytest.skip(f"TDX file not found: {tdx_file}")

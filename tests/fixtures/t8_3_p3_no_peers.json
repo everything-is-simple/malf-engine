@@ -1,0 +1,62 @@
+{
+  "description": "T8.3 P3 反向对照 - 无反向波",
+  "scenario": "当前 UP wave，历史只有 UP waves，所有 momentum 为 None",
+  "input": {
+    "current_wave": {
+      "wave_id": "TEST_1min_w_4",
+      "symbol": "TEST",
+      "timeframe": "1min",
+      "direction": "up",
+      "wave_start_bar_dt": "2026-01-01T09:30:00",
+      "wave_end_bar_dt": "2026-01-01T09:45:00",
+      "span_bars": 15,
+      "wave_start_price": 10000,
+      "wave_end_price": 10300,
+      "price_range": 300,
+      "progress_pct": 0.03,
+      "primitive_count": 3,
+      "pivot_count": 6,
+      "new_count": 3,
+      "no_new_span": 3,
+      "span_rank": 0.60,
+      "range_rank": 0.65,
+      "stagnation_rank": 0.55,
+      "progress_rank": 0.50
+    },
+    "terminated_waves": [
+      {
+        "wave_id": "TEST_1min_w_3",
+        "direction": "up",
+        "span_rank": 0.55,
+        "range_rank": 0.60,
+        "stagnation_rank": 0.52,
+        "wave_end_bar_dt": "2026-01-01T09:25:00"
+      },
+      {
+        "wave_id": "TEST_1min_w_2",
+        "direction": "up",
+        "span_rank": 0.50,
+        "range_rank": 0.52,
+        "stagnation_rank": 0.48,
+        "wave_end_bar_dt": "2026-01-01T09:10:00"
+      }
+    ]
+  },
+  "expected_output": {
+    "p3_cross_dir_momentum": {
+      "cross_dir_span_momentum": null,
+      "cross_dir_range_momentum": null,
+      "cross_dir_stagnation_momentum": null,
+      "cross_dir_label": null
+    }
+  },
+  "calculation": {
+    "cross_dir_peers": [],
+    "note": "最近 3 个已终止波全部是同向波（UP），无反向波（DOWN）",
+    "momentum": "peer_waves 为空 → 所有 momentum 为 None"
+  },
+  "verification": {
+    "invariant": "P5 不变量：peer_waves 为空时，不 fallback、不补零、不估计",
+    "check": "所有字段为 None"
+  }
+}

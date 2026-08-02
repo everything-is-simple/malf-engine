@@ -12,7 +12,8 @@ MALF v2.1 结构计算核心。吃 OHLC，吐 `CoreStateSnapshot`（包含 Core 
 - Progress 追踪
 - TRANSITION 期间 Candidate 机制
 - **C-07 规则**：早期 pivot 替换（H0/L0/L1/H1）✅
-- 测试：51 passed
+- 测试：47 passed
+- ⚠️ **已知问题**（2026-07-27）：2 个 P0 级缺陷待修复
 
 ### Range 层（✅ 已完成）
 - Range 诞生（guard break 触发）
@@ -21,13 +22,23 @@ MALF v2.1 结构计算核心。吃 OHLC，吐 `CoreStateSnapshot`（包含 Core 
 - Continuation/Reversal 分类
 - 测试：6 synthetic + 1 real data
 
-**总计测试**：58 passed, 1 skipped（真实数据在 CI 上跳过）
+### Lifespan 层（✅ 已完成）
+- WaveLifespan 指标计算（7 个指标）
+- RangeLifespan 指标计算（6 个指标）
+- 双轨 peer_sample + percentile rank
+- 测试：77 passed
 
-**真实数据验证**：
-- 数据源：上证 600000（浦发银行）200 bars
-- 验证结果：3 Ranges，67% continuation，33% reversal
-- R2 不变量：78 个 TRANSITION 快照全部通过
-- 结论：生产就绪 ✅
+### Structural Position 层（✅ 已完成）
+- P1-P4 四个视图全部实现
+- Momentum 计算 + 标签生成
+- 测试：12 passed
+
+**总计测试**：89 passed, 2 skipped
+
+**规格合规度**（2026-07-27 检查）：**85%** (基本合规)
+- 数据结构：92% ✅
+- 算法逻辑：88% ⚠️（2 个 P0 缺陷待修复）
+- 不变量覆盖：94% ✅
 
 ## 文档（一个萝卜一个坑）
 
@@ -60,15 +71,17 @@ pip install -e ".[dev]"
 pytest
 ```
 
-**当前进度**：Core + Range 层已完成 - **58 passed, 1 skipped**
+**当前进度**：14/20 刀完成（70%）- Core + Range + Lifespan + Structural Position 层已完成
 
-| 刀数 | 目标 | 状态 | 测试 |
+**⚠️ 重要提示**（2026-07-27）：规格对照检查发现 2 个 P0 级缺陷，需立即修复后再投入生产使用。详见 `docs/dev/BUILD-PLAN.md`。
+
+| 层级 | 状态 | 测试 | 备注 |
 |------|------|------|------|
-| 第一~五刀 | Core 层完整状态机 | ✅ 完成 | 47 passed |
-| **第六刀** | **Range 层** | **✅ 完成** | **6 synthetic + 1 real data** |
-| **C-07** | **早期 pivot 替换** | **✅ 完成** | **4 replacement tests** |
-
-详见 `docs/BUILD-PLAN.md`。
+| Core | ✅ 完成 | 47 passed | ⚠️ 2个P0缺陷待修复 |
+| Range | ✅ 完成 | 6 + 1 real | ✅ 真实数据验证通过 |
+| Lifespan | ✅ 完成 | 77 passed | ⚠️ 1个P1待核对 |
+| Structural Position | ✅ 完成 | 12 passed | ✅ 合规 |
+| Service | ⏸ 待做 | - | 预计3-5天 |
 
 ## Quick Start
 
