@@ -2,6 +2,8 @@
 
 MALF v2.1 结构计算核心。吃 OHLC，吐 `CoreStateSnapshot`（包含 Core + Range 层状态）。确定性、单遍、零外部依赖。
 
+> **当前状态（2026-08-04）**：五层领域模块可运行，`112 passed, 0 skip`（实跑）；已集成于 `Z:\ai-malf-riskbench-components\malf-engine`，T02 的 `MALFDriver` 已将五层串好，生产库 14005 行快照。下方“实现状态”为历史开发记录（2026-07-27 时点），各层分项测试数为当时数值。
+
 实验目录 `RB-FX-008`，独立 venv，自跑 pytest。五层 trial-passed + replay 通过后搬主仓库。
 
 ## 实现状态
@@ -33,7 +35,7 @@ MALF v2.1 结构计算核心。吃 OHLC，吐 `CoreStateSnapshot`（包含 Core 
 - Momentum 计算 + 标签生成
 - 测试：12 passed
 
-**总计测试**：89 passed, 2 skipped
+**总计测试**（当前，2026-08-04 实跑）：**112 passed, 0 skip**（历史开发记录为 89 passed, 2 skipped）
 
 **规格合规度**（2026-07-27 检查）：**85%** (基本合规)
 - 数据结构：92% ✅
