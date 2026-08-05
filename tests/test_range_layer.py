@@ -18,6 +18,8 @@ import json
 from pathlib import Path
 from typing import List
 
+import pytest
+
 from malf.core_engine import MALFCoreEngine
 from malf.types import PriceBar, SystemState
 
@@ -101,8 +103,8 @@ def test_r1_continuation_down_break_down_resolve():
     assert resolution_snapshot.range_resolution_bar_dt == "d20"
     assert resolution_snapshot.range_resolution_type == "continuation"
     assert resolution_snapshot.range_resolution_distance == -11  # 85 - 96 = -11
-    assert resolution_snapshot.range_boundary_now_low == 90  # resolution 前的已演化边界
-    assert resolution_snapshot.range_evolution_count == 1  # 仅 break-bar L@90 演化；resolution pivot 不先回写
+    assert resolution_snapshot.range_boundary_now_low == 85  # T9.13 E4 撤回：确认 pivot 85 演化后 now_low=85
+    assert resolution_snapshot.range_evolution_count == 2  # 两次演化：d16(90), d20(85)
 
     # 断言 3: boundary_init 永不改变
     assert resolution_snapshot.range_boundary_init_high == 120
@@ -142,8 +144,8 @@ def test_r2_reversal_down_break_up_resolve():
     assert resolution_snapshot.range_resolution_bar_dt == "d20"
     assert resolution_snapshot.range_resolution_type == "reversal"  # 反转 break 方向
     assert resolution_snapshot.range_resolution_distance == 5  # 125 - 120 = 5（正数）
-    assert resolution_snapshot.range_boundary_now_high == 120  # resolution 前的已演化边界
-    assert resolution_snapshot.range_evolution_count == 1
+    assert resolution_snapshot.range_boundary_now_high == 125  # T9.13 E4 撤回：上边界演化
+    assert resolution_snapshot.range_evolution_count == 2  # 两次演化
 
 
 def test_r3_continuation_up_break_up_resolve():
@@ -172,8 +174,8 @@ def test_r3_continuation_up_break_up_resolve():
     assert resolution_snapshot.range_resolution_bar_dt == "d20"
     assert resolution_snapshot.range_resolution_type == "continuation"
     assert resolution_snapshot.range_resolution_distance == 10  # 120 - 110 = 10
-    assert resolution_snapshot.range_boundary_now_high == 115  # break-bar H@115 已演化；resolution H@120 不先回写
-    assert resolution_snapshot.range_evolution_count == 1
+    assert resolution_snapshot.range_boundary_now_high == 120  # T9.13 E4 撤回：对称 R1
+    assert resolution_snapshot.range_evolution_count == 2  # 两次演化
 
 
 def test_r4_reversal_up_break_down_resolve():
@@ -207,11 +209,12 @@ def test_r4_reversal_up_break_down_resolve():
     assert resolution_snapshot.range_resolution_bar_dt == "d20"
     assert resolution_snapshot.range_resolution_type == "reversal"
     assert resolution_snapshot.range_resolution_distance == -5  # 75 - 80 = -5
-    assert resolution_snapshot.range_boundary_now_low == 80  # resolution 前的已演化边界
-    assert resolution_snapshot.range_evolution_count == 1
+    assert resolution_snapshot.range_boundary_now_low == 75  # T9.13 E4 撤回
+    assert resolution_snapshot.range_evolution_count == 2
 
 
 
+@pytest.mark.skip(reason="T9.13 E4 撤回（2026-08-06 用户授权）：R5 口径（pct 恒 0 是权威 R3/R5 字面组合性质还是实现退化）留战役 2 单独裁决；正/负/零 fixture 保留为 RED 证据，裁决后恢复断言")
 def test_resolution_distance_pct_covers_positive_negative_and_zero() -> None:
     """Range §5：R5 百分比基于 resolution 前的 ``boundary_now``，可正、负、零。
 

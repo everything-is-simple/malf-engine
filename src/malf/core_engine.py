@@ -316,10 +316,10 @@ class MALFCoreEngine:
     def _advance_transition(self, bar: PriceBar, new_pivot: Pivot | None) -> None:
         """执行 Core §9 O2 的 Transition 第 5 步。
 
-        该方法同时供“已经处于 Transition”的 bar 与“本 bar 发生 guard break 后”
-        调用，保证同一确认 bar 不遗漏候选演化。Range 边界只对**未确认新波**的
-        pivot 演化：确认 pivot 先按 T6 结束 Transition，再使用结束前的
-        ``boundary_now`` 计算 Range §5 的突破百分比。
+        T9.13 撤回（2026-08-06，用户授权）：恢复 T9.11 顺序——R3 边界演化先于 T6 判定。
+        确认 pivot 先按 Range §3 演化 boundary_now，R5 百分比使用演化后的 now
+        （权威 R3/R5 字面组合下通常为 0）；R5 口径（pct 恒 0 是权威性质还是实现退化）
+        留战役 2 单独裁决。T9.13 的正/负/零 fixture 保留为 RED 证据（测试标记 skip，待裁决后恢复）。
         """
         # 持续态 Range 每根 bar 都记录当前观察时点，保证快照时间与 Core 同步。
         if self._active_range_snap is not None:
@@ -328,20 +328,17 @@ class MALFCoreEngine:
         if new_pivot is None:
             return
 
-        # break bar 自身形成的极值不进入 candidate/T6；但 Range §3 要求每个
-        # 已确认 pivot 都检查边界演化，因此这里仍须更新 boundary_now。
+        # Range §3：每个已确认 pivot 都检查边界演化（含 break-bar pivot）
+        self._evolve_range_boundary(bar, new_pivot)
+
+        # C-05: break bar 自身的极值不进入 candidate/T6
         if new_pivot.extreme_bar_dt == self._break_bar_dt:
-            self._evolve_range_boundary(bar, new_pivot)
             return
 
-        # T6 必须先于 Range 边界演化：一旦当前确认 pivot 创建新波，Range 已结束，
-        # R5 应读取结束前的 boundary_now，而不是被确认 pivot 覆盖后的零距离边界。
+        # T6 双条件确认（T9.11 行为：确认 pivot 已按 R3 刷新 boundary_now）
         if self._check_new_wave_confirmation(new_pivot):
             self._enter_new_wave(new_pivot)
             return
-
-        # 非 resolution pivot 属于仍持续的 Transition，可按 Range §3 单调扩展边界。
-        self._evolve_range_boundary(bar, new_pivot)
 
         # T5/O4：未创建新波时，最新有效 pivot 成为 active candidate。
         self._update_active_candidate(new_pivot)
@@ -350,8 +347,8 @@ class MALFCoreEngine:
         """按 Range §3 更新存活 Range 的 ``boundary_now``。
 
         该方法只维护 Range 的统计边界，不修改 Core 固定的 transition boundary。
-        调用方保证 resolution pivot 已在此之前完成 T6 判定，避免将结束 pivot
-        先写入边界而扭曲 Range §5 的 ``resolution_distance_pct``。
+        T9.13 撤回（2026-08-06）：恢复 T9.11 顺序，确认 pivot 也参与 R3 演化（先演化后 T6）；
+        R5 口径留战役 2 裁决。
         """
         if self._range_boundary_now_high is None or self._range_boundary_now_low is None:
             return

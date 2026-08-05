@@ -67,8 +67,8 @@ def test_core_publishes_range_objects_and_resolution_uses_boundary_now():
     assert resolved.resolved_range is not None
     assert resolved.resolved_range.range_state is RangeState.RESOLVED
     assert resolved.resolved_range.resolution_distance == -11
-    # R5 使用 resolution 前已经形成的 boundary_now_low=90；确认 L=85 不再回写为边界。
-    assert resolved.resolved_range.resolution_distance_pct == 5 / 90
+    # T9.13 E4 撤回（2026-08-06 用户授权）：R5 用演化后 now（确认 pivot 85 已刷新边界）→ pct=0；R5 口径留战役 2 裁决
+    assert resolved.resolved_range.resolution_distance_pct == 0.0
     assert resolved.resolved_range.resolution_bar_dt == "d20"
     assert resolved.resolved_range.resolution_type.value == "continuation"
 
