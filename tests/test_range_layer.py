@@ -214,17 +214,18 @@ def test_r4_reversal_up_break_down_resolve():
 
 
 
-@pytest.mark.skip(reason="T9.13 E4 撤回（2026-08-06 用户授权）：R5 口径（pct 恒 0 是权威 R3/R5 字面组合性质还是实现退化）留战役 2 单独裁决；正/负/零 fixture 保留为 RED 证据，裁决后恢复断言")
-def test_resolution_distance_pct_covers_positive_negative_and_zero() -> None:
-    """Range §5：R5 百分比基于 resolution 前的 ``boundary_now``，可正、负、零。
+def test_resolution_distance_pct_covers_zero_negative_and_non_positive_invariant() -> None:
+    """T9.14 裁决落地（2026-08-05）：字面 R5 可达值域为 pct ≤ 0。
 
-    R1 是正值基线；R7/R8 在同一人工结构中只调整 resolution pivot 及其邻域，
-    保证 T6 仍使用冻结的 init 边界，而 R5 使用已经演化的 now 边界。
+    裁决 R5-A（字面实现）+ R5-E（fixture 恢复）：
+    - R1/R8：确认 pivot 参与 R3 演化后 now == 确认价 → pct = 0（零值特例）
+    - R7：now 已被更早 pivot 演化、确认 pivot 高于 now 但低于 init → pct 为负
+    - 正值不可达（R3 演化条件与 R5 分子同 pivot 自抵消）→ 以不可达性不变量断言：全部 resolved_range.pct ≤ 0
     """
     cases = (
-        ("R1_continuation_down_break_down_resolve", 5 / 90),
-        ("R7_resolution_distance_negative", -5 / 90),
-        ("R8_resolution_distance_zero", 0.0),
+        ("R1_continuation_down_break_down_resolve", 0.0),   # 零值：确认 pivot 刷新 now
+        ("R7_resolution_distance_negative", -5 / 90),       # 负值：now 已演化高于确认 pivot
+        ("R8_resolution_distance_zero", 0.0),               # 零值：确认 pivot == now
     )
 
     for fixture_name, expected_pct in cases:
@@ -235,8 +236,23 @@ def test_resolution_distance_pct_covers_positive_negative_and_zero() -> None:
         resolved_range = resolved_snapshot.resolved_range
 
         assert resolved_range is not None
-        assert resolved_range.boundary_now_low == 90
         assert resolved_range.resolution_distance_pct == expected_pct
+
+
+def test_resolution_distance_pct_positive_unreachable_invariant() -> None:
+    """T9.14 不可达性不变量：字面 R5 永不产生正值（权威 R3/R5 时序自引用）。
+
+    全部既有 range fixture 的 resolution_distance_pct 必须 ≤ 0；
+    若未来引擎产生正值，说明实现偏离了裁决 R5-A 的字面顺序。
+    """
+    for fixture in sorted((Path(__file__).parent / "fixtures" / "range").glob("R*.json")):
+        data = json.loads(fixture.read_text(encoding="utf-8"))
+        engine = MALFCoreEngine(k=2)
+        snapshots = [engine.on_bar(bar) for bar in bars_from_fixture(data)]
+        resolved = [s for s in snapshots if s.resolved_range is not None]
+        for s in resolved:
+            assert s.resolved_range.resolution_distance_pct is None or s.resolved_range.resolution_distance_pct <= 0, \
+                f"{fixture.name}: 字面 R5 产生正值 {s.resolved_range.resolution_distance_pct}"
 
 
 def test_r5_multi_evolution():
