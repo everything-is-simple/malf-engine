@@ -101,8 +101,8 @@ def test_r1_continuation_down_break_down_resolve():
     assert resolution_snapshot.range_resolution_bar_dt == "d20"
     assert resolution_snapshot.range_resolution_type == "continuation"
     assert resolution_snapshot.range_resolution_distance == -11  # 85 - 96 = -11
-    assert resolution_snapshot.range_boundary_now_low == 85  # 演化到 85
-    assert resolution_snapshot.range_evolution_count == 2  # 两次演化：d16(90), d20(85)
+    assert resolution_snapshot.range_boundary_now_low == 90  # resolution 前的已演化边界
+    assert resolution_snapshot.range_evolution_count == 1  # 仅 break-bar L@90 演化；resolution pivot 不先回写
 
     # 断言 3: boundary_init 永不改变
     assert resolution_snapshot.range_boundary_init_high == 120
@@ -142,8 +142,8 @@ def test_r2_reversal_down_break_up_resolve():
     assert resolution_snapshot.range_resolution_bar_dt == "d20"
     assert resolution_snapshot.range_resolution_type == "reversal"  # 反转 break 方向
     assert resolution_snapshot.range_resolution_distance == 5  # 125 - 120 = 5（正数）
-    assert resolution_snapshot.range_boundary_now_high == 125  # 上边界演化
-    assert resolution_snapshot.range_evolution_count == 2  # 两次演化
+    assert resolution_snapshot.range_boundary_now_high == 120  # resolution 前的已演化边界
+    assert resolution_snapshot.range_evolution_count == 1
 
 
 def test_r3_continuation_up_break_up_resolve():
@@ -172,8 +172,8 @@ def test_r3_continuation_up_break_up_resolve():
     assert resolution_snapshot.range_resolution_bar_dt == "d20"
     assert resolution_snapshot.range_resolution_type == "continuation"
     assert resolution_snapshot.range_resolution_distance == 10  # 120 - 110 = 10
-    assert resolution_snapshot.range_boundary_now_high == 120
-    assert resolution_snapshot.range_evolution_count == 2  # 两次演化（对称 R1）
+    assert resolution_snapshot.range_boundary_now_high == 115  # break-bar H@115 已演化；resolution H@120 不先回写
+    assert resolution_snapshot.range_evolution_count == 1
 
 
 def test_r4_reversal_up_break_down_resolve():
@@ -207,8 +207,33 @@ def test_r4_reversal_up_break_down_resolve():
     assert resolution_snapshot.range_resolution_bar_dt == "d20"
     assert resolution_snapshot.range_resolution_type == "reversal"
     assert resolution_snapshot.range_resolution_distance == -5  # 75 - 80 = -5
-    assert resolution_snapshot.range_boundary_now_low == 75
-    assert resolution_snapshot.range_evolution_count == 2
+    assert resolution_snapshot.range_boundary_now_low == 80  # resolution 前的已演化边界
+    assert resolution_snapshot.range_evolution_count == 1
+
+
+
+def test_resolution_distance_pct_covers_positive_negative_and_zero() -> None:
+    """Range §5：R5 百分比基于 resolution 前的 ``boundary_now``，可正、负、零。
+
+    R1 是正值基线；R7/R8 在同一人工结构中只调整 resolution pivot 及其邻域，
+    保证 T6 仍使用冻结的 init 边界，而 R5 使用已经演化的 now 边界。
+    """
+    cases = (
+        ("R1_continuation_down_break_down_resolve", 5 / 90),
+        ("R7_resolution_distance_negative", -5 / 90),
+        ("R8_resolution_distance_zero", 0.0),
+    )
+
+    for fixture_name, expected_pct in cases:
+        fixture = load_fixture(fixture_name)
+        engine = MALFCoreEngine(k=2)
+        snapshots = [engine.on_bar(bar) for bar in bars_from_fixture(fixture)]
+        resolved_snapshot = next(snapshot for snapshot in snapshots if snapshot.resolved_range is not None)
+        resolved_range = resolved_snapshot.resolved_range
+
+        assert resolved_range is not None
+        assert resolved_range.boundary_now_low == 90
+        assert resolved_range.resolution_distance_pct == expected_pct
 
 
 def test_r5_multi_evolution():

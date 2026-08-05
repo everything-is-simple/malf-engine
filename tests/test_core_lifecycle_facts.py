@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 from malf.core_engine import MALFCoreEngine
-from malf.types import Direction, PriceBar, RangeState, WaveCoreState
+from malf.types import Direction, PriceBar, RangeState, SystemState, WaveCoreState
 
 
 def _bars(name: str):
@@ -67,9 +67,48 @@ def test_core_publishes_range_objects_and_resolution_uses_boundary_now():
     assert resolved.resolved_range is not None
     assert resolved.resolved_range.range_state is RangeState.RESOLVED
     assert resolved.resolved_range.resolution_distance == -11
-    assert resolved.resolved_range.resolution_distance_pct == 0.0
+    # R5 使用 resolution 前已经形成的 boundary_now_low=90；确认 L=85 不再回写为边界。
+    assert resolved.resolved_range.resolution_distance_pct == 5 / 90
     assert resolved.resolved_range.resolution_bar_dt == "d20"
     assert resolved.resolved_range.resolution_type.value == "continuation"
 
     later = engine.on_bar(PriceBar("TEST", "1d", "d21", 85, 90, 84, 88))
     assert later.resolved_range is None
+
+
+def test_same_bar_confirmed_pivot_is_evolved_after_guard_break() -> None:
+    """Core §9 O2：break 进入 Transition 后，同一确认 bar 仍须完成候选演化。
+
+    d13 同时确认 d11 的 H pivot（120）且 low=90 严格穿透旧 UP wave 的
+    guard=96。Pivot 的 extreme bar 是 d11，不是 break bar d13，因此 C-05
+    不排除它；O2 第 5 步要求本 bar 立刻把它纳入 Transition。
+    """
+    source = json.loads(
+        (Path(__file__).parent / "fixtures" / "range" / "R1_continuation_down_break_down_resolve.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    bars = [
+        PriceBar(
+            "TEST",
+            "1d",
+            item["bar_dt"],
+            item["open"],
+            item["high"],
+            90 if item["bar_dt"] == "d13" else item["low"],
+            item["close"],
+        )
+        for item in source["input_bars"]
+    ]
+
+    engine = MALFCoreEngine(k=2)
+    snapshots = [engine.on_bar(bar) for bar in bars[:14]]
+    same_bar = snapshots[-1]
+
+    assert same_bar.bar_dt == "d13"
+    assert same_bar.system_state is SystemState.TRANSITION
+    assert same_bar.break_bar_dt == "d13"
+    assert same_bar.active_candidate_guard_price == 120
+    assert same_bar.active_candidate_direction is Direction.UP
+    assert same_bar.range_boundary_now_high == 120
+    assert same_bar.range_evolution_count == 1

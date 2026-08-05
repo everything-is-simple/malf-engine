@@ -272,6 +272,14 @@ class MALFCoreEngine:
                 self._active_candidate_direction = None
                 self._candidate_replacement_count = 0
 
+                # O2 第 5 步：break 已将状态切入 Transition；若本 bar 也确认了
+                # 非 break-bar 本身的 pivot，必须立刻参与 candidate/Range 演化。
+                # 不能等待下一根 bar，否则同 bar 的结构事实会被快照遗漏。
+                self._advance_transition(
+                    bar,
+                    pivots_by_confirm_dt.get(bar.bar_dt),
+                )
+
             else:
                 # D16 Progress Confirmation + D9 Guard Update（未 break 时执行；权威 O2 顺序）
                 if bar.bar_dt in pivots_by_confirm_dt:
@@ -289,47 +297,11 @@ class MALFCoreEngine:
 
         # S4: Transition 期间 active candidate 演化（第四刀）
         elif self._system_state == SystemState.TRANSITION:
-            # DECISION-004: 每根 bar 同步 active_range 的 bar_dt（持续态字段）
-            if self._active_range_snap is not None:
-                self._active_range_snap = replace(self._active_range_snap, bar_dt=bar.bar_dt)
-
-            # 检测当前 bar 是否有新确认的 pivot
-            if bar.bar_dt in pivots_by_confirm_dt:
-                new_pivot = pivots_by_confirm_dt[bar.bar_dt]
-
-                # Range boundary 演化（第六刀，R2 不变量）
-                # boundary_now 只能单调扩展：high 只能增，low 只能减
-                boundary_changed = False
-                if new_pivot.pivot_type == PivotType.H and new_pivot.price > self._range_boundary_now_high:
-                    self._range_boundary_now_high = new_pivot.price
-                    self._range_evolution_count += 1
-                    boundary_changed = True
-
-                if new_pivot.pivot_type == PivotType.L and new_pivot.price < self._range_boundary_now_low:
-                    self._range_boundary_now_low = new_pivot.price
-                    self._range_evolution_count += 1
-                    boundary_changed = True
-
-                # DECISION-004: 边界演化后同步 active_range_snap（持续态）
-                if boundary_changed and self._active_range_snap is not None:
-                    self._active_range_snap = replace(
-                        self._active_range_snap,
-                        bar_dt=bar.bar_dt,
-                        boundary_now_high=self._range_boundary_now_high,
-                        boundary_now_low=self._range_boundary_now_low,
-                        evolution_count=self._range_evolution_count,
-                    )
-
-                # C-05: break bar 自身的极值不进 candidate 逻辑
-                if new_pivot.extreme_bar_dt != self._break_bar_dt:
-                    # 先检查 new wave 确认（T6 双条件）
-                    # 必须在更新 candidate 之前检查，因为 C-02 要求 confirmation 在 active candidate 之后
-                    if self._check_new_wave_confirmation(new_pivot):
-                        # 进入 new wave
-                        self._enter_new_wave(new_pivot)
-                    else:
-                        # 未触发 new wave，更新 active candidate（O4/T5 flip-flop）
-                        self._update_active_candidate(new_pivot)
+            # 即使本 bar 没有 pivot，也要把持续态 Range 的观察时间推进到当前 bar。
+            self._advance_transition(
+                bar,
+                pivots_by_confirm_dt.get(bar.bar_dt),
+            )
 
         # 产出当前 bar 的 snapshot
         snapshot = self._make_snapshot(bar)
@@ -340,6 +312,69 @@ class MALFCoreEngine:
         self._frozen_terminated_wave = None
         self._frozen_resolved_range = None
         return snapshot
+
+    def _advance_transition(self, bar: PriceBar, new_pivot: Pivot | None) -> None:
+        """执行 Core §9 O2 的 Transition 第 5 步。
+
+        该方法同时供“已经处于 Transition”的 bar 与“本 bar 发生 guard break 后”
+        调用，保证同一确认 bar 不遗漏候选演化。Range 边界只对**未确认新波**的
+        pivot 演化：确认 pivot 先按 T6 结束 Transition，再使用结束前的
+        ``boundary_now`` 计算 Range §5 的突破百分比。
+        """
+        # 持续态 Range 每根 bar 都记录当前观察时点，保证快照时间与 Core 同步。
+        if self._active_range_snap is not None:
+            self._active_range_snap = replace(self._active_range_snap, bar_dt=bar.bar_dt)
+
+        if new_pivot is None:
+            return
+
+        # break bar 自身形成的极值不进入 candidate/T6；但 Range §3 要求每个
+        # 已确认 pivot 都检查边界演化，因此这里仍须更新 boundary_now。
+        if new_pivot.extreme_bar_dt == self._break_bar_dt:
+            self._evolve_range_boundary(bar, new_pivot)
+            return
+
+        # T6 必须先于 Range 边界演化：一旦当前确认 pivot 创建新波，Range 已结束，
+        # R5 应读取结束前的 boundary_now，而不是被确认 pivot 覆盖后的零距离边界。
+        if self._check_new_wave_confirmation(new_pivot):
+            self._enter_new_wave(new_pivot)
+            return
+
+        # 非 resolution pivot 属于仍持续的 Transition，可按 Range §3 单调扩展边界。
+        self._evolve_range_boundary(bar, new_pivot)
+
+        # T5/O4：未创建新波时，最新有效 pivot 成为 active candidate。
+        self._update_active_candidate(new_pivot)
+
+    def _evolve_range_boundary(self, bar: PriceBar, pivot: Pivot) -> None:
+        """按 Range §3 更新存活 Range 的 ``boundary_now``。
+
+        该方法只维护 Range 的统计边界，不修改 Core 固定的 transition boundary。
+        调用方保证 resolution pivot 已在此之前完成 T6 判定，避免将结束 pivot
+        先写入边界而扭曲 Range §5 的 ``resolution_distance_pct``。
+        """
+        if self._range_boundary_now_high is None or self._range_boundary_now_low is None:
+            return
+
+        boundary_changed = False
+        if pivot.pivot_type == PivotType.H and pivot.price > self._range_boundary_now_high:
+            self._range_boundary_now_high = pivot.price
+            self._range_evolution_count += 1
+            boundary_changed = True
+        elif pivot.pivot_type == PivotType.L and pivot.price < self._range_boundary_now_low:
+            self._range_boundary_now_low = pivot.price
+            self._range_evolution_count += 1
+            boundary_changed = True
+
+        # active_range 是对外持续态对象；边界变化必须与内部状态原子同步。
+        if boundary_changed and self._active_range_snap is not None:
+            self._active_range_snap = replace(
+                self._active_range_snap,
+                bar_dt=bar.bar_dt,
+                boundary_now_high=self._range_boundary_now_high,
+                boundary_now_low=self._range_boundary_now_low,
+                evolution_count=self._range_evolution_count,
+            )
 
     def _check_guard_break(self, bar: PriceBar) -> bool:
         """检查当前 bar 是否突破 guard。
@@ -542,9 +577,9 @@ class MALFCoreEngine:
         else:
             self._range_resolution_type = "reversal"  # 反转 break 方向
 
-        # 计算 resolution_distance（引擎扩展字段：绝对突破距离，用 init 边界保持区分度）
-        # 注：权威 R5 的 resolution_distance_pct 用 now 边界（下方 pct 计算），因确认 pivot 已刷新 now 边界，pct 恒 0——
-        # 这是权威 R3/R5 组合的设计特性（Range §5 "可正可负"），绝对距离字段作为统计替代保留 init 语义（T9.11 记录）
+        # 计算 resolution_distance（引擎扩展字段：绝对突破距离仍保留 init 边界）。
+        # 权威 R5 的 resolution_distance_pct 则在下方严格使用 resolution 前的
+        # boundary_now；该值可正、负或零，不能把确认 pivot 先写入边界后固定为零。
         if new_direction == Direction.UP:
             self._range_resolution_distance = confirmation_pivot.price - self._range_boundary_init_high
         else:

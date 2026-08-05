@@ -2,41 +2,188 @@
   "fixture_id": "R4_reversal_up_break_down_resolve",
   "description": "DOWN wave → 上 break → Range alive → 下突破 (reversal)",
   "purpose": "验证 R2 的对称场景（DOWN wave）",
-  "spec_refs": ["MALF v2.1 Range §6", "T6 Resolution", "C-02 Confirmation Ordering"],
+  "spec_refs": [
+    "MALF v2.1 Range §6",
+    "T6 Resolution",
+    "C-02 Confirmation Ordering"
+  ],
   "priority": "P0",
-
   "params": {
     "k": 2,
     "pivot_detection_rule_version": "fractal-k2-v1",
     "price_policy": "int_fixed"
   },
-
   "derivation_note": "R2 的对称设计。DOWN wave 初始化，上 break，但下突破（reversal）。",
-
   "input_bars": [
-    {"idx": 0,  "bar_dt": "d00", "open": 100, "high": 105, "low": 95,  "close": 98},
-    {"idx": 1,  "bar_dt": "d01", "open": 98,  "high": 103, "low": 94,  "close": 96},
-    {"idx": 2,  "bar_dt": "d02", "open": 96,  "high": 98,  "low": 90,  "close": 92},
-    {"idx": 3,  "bar_dt": "d03", "open": 92,  "high": 95,  "low": 91,  "close": 93},
-    {"idx": 4,  "bar_dt": "d04", "open": 93,  "high": 96,  "low": 92,  "close": 94},
-    {"idx": 5,  "bar_dt": "d05", "open": 94,  "high": 110, "low": 93,  "close": 108},
-    {"idx": 6,  "bar_dt": "d06", "open": 108, "high": 107, "low": 103, "close": 105},
-    {"idx": 7,  "bar_dt": "d07", "open": 105, "high": 106, "low": 102, "close": 104},
-    {"idx": 8,  "bar_dt": "d08", "open": 104, "high": 103, "low": 85,  "close": 87},
-    {"idx": 9,  "bar_dt": "d09", "open": 87,  "high": 90,  "low": 86,  "close": 88},
-    {"idx": 10, "bar_dt": "d10", "open": 88,  "high": 91,  "low": 87,  "close": 89},
-    {"idx": 11, "bar_dt": "d11", "open": 89,  "high": 88,  "low": 80,  "close": 82},
-    {"idx": 12, "bar_dt": "d12", "open": 82,  "high": 86,  "low": 81,  "close": 84},
-    {"idx": 13, "bar_dt": "d13", "open": 84,  "high": 88,  "low": 83,  "close": 86},
-    {"idx": 14, "bar_dt": "d14", "open": 86,  "high": 115, "low": 85,  "close": 113},
-    {"idx": 15, "bar_dt": "d15", "open": 113, "high": 118, "low": 112, "close": 116},
-    {"idx": 16, "bar_dt": "d16", "open": 116, "high": 115, "low": 111, "close": 113},
-    {"idx": 17, "bar_dt": "d17", "open": 113, "high": 114, "low": 109, "close": 111},
-    {"idx": 18, "bar_dt": "d18", "open": 111, "high": 110, "low": 75,  "close": 77},
-    {"idx": 19, "bar_dt": "d19", "open": 77,  "high": 81,  "low": 76,  "close": 79},
-    {"idx": 20, "bar_dt": "d20", "open": 79,  "high": 83,  "low": 78,  "close": 81}
+    {
+      "idx": 0,
+      "bar_dt": "d00",
+      "open": 100,
+      "high": 105,
+      "low": 95,
+      "close": 98
+    },
+    {
+      "idx": 1,
+      "bar_dt": "d01",
+      "open": 98,
+      "high": 103,
+      "low": 94,
+      "close": 96
+    },
+    {
+      "idx": 2,
+      "bar_dt": "d02",
+      "open": 96,
+      "high": 98,
+      "low": 90,
+      "close": 92
+    },
+    {
+      "idx": 3,
+      "bar_dt": "d03",
+      "open": 92,
+      "high": 95,
+      "low": 91,
+      "close": 93
+    },
+    {
+      "idx": 4,
+      "bar_dt": "d04",
+      "open": 93,
+      "high": 96,
+      "low": 92,
+      "close": 94
+    },
+    {
+      "idx": 5,
+      "bar_dt": "d05",
+      "open": 94,
+      "high": 110,
+      "low": 93,
+      "close": 108
+    },
+    {
+      "idx": 6,
+      "bar_dt": "d06",
+      "open": 108,
+      "high": 107,
+      "low": 103,
+      "close": 105
+    },
+    {
+      "idx": 7,
+      "bar_dt": "d07",
+      "open": 105,
+      "high": 106,
+      "low": 102,
+      "close": 104
+    },
+    {
+      "idx": 8,
+      "bar_dt": "d08",
+      "open": 104,
+      "high": 103,
+      "low": 85,
+      "close": 87
+    },
+    {
+      "idx": 9,
+      "bar_dt": "d09",
+      "open": 87,
+      "high": 90,
+      "low": 86,
+      "close": 88
+    },
+    {
+      "idx": 10,
+      "bar_dt": "d10",
+      "open": 88,
+      "high": 91,
+      "low": 87,
+      "close": 89
+    },
+    {
+      "idx": 11,
+      "bar_dt": "d11",
+      "open": 89,
+      "high": 88,
+      "low": 80,
+      "close": 82
+    },
+    {
+      "idx": 12,
+      "bar_dt": "d12",
+      "open": 82,
+      "high": 86,
+      "low": 81,
+      "close": 84
+    },
+    {
+      "idx": 13,
+      "bar_dt": "d13",
+      "open": 84,
+      "high": 88,
+      "low": 83,
+      "close": 86
+    },
+    {
+      "idx": 14,
+      "bar_dt": "d14",
+      "open": 86,
+      "high": 115,
+      "low": 85,
+      "close": 113
+    },
+    {
+      "idx": 15,
+      "bar_dt": "d15",
+      "open": 113,
+      "high": 118,
+      "low": 112,
+      "close": 116
+    },
+    {
+      "idx": 16,
+      "bar_dt": "d16",
+      "open": 116,
+      "high": 115,
+      "low": 111,
+      "close": 113
+    },
+    {
+      "idx": 17,
+      "bar_dt": "d17",
+      "open": 113,
+      "high": 114,
+      "low": 109,
+      "close": 111
+    },
+    {
+      "idx": 18,
+      "bar_dt": "d18",
+      "open": 111,
+      "high": 110,
+      "low": 75,
+      "close": 77
+    },
+    {
+      "idx": 19,
+      "bar_dt": "d19",
+      "open": 77,
+      "high": 81,
+      "low": 76,
+      "close": 79
+    },
+    {
+      "idx": 20,
+      "bar_dt": "d20",
+      "open": 79,
+      "high": 83,
+      "low": 78,
+      "close": 81
+    }
   ],
-
   "expected_range_snapshots": [
     {
       "bar_dt": "d14",
@@ -58,7 +205,7 @@
       "bar_dt": "d17",
       "range_state": "alive",
       "birth_bar_dt": "d14",
-      "boundary_init_high": 118,
+      "boundary_init_high": 110,
       "boundary_init_low": 80,
       "boundary_now_high": 118,
       "boundary_now_low": 80,
@@ -77,8 +224,8 @@
       "boundary_init_high": 110,
       "boundary_init_low": 80,
       "boundary_now_high": 118,
-      "boundary_now_low": 75,
-      "evolution_count": 2,
+      "boundary_now_low": 80,
+      "evolution_count": 1,
       "break_direction": "up",
       "old_wave_direction": "down",
       "resolution_bar_dt": "d20",
@@ -89,10 +236,9 @@
       "confirmation_pivot_extreme_bar_dt": "d18",
       "confirmation_pivot_confirm_bar_dt": "d20",
       "new_wave_direction": "down",
-      "note": "L @ d18 确认 @ d20 (75 < 80)，触发 resolution。REVERSAL（break=UP, wave=DOWN）。Distance=75-80=-5。"
+      "note": "L @ d18 确认 @ d20（75 < boundary_init_low=80），满足 T6 并触发 reversal resolution。R5 使用 resolution 前 boundary_now_low=80；resolution pivot 不先改写 boundary_now。"
     }
   ],
-
   "key_assertions": [
     "R2 的对称实现（DOWN ↔ UP, L ↔ H, < ↔ >）",
     "DOWN wave 初始化（L0=90, H1=110, L2=85）",
