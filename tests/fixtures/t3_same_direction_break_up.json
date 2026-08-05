@@ -100,7 +100,7 @@
       "price": 102,
       "extreme_bar_dt": "d03",
       "confirm_bar_dt": "d05",
-      "confirm_price": 102
+      "confirm_price": 98
     },
     {
       "pivot_type": "L",
@@ -108,7 +108,7 @@
       "price": 94,
       "extreme_bar_dt": "d04",
       "confirm_bar_dt": "d06",
-      "confirm_price": 94
+      "confirm_price": 96
     },
     {
       "pivot_type": "H",
@@ -116,7 +116,7 @@
       "price": 104,
       "extreme_bar_dt": "d06",
       "confirm_bar_dt": "d08",
-      "confirm_price": 104
+      "confirm_price": 99
     }
   ],
   "expected_snapshots": [

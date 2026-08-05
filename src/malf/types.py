@@ -83,14 +83,14 @@ class Pivot:
 
     规格 D2 要求：
     - price: 极值价格（extreme bar 的 high/low）
-    - confirm_price: 确认 bar 的价格（confirm bar 的 close，用于审计追溯）
+    - confirm_price: 确认 bar 对应价格（权威 D2：H 用 high、L 用 low；实现偏离见 T9.11 记录）
     """
 
     pivot_type: PivotType
     price: int                      # 极值价格（extreme bar 的 high/low）
     extreme_bar_dt: str
     confirm_bar_dt: str
-    confirm_price: int              # 确认 bar 的价格（规格 D2 要求）
+    confirm_price: int              # 确认 bar 对应价格（权威 D2：H 用 high、L 用 low；实现偏离见 T9.11 记录）
     pivot_id: Optional[str] = None  # 生成规则见后续；第一刀可为 None
 
 
@@ -181,9 +181,9 @@ class CoreStateSnapshot:
     active_candidate_direction: Optional[Direction] = None
     candidate_replacement_count: int = 0
     # version（replay 契约）
-    core_rule_version: str = "core-v0.0.1"
-    pivot_detection_rule_version: str = "fractal-k2-v1"
-    price_policy: str = "int_fixed"
+    core_rule_version: str = "v2.1"  # T9.11 对齐权威 Service §5（原 core-v0.0.1）
+    pivot_detection_rule_version: str = "fractal_k2_v1.0"  # T9.11 对齐权威 O1（原 fractal-k2-v1）
+    price_policy: str = "source_integer_fixed_point"  # T9.11 对齐权威（原 int_fixed；术语表 §8.3 消解）
     runtime_fingerprint: str = ""  # 由引擎发布时填入；审计元数据，不进 lineage_hash
     # audit
     schema_version: str = "malf-core-snapshot-v0"  # 【填洞 L4-7 预留】
@@ -365,9 +365,10 @@ class RangeLifespan:
 
     # Resolution 距离
     resolution_distance: int    # Resolution 距离（有符号整数，v2.1 Range §5）
-    resolution_distance_pct: float  # Resolution 距离百分比（归一化到 boundary_init 幅度）
+    resolution_distance_pct: float  # Resolution 距离百分比（权威 R5：基于 boundary_now 单边；实现偏离见 T9.11 记录）
 
     # Boundary 幅度
+    # ⚠️ T9.11（2026-08-05）：amplitude_* 为 H5 裁决后残留字段（权威 v2.1 已删除 amplitude 指标），无排名、无 Service 输出；保留待清理
     amplitude_init: int         # boundary_init 范围（boundary_high_init - boundary_low_init）
     amplitude_now: int          # boundary_now 范围（boundary_now_high - boundary_now_low）
     amplitude_pct: float        # boundary_now 幅度百分比（amplitude_now / boundary_low_init）

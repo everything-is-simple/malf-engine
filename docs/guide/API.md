@@ -154,9 +154,9 @@ class CoreStateSnapshot:
 
 ```python
     # 版本信息
-    core_rule_version: str                   # Core 规则版本，e.g., "core-v0.0.1"
-    pivot_detection_rule_version: str        # Pivot 检测规则版本
-    price_policy: str                        # 价格策略，e.g., "int_fixed"
+    core_rule_version: str                   # Core 规则版本（权威 Service §5："v2.1"）
+    pivot_detection_rule_version: str        # Pivot 检测规则版本（权威 O1："fractal_k2_v1.0"）
+    price_policy: str                        # 价格域（权威："source_integer_fixed_point"）
     runtime_fingerprint: str                 # 运行时指纹
     schema_version: str                      # 快照 schema 版本
     note: str                                # 备注

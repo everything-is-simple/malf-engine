@@ -139,7 +139,9 @@ def test_wave_lifespan_down_direction():
     )
 
     assert lifespan.direction == Direction.DOWN
-    assert lifespan.price_range == 40
+    # T9.11 对齐权威 Lifespan §3：price_range = |progress_extreme - guard|（原实现 |wave_end - wave_start|）
+    # wave_end_price=80（=progress_extreme）、guard_price=100 → |80-100| = 20
+    assert lifespan.price_range == 20
     assert lifespan.progress_pct == 2.0
     assert lifespan.span_rank is None
     assert lifespan.range_rank is None

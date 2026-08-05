@@ -185,20 +185,7 @@ class MALFCoreEngine:
             # DECISION-004: 每根 alive bar 递增 no_new_span（无新推进 bar 数）
             self._no_new_span += 1
 
-            # D16 Progress Confirmation + D9 Guard Update: 检查是否有新 pivot 确认
-            if bar.bar_dt in pivots_by_confirm_dt:
-                new_pivot = pivots_by_confirm_dt[bar.bar_dt]
-                old_progress = self._progress_extreme_price
-                self._update_progress_if_better(new_pivot)
-                # DECISION-004: D16 progress 更新时 new_count += 1、重置 no_new_span
-                if self._progress_extreme_price != old_progress:
-                    self._new_count += 1
-                    self._last_progress_bar_dt = bar.bar_dt
-                    self._no_new_span = 0
-                self._update_guard_if_valid(new_pivot)
-                # DECISION-004: 追加到当前 wave 的 pivot 列表（Core D5 pivots：按时间顺序）
-                self._current_wave_pivots.append(new_pivot)
-
+            # T9.11 对齐权威 O2（Core §3）：break 检查先于 progress/guard 更新（2026-08-05）
             if self._check_guard_break(bar):
                 # 计算双边界（D12）
                 self._transition_boundary_high, self._transition_boundary_low = self._calculate_boundaries()
@@ -284,6 +271,21 @@ class MALFCoreEngine:
                 self._active_candidate_guard_confirm_bar_dt = None
                 self._active_candidate_direction = None
                 self._candidate_replacement_count = 0
+
+            else:
+                # D16 Progress Confirmation + D9 Guard Update（未 break 时执行；权威 O2 顺序）
+                if bar.bar_dt in pivots_by_confirm_dt:
+                    new_pivot = pivots_by_confirm_dt[bar.bar_dt]
+                    old_progress = self._progress_extreme_price
+                    self._update_progress_if_better(new_pivot)
+                    # DECISION-004: D16 progress 更新时 new_count += 1、重置 no_new_span
+                    if self._progress_extreme_price != old_progress:
+                        self._new_count += 1
+                        self._last_progress_bar_dt = bar.bar_dt
+                        self._no_new_span = 0
+                    self._update_guard_if_valid(new_pivot)
+                    # DECISION-004: 追加到当前 wave 的 pivot 列表（Core D5 pivots：按时间顺序）
+                    self._current_wave_pivots.append(new_pivot)
 
         # S4: Transition 期间 active candidate 演化（第四刀）
         elif self._system_state == SystemState.TRANSITION:
@@ -540,7 +542,9 @@ class MALFCoreEngine:
         else:
             self._range_resolution_type = "reversal"  # 反转 break 方向
 
-        # 计算 resolution_distance（基于 boundary_init）
+        # 计算 resolution_distance（引擎扩展字段：绝对突破距离，用 init 边界保持区分度）
+        # 注：权威 R5 的 resolution_distance_pct 用 now 边界（下方 pct 计算），因确认 pivot 已刷新 now 边界，pct 恒 0——
+        # 这是权威 R3/R5 组合的设计特性（Range §5 "可正可负"），绝对距离字段作为统计替代保留 init 语义（T9.11 记录）
         if new_direction == Direction.UP:
             self._range_resolution_distance = confirmation_pivot.price - self._range_boundary_init_high
         else:

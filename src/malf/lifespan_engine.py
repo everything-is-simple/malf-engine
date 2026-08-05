@@ -77,8 +77,9 @@ class LifespanEngine:
         返回：
             WaveLifespan 对象
         """
-        # 计算价格范围（绝对值）
-        price_range = abs(wave_end_price - wave_start_price)
+        # 计算价格范围（权威 Lifespan §3：|progress_extreme_price - guard_price| 的绝对值）
+        # T9.11（2026-08-05）：原实现为 |wave_end - wave_start|，对齐权威后改为 |progress_extreme - guard|
+        price_range = abs(wave_end_price - guard_price)
 
         # 计算进展百分比（v2.1 Lifespan §3.1）
         # UP: (progress_extreme_price - first_pivot_price) / (progress_extreme_price - guard_price)

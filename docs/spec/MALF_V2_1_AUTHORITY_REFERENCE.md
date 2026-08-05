@@ -62,7 +62,7 @@ IMPLEMENTATION-CONTRACT-PATCH 的第 1-3 层（21条）已全部回写入 v2.1 �
 
 ### 3. 歧义闭合（3处）
 
-- R5 resolution_distance_pct 公式：`|confirmation_pivot.extreme_price - range.birth_break_price| / |boundary_high_init - boundary_low_init|`
+- R5 resolution_distance_pct 公式：up 突破 `(confirmation_pivot.extreme_price - boundary_high_now) / boundary_high_now`；down 突破 `(boundary_low_now - confirmation_pivot.extreme_price) / boundary_low_now`（**分母=单边 now 边界**）
 - R6 continuation_range 命名陷阱：延续的是 break 方向，不是旧 wave 方向
 - 两层边界明确：Core 用 init，Range 统计用 now
 

@@ -60,7 +60,7 @@
 
 **Service 层完成** ✅：对外接口与持久化（2026-07-27）
 - T9.1 Usage 判定 + 失败模式：
-  - WaveStructuralSnapshot 数据结构（34 字段）
+  - WaveStructuralSnapshot 数据结构（44 字段）
   - UsageType 枚举（4 个值）
   - ReasonCode 枚举（11 个常量）
   - Usage 判定逻辑（G0-G2 优先级）
@@ -85,7 +85,7 @@
 ### 核心模块
 
 **Core 层**:
-- **`types.py`**：核心数据结构（stdlib dataclass）。价格为整数（`int_fixed`）以避免 float 精度问题。定义 `PriceBar`、`Pivot`（双时间戳）、`CoreStateSnapshot`、`RangeStateSnapshot`、`WaveLifespan`、`RangeLifespan`、`WaveStructuralSnapshot`（34 字段）。
+- **`types.py`**：核心数据结构（stdlib dataclass）。价格为整数（`source_integer_fixed_point` 策略，术语表 §8.3）以避免 float 精度问题。定义 `PriceBar`、`Pivot`（双时间戳）、`CoreStateSnapshot`、`RangeStateSnapshot`、`WaveLifespan`、`RangeLifespan`、`WaveStructuralSnapshot`（44 字段）。
 - **`pivot_detection.py`**：分形 k=2 窗口检测。产出 pivot 列表，不含状态机逻辑。
 - **`initialization.py`**：初始波段检测（UP/DOWN 双方向）。支持 C-07 早期 Pivot 替换规则。
 - **`core_engine.py`**：完整状态机（UP_ALIVE/DOWN_ALIVE/TRANSITION/UNINITIALIZED）。Guard break 检测、progress 追踪、candidate 机制。

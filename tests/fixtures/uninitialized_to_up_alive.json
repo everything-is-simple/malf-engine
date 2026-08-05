@@ -1,7 +1,13 @@
 {
   "fixture_id": "uninitialized_to_up_alive",
   "purpose": "第一刀纵切：从 uninitialized 走到 initial up wave 确认（up_alive）。覆盖 spec §2 的 S1→S9、pivot k=2 延迟确认、first guard=L1、D18 初始化序列 H0→L1→H2>H0。",
-  "spec_refs": ["§2.4 pivot检测/初始化", "§2.5 状态机", "§2.8 九步顺序", "D18", "O6"],
+  "spec_refs": [
+    "§2.4 pivot检测/初始化",
+    "§2.5 状态机",
+    "§2.8 九步顺序",
+    "D18",
+    "O6"
+  ],
   "params": {
     "k": 2,
     "pivot_detection_rule_version": "fractal-k2-v1",
@@ -9,40 +15,197 @@
   },
   "derivation_note": "预期输出人肉按 spec §2 推导，非待测代码生成（TDD 铁律）。价格为整数（int_fixed）。每个 pivot 存 extreme_bar_dt（极值真正发生）+ confirm_bar_dt（延迟 k 根后确认）双时间戳。",
   "scope_note": "本 fixture 只断言到 d11（up_alive 成立）。d11 之后的潜在 pivot / break / transition 不在本 fixture 断言范围，属后续 fixture。",
-
   "input_bars": [
-    {"idx": 0,  "bar_dt": "d00", "open": 100, "high": 102, "low": 99,  "close": 101},
-    {"idx": 1,  "bar_dt": "d01", "open": 101, "high": 105, "low": 100, "close": 104},
-    {"idx": 2,  "bar_dt": "d02", "open": 104, "high": 110, "low": 103, "close": 108},
-    {"idx": 3,  "bar_dt": "d03", "open": 108, "high": 107, "low": 104, "close": 105},
-    {"idx": 4,  "bar_dt": "d04", "open": 105, "high": 106, "low": 102, "close": 103},
-    {"idx": 5,  "bar_dt": "d05", "open": 103, "high": 104, "low": 96,  "close": 98},
-    {"idx": 6,  "bar_dt": "d06", "open": 98,  "high": 101, "low": 97,  "close": 100},
-    {"idx": 7,  "bar_dt": "d07", "open": 100, "high": 103, "low": 98,  "close": 102},
-    {"idx": 8,  "bar_dt": "d08", "open": 102, "high": 108, "low": 101, "close": 107},
-    {"idx": 9,  "bar_dt": "d09", "open": 107, "high": 114, "low": 106, "close": 112},
-    {"idx": 10, "bar_dt": "d10", "open": 112, "high": 111, "low": 108, "close": 109},
-    {"idx": 11, "bar_dt": "d11", "open": 109, "high": 110, "low": 106, "close": 108}
+    {
+      "idx": 0,
+      "bar_dt": "d00",
+      "open": 100,
+      "high": 102,
+      "low": 99,
+      "close": 101
+    },
+    {
+      "idx": 1,
+      "bar_dt": "d01",
+      "open": 101,
+      "high": 105,
+      "low": 100,
+      "close": 104
+    },
+    {
+      "idx": 2,
+      "bar_dt": "d02",
+      "open": 104,
+      "high": 110,
+      "low": 103,
+      "close": 108
+    },
+    {
+      "idx": 3,
+      "bar_dt": "d03",
+      "open": 108,
+      "high": 107,
+      "low": 104,
+      "close": 105
+    },
+    {
+      "idx": 4,
+      "bar_dt": "d04",
+      "open": 105,
+      "high": 106,
+      "low": 102,
+      "close": 103
+    },
+    {
+      "idx": 5,
+      "bar_dt": "d05",
+      "open": 103,
+      "high": 104,
+      "low": 96,
+      "close": 98
+    },
+    {
+      "idx": 6,
+      "bar_dt": "d06",
+      "open": 98,
+      "high": 101,
+      "low": 97,
+      "close": 100
+    },
+    {
+      "idx": 7,
+      "bar_dt": "d07",
+      "open": 100,
+      "high": 103,
+      "low": 98,
+      "close": 102
+    },
+    {
+      "idx": 8,
+      "bar_dt": "d08",
+      "open": 102,
+      "high": 108,
+      "low": 101,
+      "close": 107
+    },
+    {
+      "idx": 9,
+      "bar_dt": "d09",
+      "open": 107,
+      "high": 114,
+      "low": 106,
+      "close": 112
+    },
+    {
+      "idx": 10,
+      "bar_dt": "d10",
+      "open": 112,
+      "high": 111,
+      "low": 108,
+      "close": 109
+    },
+    {
+      "idx": 11,
+      "bar_dt": "d11",
+      "open": 109,
+      "high": 110,
+      "low": 106,
+      "close": 108
+    }
   ],
-
   "expected_pivots": [
-    {"pivot_type": "H", "label": "H0", "price": 110, "extreme_bar_dt": "d02", "confirm_bar_dt": "d04", "confirm_price": 103},
-    {"pivot_type": "L", "label": "L1", "price": 96,  "extreme_bar_dt": "d05", "confirm_bar_dt": "d07", "confirm_price": 102},
-    {"pivot_type": "H", "label": "H2", "price": 114, "extreme_bar_dt": "d09", "confirm_bar_dt": "d11", "confirm_price": 108}
+    {
+      "pivot_type": "H",
+      "label": "H0",
+      "price": 110,
+      "extreme_bar_dt": "d02",
+      "confirm_bar_dt": "d04",
+      "confirm_price": 106
+    },
+    {
+      "pivot_type": "L",
+      "label": "L1",
+      "price": 96,
+      "extreme_bar_dt": "d05",
+      "confirm_bar_dt": "d07",
+      "confirm_price": 98
+    },
+    {
+      "pivot_type": "H",
+      "label": "H2",
+      "price": 114,
+      "extreme_bar_dt": "d09",
+      "confirm_bar_dt": "d11",
+      "confirm_price": 110
+    }
   ],
-
   "expected_snapshots": [
-    {"bar_dt": "d00", "system_state": "uninitialized", "direction": null, "note": "窗口不足（左侧<2根），无 pivot"},
-    {"bar_dt": "d01", "system_state": "uninitialized", "direction": null, "note": "窗口不足，无 pivot"},
-    {"bar_dt": "d02", "system_state": "uninitialized", "direction": null, "note": "H0 极值发生于此，但此刻不可确认"},
-    {"bar_dt": "d03", "system_state": "uninitialized", "direction": null, "note": "H0 右侧第1根"},
-    {"bar_dt": "d04", "system_state": "uninitialized", "direction": null, "note": "确认 H0（extreme=d02）；仅有首个 H，初始化序列未齐"},
-    {"bar_dt": "d05", "system_state": "uninitialized", "direction": null, "note": "L1 极值发生于此"},
-    {"bar_dt": "d06", "system_state": "uninitialized", "direction": null, "note": "L1 右侧第1根"},
-    {"bar_dt": "d07", "system_state": "uninitialized", "direction": null, "note": "确认 L1（extreme=d05）；H0→L1 就位，仍差 H2"},
-    {"bar_dt": "d08", "system_state": "uninitialized", "direction": null, "note": "爬向 H2"},
-    {"bar_dt": "d09", "system_state": "uninitialized", "direction": null, "note": "H2 极值发生于此（114>H0=110），未确认"},
-    {"bar_dt": "d10", "system_state": "uninitialized", "direction": null, "note": "H2 右侧第1根"},
+    {
+      "bar_dt": "d00",
+      "system_state": "uninitialized",
+      "direction": null,
+      "note": "窗口不足（左侧<2根），无 pivot"
+    },
+    {
+      "bar_dt": "d01",
+      "system_state": "uninitialized",
+      "direction": null,
+      "note": "窗口不足，无 pivot"
+    },
+    {
+      "bar_dt": "d02",
+      "system_state": "uninitialized",
+      "direction": null,
+      "note": "H0 极值发生于此，但此刻不可确认"
+    },
+    {
+      "bar_dt": "d03",
+      "system_state": "uninitialized",
+      "direction": null,
+      "note": "H0 右侧第1根"
+    },
+    {
+      "bar_dt": "d04",
+      "system_state": "uninitialized",
+      "direction": null,
+      "note": "确认 H0（extreme=d02）；仅有首个 H，初始化序列未齐"
+    },
+    {
+      "bar_dt": "d05",
+      "system_state": "uninitialized",
+      "direction": null,
+      "note": "L1 极值发生于此"
+    },
+    {
+      "bar_dt": "d06",
+      "system_state": "uninitialized",
+      "direction": null,
+      "note": "L1 右侧第1根"
+    },
+    {
+      "bar_dt": "d07",
+      "system_state": "uninitialized",
+      "direction": null,
+      "note": "确认 L1（extreme=d05）；H0→L1 就位，仍差 H2"
+    },
+    {
+      "bar_dt": "d08",
+      "system_state": "uninitialized",
+      "direction": null,
+      "note": "爬向 H2"
+    },
+    {
+      "bar_dt": "d09",
+      "system_state": "uninitialized",
+      "direction": null,
+      "note": "H2 极值发生于此（114>H0=110），未确认"
+    },
+    {
+      "bar_dt": "d10",
+      "system_state": "uninitialized",
+      "direction": null,
+      "note": "H2 右侧第1根"
+    },
     {
       "bar_dt": "d11",
       "system_state": "up_alive",

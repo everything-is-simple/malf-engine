@@ -183,16 +183,17 @@ def test_version_fields_present():
 
     # 验证 core_rule_version
     assert snapshot.core_rule_version, "core_rule_version is empty"
-    assert snapshot.core_rule_version.startswith("core-"), f"core_rule_version format wrong: {snapshot.core_rule_version}"
+    # T9.11 对齐权威 Service §5：core_rule_version = "v2.1"（权威版本引用，原 "core-v0.0.1"）
+    assert snapshot.core_rule_version == "v2.1", f"core_rule_version format wrong: {snapshot.core_rule_version}"
 
     # 验证 pivot_detection_rule_version
     assert snapshot.pivot_detection_rule_version, "pivot_detection_rule_version is empty"
     # 格式：fractal-k{k}-v{version}
     assert "fractal" in snapshot.pivot_detection_rule_version, f"pivot_detection_rule_version format wrong: {snapshot.pivot_detection_rule_version}"
 
-    # 验证 price_policy
+    # 验证 price_policy（T9.11 对齐权威：source_integer_fixed_point；原 int_fixed/round_2 已废弃）
     assert snapshot.price_policy, "price_policy is empty"
-    assert snapshot.price_policy in ["int_fixed", "round_2"], f"price_policy invalid: {snapshot.price_policy}"
+    assert snapshot.price_policy == "source_integer_fixed_point", f"price_policy invalid: {snapshot.price_policy}"
 
     # 验证 schema_version
     assert snapshot.schema_version, "schema_version is empty"
