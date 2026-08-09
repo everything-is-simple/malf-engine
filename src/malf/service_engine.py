@@ -290,11 +290,27 @@ def build_wave_structural_snapshot(
         wave_range_rank=wave_lifespan.range_rank if wave_lifespan else None,
         wave_stagnation_rank=wave_lifespan.stagnation_rank if wave_lifespan else None,
 
+        # Lifespan 层（Wave 推进 + 身份，T9.15 新增）
+        progress_pct=wave_lifespan.progress_pct if wave_lifespan else None,
+        new_count=wave_lifespan.new_count if wave_lifespan else None,
+        no_new_span=wave_lifespan.no_new_span if wave_lifespan else None,
+        progress_rank=wave_lifespan.progress_rank if wave_lifespan else None,
+        birth_type=core.active_wave.birth_type if core.active_wave else None,
+        wave_id=wave_lifespan.wave_id if wave_lifespan else core.active_wave.wave_id if core.active_wave else None,
+        wave_start_bar_dt=wave_lifespan.wave_start_bar_dt if wave_lifespan else (core.active_wave.start_bar_dt if core.active_wave else None),
+        wave_end_bar_dt=wave_lifespan.wave_end_bar_dt if wave_lifespan else None,
+
         # Lifespan 层（Range）
         range_span_rank=range_lifespan.span_rank if range_lifespan else None,
         range_evolution_rank=range_lifespan.evolution_rank if range_lifespan else None,
         range_replacement_rank=range_lifespan.replacement_rank if range_lifespan else None,
         range_resolution_distance_rank=range_lifespan.resolution_distance_rank if range_lifespan else None,
+
+        # Lifespan 层（Range 演化，T9.15 新增）
+        range_amplitude_init=range_lifespan.amplitude_init if range_lifespan else None,
+        range_amplitude_now=range_lifespan.amplitude_now if range_lifespan else None,
+        range_amplitude_pct=range_lifespan.amplitude_pct if range_lifespan else None,
+        range_resolution_distance_pct=range_lifespan.resolution_distance_pct if range_lifespan else None,
 
         # Structural Position 层
         p2_same_dir_span_momentum=p2.same_dir_span_momentum if p2 else None,

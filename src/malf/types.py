@@ -516,6 +516,7 @@ class WaveStructuralSnapshot:
     wave_range_rank: Optional[float]
     wave_stagnation_rank: Optional[float]
 
+
     # ========== Lifespan 层（Range）==========
     range_span_rank: Optional[float]
     range_evolution_rank: Optional[float]
@@ -539,4 +540,25 @@ class WaveStructuralSnapshot:
     reason_codes: list[str]                 # 字段为 None 的原因代码（v2.1 Service §6 铁律 6）
     usage: str                              # "research_only" | "verification_only" | "rejected" | "operational"
     freshness: str                          # "current" | "stale_research_only"
+
+    # ========== Lifespan 层（Wave 推进 + Range 演化 + Wave 身份，T9.15 新增）==========
+    # 引擎内部已计算，Service 投影补齐（用户裁决 2026-08-10）；默认值字段排最后避免 dataclass 顺序错误
+    # ========== Lifespan 层（Wave 推进，T9.15 新增）==========
+    # 引擎内部 WaveLifespan 已计算，Service 投影补齐（用户裁决 2026-08-10）
+    progress_pct: Optional[float] = None     # 推进幅度 / guard 距离比例（Lifespan §3）
+    new_count: Optional[int] = None          # alive 期间新确认 pivot 数（推进频率）
+    no_new_span: Optional[int] = None        # 最后新 pivot 到 break 的 bar 数（没创新值天数）
+    progress_rank: Optional[float] = None    # progress_pct 的 percentile_rank（推进排名）
+    birth_type: Optional[str] = None         # "initial" | "continuation" | "reversal"（波段出身）
+
+    # ========== Lifespan 层（Range 演化，T9.15 新增）==========
+    range_amplitude_init: Optional[int] = None    # 区间初始幅度（boundary_init 差）
+    range_amplitude_now: Optional[int] = None     # 区间当前幅度（boundary_now 差，可演化）
+    range_amplitude_pct: Optional[float] = None   # 幅度变化比例（now-init）/init
+    range_resolution_distance_pct: Optional[float] = None  # 解决距离比例（RangeLifespan）
+
+    # ========== Lifespan 层（Wave 身份，T9.15 新增）==========
+    wave_id: Optional[str] = None            # 活跃波段 ID（与 active_wave_id 一致，雷达标识）
+    wave_start_bar_dt: Optional[str] = None  # 波段起始 bar 时间（波段时间轴）
+    wave_end_bar_dt: Optional[str] = None    # 波段终止 bar 时间（alive 中为 None）
 
